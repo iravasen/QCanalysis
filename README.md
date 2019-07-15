@@ -35,7 +35,8 @@ When starting the script, it will load automatically the QualityControl modules.
 You just need to enter the option number (1 or 2). Any other character that will be inserted will be recognized as invalid and the option will have to be retyped. 
 #### Option 1 - Download and analyse data
 In case option 1 from the menu above is chosen, the script compiles automatically the code for database access. First, a list of all the available *tasks* in the database is shown (the database is accessible also from [here](http://ccdb-test.cern.ch:8080/browse/)). You need to type a *task name* choosing among the one proposed (type *quit* to exit). The tasks used during shifts are **ITSRAWDS** and **ITSQCTrhesholdTask**. They might be the ones you want to type. 
-After this, a list of all the *objects* inside the chosen task is shown. You need to copy a single *object name* from where to download the data (type *quit* to exit).
+After this, a list of all the *objects* inside the chosen task is shown. You need to copy a single *object name* from where to download the data (type *quit* to exit). Have a look to the end of this paragraph to know which are the correct object names depending on the analysis you want to perform. 
+
 After selecting an object, a menu with the following options will appear:
 1. Enter run numbers
 2. Enter timestamps
