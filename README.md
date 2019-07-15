@@ -28,7 +28,7 @@ When starting the script, it will load automatically the QualityControl modules.
 2. Analyse data only
 
 You just need to enter the option number (1 or 2). Any other character that will be inserted will be recognized as invalid and the option will have to be retyped. 
-### Option 1 - Download and analyse data
+#### Option 1 - Download and analyse data
 In case option 1 from the menu above is chosen, the script compiles automatically the code for database access. First, a list of all the available *tasks* in the database is shown (the database is accessible also from [here](http://ccdb-test.cern.ch:8080/browse/)). You need to type a *task name* choosing among the one proposed (type *quit* to exit). The tasks used during shifts are **ITSRAWDS** and **ITSQCTrhesholdTask**. They might be the ones you want to type. 
 After this, a list of all the *objects* inside the chosen task is shown. You need to copy a single *object name* from where to download the data (type *quit* to exit).
 After selecting an object, a menu with the following options will appear:
@@ -46,5 +46,8 @@ After the downloading of the data, a menu with the **available analyses** is sho
 If **option 1** is chosen, the software will show you the fake-hit rate as a function of the run number for all the chips in a Stave. The ROOT macro is run automatically and a list of (good) files for the analysis is shown. Copy and paste the file name in the input line that will appear. **A good file for the analysis must be downloaded from objects named as *ITSQC/Occupancy/LayerXX/LayerXXStaveYYHITMAP* where XX is the layer number, YY the stave number**. The plot is automatically saved in *pdf* and *root* format in the repository *Plots/*. 
 If **option 2** is chosen, the software will compare the number of noisy pixels run by run. The ROOT macro is run automatically and a list of (good) files for the analysis is shown. Copy and paste the file name in the input line that will appear. Then, a reference run number (**choose a run among the ones in the input file!**) has to be typed. All the runs in the input file will be compared with the chosen reference run. **A good file for the analysis must be downloaded from objects named as *ITSQC/Occupancy/LayerXX/LayerXXStaveYYHITMAP* where XX is the layer number, YY the stave number**. The plot is automatically saved in *pdf* and *root* format in the repository *Plots/*. 
 
-### Option 2 - Analyse data only
+#### Option 2 - Analyse data only
 For this option you will need to have already a file containing a set of histograms to analyse. If this is the case, choosing this option, you will access directly the analysis menu. Choose a single analysis as explained in the paragraph above
+
+## Contacts
+For any issue, please contact [mailto](ivan.ravasenga@cern.ch).
