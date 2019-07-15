@@ -9,7 +9,12 @@ In order to be able to run the scripts you will need to build the QualityControl
 ```bash
 alienv load QualityControl/latest
 ```
-**Be sure that this command works on your machine**
+**Be sure that this command works on your machine**. If it works only in the installation directory you might want to add the following lines to your *.bashrc*:
+```bash
+export ALIBUILD_WORK_DIR="$HOME/alice/sw"
+eval "`alienv shell-helper`"
+```
+If this is not the case you will have to copy the folder QCanalysis in the folder where the *alienv* command works. 
 Then, you need to have permissions to execute the script *startanalysis.sh*. To do so, just do on your terminal (in the folder where the script is):
 ```bash
 chmod +x startanalysis.sh
