@@ -25,7 +25,7 @@ To start the download (optional) and analysis of the data you simply need to run
 ```bash
 ./startanalysis.sh
 ```
-Then you need to follow the instructions that appear on the terminal window. The general workflow is described in the following. 
+Then you need to follow the instructions that appear on the terminal window. The workflow is described in the following. **Remember that you can exit the program with Ctrl+c at any moment**. 
 
 ### Choose what to do (main menu)
 When starting the script, it will load automatically the QualityControl modules. After this, a first menu will appear on the terminal allowing the choice of the following options:
