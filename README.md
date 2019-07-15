@@ -33,6 +33,7 @@ After this, a list of all the *objects* inside the chosen task is shown. You nee
 After selecting an object, a menu with the following options will appear:
 1. Enter run numbers
 2. Enter timestamps
+
 You need to choose one of the options by typing the corresponding number (any other character inserted will be recognized as invalid and the correct option will have to be retyped).
 If **option 1** is chosen, you need to type an interval of runs from which to download data (i.e. if the interval is run100 - run200, all the data related to runs having a number between 100 and 200 will be downloaded. **Note the run number is available in the database from July 3rd, 2019 only!**. For older data you will need to choose option 2.  
 Instead, if **option 2** is chosen, you will need to type a time interval from which to download data: the time interval will include a date (DD MM YY) and a time in H24 format (HH MM SS). 
