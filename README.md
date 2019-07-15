@@ -50,4 +50,4 @@ If **option 2** is chosen, the software will compare the number of noisy pixels 
 For this option you will need to have already a file containing a set of histograms to analyse. If this is the case, choosing this option, you will access directly the analysis menu. Choose a single analysis as explained in the paragraph above
 
 ## Contacts
-For any issue, please contact [mailto](ivan.ravasenga@cern.ch).
+For any issue, please contact <ivan.ravasenga@cern.ch>.
