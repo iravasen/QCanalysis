@@ -45,7 +45,7 @@ todooption(){
 
 echo "==== Loading environment modules ===="
 export ALIBUILD_WORK_DIR="/home/alidock/.sw"
-eval $(alienv load flpproto/latest 2> /dev/null)
+eval $(alienv load QualityControl/latest 2> /dev/null)
 
 echo -e "\n==== What to do ====\n"
 echo -e "=> Chose an option: \n\n"
