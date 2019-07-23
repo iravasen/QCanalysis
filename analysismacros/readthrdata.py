@@ -1,11 +1,13 @@
 import numpy
 import re
 import math
+import gzip
 from array import array
 from ROOT import TTree, TFile
 
 def readdata(inputfile):
-    data = numpy.load(inputfile)
+    fl = gzip.GzipFile(inputfile,"r")
+    data = numpy.load(fl)
     return data
 
 def insertrun(word):
@@ -55,7 +57,7 @@ def main():
     f = open("datatoanalyse.txt", "r") ## file with all paths
 
     #open file with all the paths
-    ftree = TFile.Open("thresholds_tree_from_run{}_to_run{}.root".format(runs[0], runs[1]), "recreate") ## file containing the tree
+    ftree = TFile.Open("Data/thresholds_tree_from_run{}_to_run{}.root".format(runs[0], runs[1]), "recreate") ## file containing the tree
     roottree1 = TTree("thrscan_thr", "thrscan_thr");
     roottree1.Branch("runnum", runnum, "runnum/I")
     roottree1.Branch("stavenum", currstave, "stavenum/I")

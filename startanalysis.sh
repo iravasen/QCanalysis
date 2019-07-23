@@ -31,12 +31,12 @@ doanalysisinflp(){
   case "$layernum" in
     0) cd /home/its/QCNew/QCanalysis
        echo -e "\n=> Starting analysis on flp"
-       echo -e "Enter QualityControl environment on flp"
-       alienv enter QualityControl/latest
+       echo -e "Load QualityControl environment on flp"
+       eval $(alienv load QualityControl/latest)
        echo -e "\nPreparation of the sample (may take several minutes)"
        cd analysismacros
-       find /data/L0_shifts/ -name "thresholds.npy" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
-       ipython readthrdata.py
+       find /data/L0_shifts/ -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+       python readthrdata.py
        rm datatoanalyse.txt
        ;;
     *) echo -e "\nLayer not yet available"
