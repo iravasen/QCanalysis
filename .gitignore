@@ -3,6 +3,7 @@ Plots/
 *.o
 
 *
-*.*
+!*.*
+*.o
 !Makefile
 !analysismacros/
