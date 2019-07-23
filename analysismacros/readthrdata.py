@@ -11,7 +11,7 @@ def readdata(inputfile):
     return data
 
 def insertrun(word):
-    rn = input('Type the {} run number: '.format(word))
+    rn = input('Type the {} run number of a threshold scan: '.format(word))
     return rn
 
 def askruns():
@@ -45,7 +45,7 @@ def askruns():
 ########
 def main():
     runs = askruns()
-    staven = input('Type the number of the first stave: ')
+    staven = input('Type the number of the first stave in the (half-)layer: ')
 
     runnum = array('i', [0])
     currstave = array('i', [0])
