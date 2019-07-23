@@ -6,4 +6,5 @@ Plots/
 !*.cxx
 !Makefile
 !*.sh
-!analysismacros/
+!analysismacros/*.py
+!analysismacros/*.C

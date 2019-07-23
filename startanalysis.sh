@@ -25,6 +25,25 @@ analysismenu(){
   cd ..
 }
 
+doanalysisinflp(){
+  echo -e "\n=> Which ITS Layer do you want to analyse [0,1,2,3,4,5,6]? \c"
+  read layernum
+  case "$layernum" in
+    0) cd /home/its/QCNew/QCanalysis
+       echo -e "\n=> Starting analysis on flp"
+       echo -e "Enter QualityControl environment on flp"
+       alienv enter QualityControl/latest
+       echo -e "\nPreparation of the sample (may take several minutes)"
+       cd analysismacros
+       find /data/L0_shifts/ -name "thresholds.npy" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+       ipython readthrdata.py
+       rm datatoanalyse.txt
+       ;;
+    *) echo -e "\nLayer not yet available"
+       doanalysisinflp ;;
+  esac
+}
+
 todooption(){
   read answerfirst
   case "$answerfirst" in
@@ -35,6 +54,15 @@ todooption(){
        echo -e "\n"
        analysismenu ;;
     2) analysismenu ;;
+    3) username=$(whoami)
+       if [ "$username"!="its" ]; then
+	echo -e "\nInsert you CERN username: \c"
+	read usercern
+	echo -e "... Connecting to lxplus and to flpits1"
+	ssh -o "ProxyCommand ssh $usercern@lxplus.cern.ch -q nc %h 22" its@flpits1.cern.ch "$(typeset -f doanalysisinflp); doanalysisinflp"
+       else
+	doanalysisinflp
+       fi; ;;
     *) echo -e "Invalid option \n"
        echo -e "Retype an option \c"
        todooption ;;
@@ -51,6 +79,7 @@ echo -e "\n==== What to do ====\n"
 echo -e "=> Chose an option: \n\n"
 echo -e "\t 1. Download and analyse data"
 echo -e "\t 2. Analyse data only"
+echo -e "\t 3. Analyse data on flp"
 echo -e "\n"
 echo -e "Enter option \c"
 todooption
