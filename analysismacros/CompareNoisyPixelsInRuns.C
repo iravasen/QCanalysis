@@ -226,13 +226,13 @@ std::array<long int,4> CompareTwoRuns(TH2 *href, TH2 *h2){
   //number of noisy pix in refrun_only and in common
   for(int ixbin=1; ixbin<=href->GetXaxis()->GetNbins(); ixbin++){
     for(int iybin=1; iybin<=href->GetYaxis()->GetNbins(); iybin++){
-      if(href->GetBinContent(ixbin, iybin)>0 && h2->GetBinContent(ixbin, iybin)>0){//noisy in both runs
+      if(href->GetBinContent(ixbin, iybin)>1 && h2->GetBinContent(ixbin, iybin)>1){//noisy in both runs
         noisypix[3]++;
       }
-      else if(href->GetBinContent(ixbin, iybin)>0 && h2->GetBinContent(ixbin, iybin)==0){//noisy only in ref run
+      else if(href->GetBinContent(ixbin, iybin)>1 && h2->GetBinContent(ixbin, iybin)==0){//noisy only in ref run
         noisypix[1]++;
       }
-      else if(href->GetBinContent(ixbin, iybin)==0 && h2->GetBinContent(ixbin, iybin)>0){//noisy only in second run
+      else if(href->GetBinContent(ixbin, iybin)==0 && h2->GetBinContent(ixbin, iybin)>1){//noisy only in second run
         noisypix[2]++;
       }
       else continue;
