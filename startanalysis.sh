@@ -4,9 +4,9 @@ todo(){
   read answer
   case "$answer" in
     1) echo -e "\n=> Starting fake-hit rate analysis run by run"
-       root -l -q AnalyzeStaveHitmaps.C+ ;;
+       root -l -b -q AnalyzeStaveHitmaps.C+ ;;
     2) echo -e "\n=> Starting comparison between runs"
-       root -l -q CompareNoisyPixelsInRuns.C+ ;;
+       root -l -b -q CompareNoisyPixelsInRuns.C+ ;;
     *) echo -e "Invalid option \n"
        echo -e "Retype an option \c"
        todo ;;
@@ -25,6 +25,29 @@ analysismenu(){
   cd ..
 }
 
+todoinflp(){
+  read answerflp
+  case "$answerflp" in
+    1) echo -e "\n=> Starting thresholds analysis run by run"
+       root -l -b -q AnalyzeThrScanAvgThr.C+ ;;
+    #2) echo -e "\n=> Starting comparison between runs"
+     #  root -l -q CompareNoisyPixelsInRuns.C+ ;;
+    *) echo -e "Invalid option \n"
+       echo -e "Retype an option \c"
+       todoinflp ;;
+  esac
+}
+
+analysismenuonflp(){
+  echo -e "\n=> Choose the analysis you want to perform \n"
+  echo "[Threshold scan analyses]"
+  echo -e "\t 1. Average stave thresholds run by run"
+  echo -e "\t 2. Compare dead pixels between runs"
+  echo -e "\n"
+  echo -e "Enter option \c"
+  todoinflp
+}
+
 doanalysisinflp(){
   echo -e "\n=> Which ITS Layer do you want to analyse [0,1,2,3,4,5,6]? \c"
   read layernum
@@ -33,11 +56,12 @@ doanalysisinflp(){
        echo -e "\n=> Starting analysis on flp"
        echo -e "Load QualityControl environment on flp"
        eval $(alienv load QualityControl/latest)
-       echo -e "\nPreparation of the sample (may take several minutes)"
+       echo -e "\n=> Preparation of the sample (may take several minutes)\n"
        cd analysismacros
        find /data/L0_shifts/ -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
-       python readthrdata.py
+       python readthrdata.py "IB" 0
        rm datatoanalyse.txt
+       analysismenuonflp
        ;;
     *) echo -e "\nLayer not yet available"
        doanalysisinflp ;;
@@ -55,11 +79,11 @@ todooption(){
        analysismenu ;;
     2) analysismenu ;;
     3) username=$(whoami)
-       if [ "$username"!="its" ]; then
+       if [ "$username"!="its" -a "$hostname"!="flpits1" ]; then
 	echo -e "\nInsert you CERN username: \c"
 	read usercern
 	echo -e "... Connecting to lxplus and to flpits1"
-	ssh -o "ProxyCommand ssh $usercern@lxplus.cern.ch -q nc %h 22" its@flpits1.cern.ch "$(typeset -f doanalysisinflp); doanalysisinflp"
+	ssh -o "ProxyCommand ssh $usercern@lxplus.cern.ch -q nc %h 22" its@flpits1.cern.ch "$(typeset -f); doanalysisinflp"
        else
 	doanalysisinflp
        fi; ;;
@@ -72,7 +96,7 @@ todooption(){
 # MAIN TASK
 
 echo "==== Loading environment modules ===="
-export ALIBUILD_WORK_DIR="/home/alidock/.sw"
+#export ALIBUILD_WORK_DIR="/home/alidock/.sw"
 eval $(alienv load QualityControl/latest 2> /dev/null)
 
 echo -e "\n==== What to do ====\n"

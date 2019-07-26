@@ -1,9 +1,11 @@
-Data/
-Plots/
-*.o
-
 *
 !*.*
 *.o
 !Makefile
-!analysismacros/
+Plots/
+Data/*.root
+Data/*.pdf
+!analysismacros
+*.so
+*.d
+*.pcm

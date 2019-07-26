@@ -43,24 +43,18 @@ CXXFLAGS     += -DUSENCURSES
 SYSLIBS       = -lmenu -lncurses
 endif
 
-HOMEDIR    = /home/alidock
-QCINC      = -I$(HOMEDIR)/.sw/slc7_x86-64/QualityControl/latest/include
-COMO2INC   = -I$(HOMEDIR)/.sw/slc7_x86-64/Common-O2/latest/include
-O2INC      = -I$(HOMEDIR)/.sw/slc7_x86-64/O2/latest/include
-BOOSTINC   = -I$(HOMEDIR)/.sw/slc7_x86-64/boost/latest/include
-DATEINC    = -I$(HOMEDIR)/Alice/QC/date-master/include/date
-#FAIRMQINC  = -I$(HOMEDIR)/sw/slc7_x86-64/FairMQ/latest/include -I$(HOMEDIR)/sw/slc7_x86-64/FairMQ/latest/include/fairmq
-#FAIRLOGINC = -I$(HOMEDIR)/sw/slc7_x86-64/FairLogger/latest/include
-#MSGSLINC   = -I$(HOMEDIR)/sw/slc7_x86-64/ms_gsl/latest/include
-#BOOSTINC   = -I$(HOMEDIR)/sw/slc7_x86-64/boost/latest/include
-#ARROWINC   = -I$(HOMEDIR)/sw/slc7_x86-64/arrow/latest/include
-#INFOLOGINC = -I$(HOMEDIR)/sw/slc7_x86-64/libInfoLogger/latest/include
+QCINC      = -I$(HOME)/.sw/slc7_x86-64/QualityControl/latest/include
+COMO2INC   = -I$(HOME)/.sw/slc7_x86-64/Common-O2/latest/include
+O2INC      = -I$(HOME)/.sw/slc7_x86-64/O2/latest/include
+BOOSTINC   = -I$(HOME)/.sw/slc7_x86-64/boost/latest/include
+DATEINC    = -I$(HOME)/Alice/QC/date-master/include/date
+
 ROOTINC    = -I$(ROOTSYS)/include
 #INCLUDES   = $(QCINC) $(COMO2INC) $(O2INC) $(FAIRMQINC) $(FAIRLOGINC) $(MSGSLINC) $(BOOSTINC) $(ARROWINC) $(INFOLOGINC) $(ROOTINC)
-INCLUDES   = $(BOOSTINC) $(QCINC) $(COMO2INC) $(O2INC) $(ROOTINC) $(DATEINC)
+INCLUDES   =  $(BOOSTINC) $(QCINC) $(COMO2INC) $(O2INC) $(ROOTINC) $(DATEINC)
 CXXFLAGS   += $(ROOTCFLAGS) $(INCLUDES)
-QCLIBS     = -L$(HOMEDIR)/.sw/slc7_x86-64/QualityControl/latest/lib -lQualityControl
-O2LIBS     = -L$(HOMEDIR)/.sw/slc7_x86-64/O2/latest/lib -lO2CCDB
+QCLIBS     = -L$(HOME)/.sw/slc7_x86-64/QualityControl/latest/lib -lQualityControl
+O2LIBS     = -L$(HOME)/.sw/slc7_x86-64/O2/latest/lib -lO2CCDB
 LIBS       = $(QCLIBS) $(O2LIBS) $(ROOTLIBS) $(SYSLIBS)
 
 #------------------------------------------------------------------------------
