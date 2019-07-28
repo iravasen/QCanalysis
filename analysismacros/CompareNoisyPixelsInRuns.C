@@ -155,14 +155,14 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
     ge_nref->SetPointError(ipoint, 0.5, (double)noisypix[icomp][1]/2.);
     ge_ncom1->SetPoint(ipoint, ipoint*xshift, 0.);
     ge_ncom1->SetPointError(ipoint, 0.5, (double)noisypix[icomp][3]/2.);
-    if((double)noisypix[icomp][3]/2.+(double)noisypix[icomp][1] > max) max = (double)noisypix[icomp][3]/2.+(double)noisypix[icomp][1];
+    if((double)noisypix[icomp][3]/2.+(double)noisypix[icomp][1]/2. > max) max = (double)noisypix[icomp][3]/2.+(double)noisypix[icomp][1]/2.;
 
     //second couple of bar on the right
     ge_n2->SetPoint(ipoint, ipoint*xshift+1, -(double)noisypix[icomp][3]/2.-(double)noisypix[icomp][2]/2.);
     ge_n2->SetPointError(ipoint, 0.5, (double)noisypix[icomp][2]/2.);
     ge_ncom2->SetPoint(ipoint, ipoint*xshift+1, 0.);
     ge_ncom2->SetPointError(ipoint, 0.5, (double)noisypix[icomp][3]/2.);
-    if(-(double)noisypix[icomp][3]/2.-(double)noisypix[icomp][2] < min) min = -(double)noisypix[icomp][3]/2.-(double)noisypix[icomp][2];
+    if(-(double)noisypix[icomp][3]/2.-(double)noisypix[icomp][2]/2. < min) min = -(double)noisypix[icomp][3]/2.-(double)noisypix[icomp][2]/2.;
   }
 
   //Style
@@ -182,12 +182,12 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
   TH1F *hfake = new TH1F("hfake","hfake", (int)x2+6, -3, x2+3);
   hfake->Draw();
   //canvas->SetLogy();
-  hfake->SetTitle(Form("%s%ld compared to all",filepath.find("run")==string::npos? "":"run",refrun));
+  hfake->SetTitle(Form("%s%06ld compared to all",filepath.find("run")==string::npos? "":"run",refrun));
   ge_nref->Draw("P E2 same");
   ge_ncom1->Draw("E2 same");
   ge_ncom2->Draw("E2 same");
   ge_n2->Draw("E2 same");
-  hfake->GetYaxis()->SetRangeUser(min-0.05*min, max+0.05*max);
+  hfake->GetYaxis()->SetRangeUser(min+0.1*min, max+0.1*max);
   hfake->GetYaxis()->SetLabelColor(kWhite);
   hfake->GetYaxis()->SetTickLength(0.005);
   TLine *lineref = new TLine(-0.5, 0, x2+0.5, 0);
@@ -246,7 +246,8 @@ std::array<long int,4> CompareTwoRuns(TH2 *href, TH2 *h2){
 // Style
 //
 void SetStyle(TGraphErrors *ge, Color_t col){
-  ge->SetMarkerStyle(1);
+  ge->SetMarkerStyle(0);
+  ge->SetMarkerColor(col);
   ge->SetFillColor(col);
   ge->SetLineColor(col);
 }

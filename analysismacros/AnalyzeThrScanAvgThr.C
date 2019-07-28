@@ -69,7 +69,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum){
   //std::vector<TH2S*> hmaps;
   //std::vector<string> timestamps, runnumbers;
   int nTimes=0;
-  Int_t col[] = {TColor::GetColor("#ff3300"), TColor::GetColor("#ec6e0a"), TColor::GetColor("#daaa14"), TColor::GetColor("#c7e51e"), TColor::GetColor("#85dd69"), TColor::GetColor("#42d6b4"), TColor::GetColor("#00ceff"), TColor::GetColor("#009adf"), TColor::GetColor("#0067c0")};
+  Int_t col[] = {TColor::GetColor("#ff3300"), TColor::GetColor("#ec6e0a"), TColor::GetColor("#daaa14"), TColor::GetColor("#c7e51e"), TColor::GetColor("#85dd69"), TColor::GetColor("#42d6b4"), TColor::GetColor("#00ceff"), TColor::GetColor("#009adf"), TColor::GetColor("#0067c0"), TColor::GetColor("#0033a1")};
 
   //Read the tree containing the average thresholds for each chip
   TFile *infl = new TFile(filepath.c_str());
