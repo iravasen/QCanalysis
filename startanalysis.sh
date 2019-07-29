@@ -1,12 +1,20 @@
 #!/bin/bash
 
+remove(){
+  rm *.d
+  rm *.pcm
+  rm *.so
+}
+
 todo(){
   read answer
   case "$answer" in
     1) echo -e "\n=> Starting fake-hit rate analysis run by run"
-       root -l -b -q AnalyzeStaveHitmaps.C+ ;;
+       root -l -b -q AnalyzeStaveHitmaps.C++ 
+       remove ;;
     2) echo -e "\n=> Starting comparison between runs"
-       root -l -b -q CompareNoisyPixelsInRuns.C+ ;;
+       root -l -b -q CompareNoisyPixelsInRuns.C++
+       remove ;;
     *) echo -e "Invalid option \n"
        echo -e "Retype an option \c"
        todo ;;
@@ -29,9 +37,11 @@ todoinflp(){
   read answerflp
   case "$answerflp" in
     1) echo -e "\n=> Starting thresholds analysis run by run"
-       root -l -b -q AnalyzeThrScanAvgThr.C+ ;;
+       root -l -b -q AnalyzeThrScanAvgThr.C++
+       remove ;;
     2) echo -e "\n=> Starting dead pixel comparison between runs"
-       root -l -b -q CompareDeadPixelsInRuns.C+ ;;
+       root -l -b -q CompareDeadPixelsInRuns.C++
+       remove ;;
     *) echo -e "Invalid option \n"
        echo -e "Retype an option \c"
        todoinflp ;;

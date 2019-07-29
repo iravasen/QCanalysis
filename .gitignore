@@ -6,6 +6,3 @@ Plots/
 Data/*.root
 Data/*.pdf
 !analysismacros
-*.so
-*.d
-*.pcm
