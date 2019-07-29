@@ -73,6 +73,35 @@ doanalysisinflp(){
        rm datatoanalyse.txt
        analysismenuonflp
        ;;
+    1) cd /home/its/QCNew/QCanalysis
+       echo -e "\n=> Starting analysis on flp"
+       echo -e "Load QualityControl environment on flp"
+       eval $(alienv load QualityControl/latest)
+       echo -e "\n=> Preparation of the sample (may take several minutes)\n"
+       cd analysismacros
+       echo -e "In which folder the data are saved? \c"
+       read foldername
+       find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+       python readthrdata.py "IB" 1
+       rm datatoanalyse.txt
+       analysismenuonflp
+       ;;
+     
+     2) cd /home/its/QCNew/QCanalysis
+       echo -e "\n=> Starting analysis on flp"
+       echo -e "Load QualityControl environment on flp"
+       eval $(alienv load QualityControl/latest)
+       echo -e "\n=> Preparation of the sample (may take several minutes)\n"
+       cd analysismacros
+       echo -e "In which folder the data are saved? \c"
+       read foldername
+       find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+       python readthrdata.py "IB" 2
+       rm datatoanalyse.txt
+       analysismenuonflp
+       ;;
+
+
     *) echo -e "\nLayer not yet available"
        doanalysisinflp ;;
   esac
