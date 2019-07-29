@@ -79,7 +79,8 @@ todooption(){
        analysismenu ;;
     2) analysismenu ;;
     3) username=$(whoami)
-       if [ "$username"!="its" -a "$hostname"!="flpits1" ]; then
+       hname=$(hostname)
+       if [ $username != "its" ] && [ $hname != "flpits1" ]; then
 	echo -e "\nInsert you CERN username: \c"
 	read usercern
 	echo -e "... Connecting to lxplus and to flpits1"
