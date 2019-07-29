@@ -155,7 +155,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
     deadpixinfo.push_back(CompareTwoRuns(deadpixperrun[posrefrun], deadpixperrun[irun]));
     deadpixinfo[deadpixinfo.size()-1][0] = allruns[irun];//save timestamp on run2 (the ref one is known)
     runlabel.push_back(allruns[irun]);
-    cout<<allruns[irun]<<endl;
+    //cout<<allruns[irun]<<endl;
     //cout<<deadpixinfo[deadpixinfo.size()-1][0]<<"  "<<deadpixinfo[deadpixinfo.size()-1][1]<<"  "<<deadpixinfo[deadpixinfo.size()-1][2]<<"  "<<deadpixinfo[deadpixinfo.size()-1][3]<<endl;
   }
 
