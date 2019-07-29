@@ -19,6 +19,7 @@ Then, you need to have permissions to execute the script *startanalysis.sh*. To 
 ```bash
 chmod +x startanalysis.sh
 ```
+Inside the folder there is also a MakeFile needed to compile getObject.cxx. As a **temporary solution**, you need to edit the lines 46,47,48,49,55,56 where you see a path to the "sw/" folder. Edit them by writing the correct path of the sw folder on your computer. 
 
 ## Start the analysis
 To start the download (optional) and analysis of the data you simply need to run the script *startanalysis.sh*:
@@ -31,20 +32,21 @@ Then you need to follow the instructions that appear on the terminal window. The
 When starting the script, it will load automatically the QualityControl modules. After this, a first menu will appear on the terminal allowing the choice of the following options:
 1. Download and analyse data
 2. Analyse data only
+3. Analyse data on flp (for threshold scan)
 
-You just need to enter the option number (1 or 2). Any other character that will be inserted will be recognized as invalid and the option will have to be retyped. 
+You just need to enter the option number (1, 2 or 3). Any other character that will be inserted will be recognized as invalid and the option will have to be retyped. In general, at present, options 1 and 2 are meant to analyse data coming from fake-hit rate scans while option 3 is for threshold scan runs. 
 #### Option 1 - Download and analyse data
-In case option 1 from the menu above is chosen, the script compiles automatically the code for database access. First, a list of all the available *tasks* in the database is shown (the database is accessible also from [here](http://ccdb-test.cern.ch:8080/browse/)). You need to type a *task name* choosing among the one proposed (type *quit* to exit). The tasks used during shifts are **ITSRAWDS** and **ITSQCTrhesholdTask**. They might be the ones you want to type. 
-After this, a list of all the *objects* inside the chosen task is shown. You need to copy a single *object name* from where to download the data (type *quit* to exit). Have a look to the end of this paragraph to know which are the correct object names depending on the analysis you want to perform. 
+In case option 1 from the menu above is chosen, the script compiles automatically the code for database access (getObject.cxx) provided that the MakeFile has been properly edited. First, a list of all the available *tasks* in the database is shown (the database is accessible also from [here](http://ccdb-test.cern.ch:8080/browse/)). You need to type a *task name* choosing among the one proposed (type *quit* to exit). The tasks used during shifts are **ITSRAWDS** and **ITSQCTrhesholdTask**. They might be the ones you want to type. 
+After this, a list of all the *objects* inside the chosen task is shown. You need to copy a single *object name* from where to download the data (type *quit* to exit). Have a look to the end of this paragraph to know which are the correct object names to select depending on the analysis you want to perform. 
 
 After selecting an object, a menu with the following options will appear:
 1. Enter run numbers
 2. Enter timestamps
 
-You need to choose one of the options by typing the corresponding number (any other character inserted will be recognized as invalid and the correct option will have to be retyped).
-If **option 1** is chosen, you need to type an interval of runs from which to download data (i.e. if the interval is run100 - run200, all the data related to runs having a number between 100 and 200 will be downloaded. **Note the run number is available in the database from July 3rd, 2019 only!**. For older data you will need to choose option 2.  
+You need to choose one of the options by typing the corresponding number (any other character will be recognized as invalid and the correct option will have to be retyped).
+If **option 1** is chosen, you will need to type an interval of runs from which to download data (i.e. if the interval is 100 - 200, all the data related to runs having a number between 100 and 200 will be downloaded). **Note that the run number is available in the database from July 3rd, 2019 only!**. For older data you will need to choose option 2.  
 Instead, if **option 2** is chosen, you will need to type a time interval from which to download data: the time interval will include a date (DD MM YY) and a time in H24 format (HH MM SS). 
-The final result will be a *.root* saved in the directory *Data/* containing the histrograms of each run or timestamp. This is the file to use for the analysis of the data. 
+The final result will be a *.root* saved in the directory *Data/* containing the histrograms of each run or timestamp. This is the file to use for the analysis of the data (next step). 
 After the downloading of the data, a menu with the **available analyses** is shown (**!IMPORTANT! Other analyses will be added soon**):
 1. Fake-hit rate run by run
 2. Compare noisy pixels between runs
@@ -54,6 +56,17 @@ If **option 2** is chosen, the software will compare the number of noisy pixels 
 
 #### Option 2 - Analyse data only
 For this option you will need to have already a file containing a set of histograms to analyse. If this is the case, choosing this option, you will access directly the analysis menu. Choose a single analysis as explained in the paragraph above
+
+#### Option 3 - Analyse data on flp (for threshold scan) 
+This option allows you to analyse data directly on its-flp1 skipping the download from the database. This option can be chosen both if you are working on your compure and on flp1 directly. In the first case, the script recognise automatically that you are not on flp1 and it will ask you to type your CERN username. This is used to make a connection via ssh to flpits1 (and lxplus). You just need to insert first your CERN account password and then the one of the "its" account on flpits1. 
+Then, the script asks to type the layer number.
+Later, the QualityControl environment is loaded on flp1 and the script asks to type a run interval in order to prepare the sample to analyse. If you type starting run = 100 and final run = 200, all the threshold scan runs between 100 and 200 will be included in the analysis. Then you need to type also the number of the first stave in the layer (for example "6" if you are analysing the layer 0 currently under commissioning -> stave numbered from 6 to 11). Then wait few minutes for the preparation of the setup.
+Then, an analysis menu is presented with the following options:
+1. Average stave thresholds run by run
+2. Compare dead pixels between runs
+If **option 1** is chosen, the software will show you the average threshold (stave by stave on the layer) as a function of the run number. The ROOT macro is run automatically and a list of (good) files for the analysis is shown. Copy and paste the file name in the input line that will appear. The plot is automatically saved in *pdf* and *root* format in the repository *Plots/*. 
+If **option 2** is chosen, the software will compare the number of dead pixels (i.e. having null threshold) run by run. The ROOT macro is run automatically and a list of (good) files for the analysis is shown. Copy and paste the file name in the input line that will appear. Then, a reference run number (**choose a run among the ones in the input file!**) has to be typed. All the runs in the input file will be compared with the chosen reference run. The plot is automatically saved in *pdf* and *root* format in the repository *Plots/*. 
+
 
 ## Contacts
 For any issue, please contact <ivan.ravasenga@cern.ch>.
