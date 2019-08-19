@@ -62,7 +62,7 @@ doanalysisinflp(){
   echo -e "\n=> Which ITS Layer do you want to analyse [0,1,2,3,4,5,6]? \c"
   read layernum
   case "$layernum" in
-    0) cd /home/its/QCNew/QCanalysis
+    0) cd $1
        echo -e "\n=> Starting analysis on flp"
        echo -e "Load QualityControl environment on flp"
        eval $(alienv load QualityControl/latest)
@@ -73,7 +73,7 @@ doanalysisinflp(){
        rm datatoanalyse.txt
        analysismenuonflp
        ;;
-    1) cd /home/its/QCNew/QCanalysis
+    1) cd $1
        echo -e "\n=> Starting analysis on flp"
        echo -e "Load QualityControl environment on flp"
        eval $(alienv load QualityControl/latest)
@@ -87,7 +87,7 @@ doanalysisinflp(){
        analysismenuonflp
        ;;
      
-     2) cd /home/its/QCNew/QCanalysis
+     2) cd $1
        echo -e "\n=> Starting analysis on flp"
        echo -e "Load QualityControl environment on flp"
        eval $(alienv load QualityControl/latest)
@@ -107,6 +107,25 @@ doanalysisinflp(){
   esac
 }
 
+chooseflp(){
+  echo -e "\nIn which flp your data are [type the number only]? \c"
+  read flpnum
+  case "$flpnum" in
+    1) path="/home/its/QCNew/QCanalysis" ;;
+    7) path="/home/its/QC/QCanalysis" ;;
+    *) echo "Invalid number (for the moment)"
+       chooseflp ;;
+   esac
+}
+
+
+connect(){
+  echo -e "\nInsert you CERN username: \c"
+  read usercern
+  echo -e "... Connecting to lxplus and to $1"
+  ssh -o "ProxyCommand ssh $usercern@lxplus.cern.ch -q nc %h 22" its@$1.cern.ch "$(typeset -f); doanalysisinflp $path"
+}
+
 todooption(){
   read answerfirst
   case "$answerfirst" in
@@ -119,14 +138,20 @@ todooption(){
     2) analysismenu ;;
     3) username=$(whoami)
        hname=$(hostname)
-       if [ $username != "its" ] && [ $hname != "flpits1" ]; then
-	echo -e "\nInsert you CERN username: \c"
-	read usercern
-	echo -e "... Connecting to lxplus and to flpits1"
-	ssh -o "ProxyCommand ssh $usercern@lxplus.cern.ch -q nc %h 22" its@flpits1.cern.ch "$(typeset -f); doanalysisinflp"
+       chooseflp
+       if [ $hname == "flpits$flpnum" ]; then
+	doanalysisinflp $path
        else
-	doanalysisinflp
+	connect "flpits$flpnum"
        fi; ;;
+
+       #if [ $username != "its" ] && [ $hname != "flpits1" ] && [ $hname != "flpits7" ]; then
+	#echo -e "\nTo which flp you want to connect [type the number only]? \c"
+	#read flpnum
+	#connect "flpits$flpnum"
+       #else
+	#doanalysisinflp
+       #fi; ;;
     *) echo -e "Invalid option \n"
        echo -e "Retype an option \c"
        todooption ;;
