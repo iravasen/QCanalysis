@@ -108,7 +108,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum, int 
       double ntrigger = std::stol(timestamps[itime])>1560426360000 ? 300.*50000. : 600.*50000.; //after 13 June 2019 13.46, the trigger is 50kHz for 5 min, before was 50kHz for 10 min
       //cout<<ntrigger<<endl;
       double noiseocc = (double)(hproj->GetEntries()) / (double)(512.*1024.*ntrigger);
-      //cout<<"entries: "<<(double)(hproj->GetEntries())<<"  noise occ: "<<noiseocc<<endl;
+      //cout<<"entries: "<<(double)(hproj->GetEntries())<<"  noise occ: "<<noiseocc<<"(integral: )"<<hproj->Integral()<<endl;
       if(!itime) hnoiseocc[ichip] = new TH1F(Form("hnoiseocc_chip%d",ichip), Form("hnoiseocc_chip%d; %s; Fake Hit Rate (/pixel/event)",ichip,histname.find("run")==string::npos? "Time (timestamp)":"Run"), nTimes, 0.5, (double)nTimes+0.5);
       hnoiseocc[ichip]->SetBinContent(nTimes-itime, noiseocc);
       double errrel_num = TMath::Sqrt(hproj->GetEntries()) / hproj->GetEntries();//poissonian error
