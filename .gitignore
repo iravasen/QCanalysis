@@ -3,6 +3,5 @@
 *.o
 !Makefile
 Plots/
-Data/*.root
-Data/*.pdf
 !analysismacros
+!Data/
