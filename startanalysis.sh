@@ -59,6 +59,7 @@ analysismenuonflp(){
 }
 
 updategitrepo(){
+  echo -e "\n=> Updating the git repository (your modification will be kept!)"
   git stash #in case there is something modified by the user
   git pull --rebase
   git stash pop #apply last modifications from the user
