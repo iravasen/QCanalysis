@@ -1,7 +1,8 @@
-*
+/*
 !*.*
 *.o
 !Makefile
 Plots/
 !analysismacros
 !Data/
+!Data/*
