@@ -58,11 +58,18 @@ analysismenuonflp(){
   todoinflp
 }
 
+updategitrepo(){
+  git stash #in case there is something modified by the user
+  git pull --rebase
+  git stash pop #apply last modifications from the user
+}
+
 doanalysisinflp(){
   echo -e "\n=> Which ITS Layer do you want to analyse [0,1,2,3,4,5,6]? \c"
   read layernum
   case "$layernum" in
     0) cd $1
+       updategitrepo
        echo -e "\n=> Starting analysis on flp"
        echo -e "Load QualityControl environment on flp"
        eval $(alienv load QualityControl/latest)
@@ -74,6 +81,7 @@ doanalysisinflp(){
        analysismenuonflp
        ;;
     1) cd $1
+       updategitrepo
        echo -e "\n=> Starting analysis on flp"
        echo -e "Load QualityControl environment on flp"
        eval $(alienv load QualityControl/latest)
@@ -88,6 +96,7 @@ doanalysisinflp(){
        ;;
      
      2) cd $1
+       updategitrepo
        echo -e "\n=> Starting analysis on flp"
        echo -e "Load QualityControl environment on flp"
        eval $(alienv load QualityControl/latest)
