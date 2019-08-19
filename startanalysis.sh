@@ -169,8 +169,10 @@ todooption(){
 }
 
 # MAIN TASK
+echo "==== Updating git repository (your modification are kept!) ===="
+updategitrepo
 
-echo "==== Loading environment modules ===="
+echo "\n==== Loading environment modules ===="
 #export ALIBUILD_WORK_DIR="/home/alidock/.sw"
 eval $(alienv load QualityControl/latest 2> /dev/null)
 
