@@ -2,24 +2,28 @@
 In the following some instructions about how to use the scripts are presented. 
 
 ## Purpose of this repository
-The purpose of the code developed in this repository is to analyse data coming from the commissioning runs on the available ITS layers. The data are downloaded from the CCDB database or read directly from the compurer on which data are saved after each run. 
+The purpose of the code developed in this repository is to analyse data coming from the commissioning runs on the available ITS layers. The data are downloaded from the CCDB database or read directly from the computer (FLP) on which data are saved after each run. 
 
 ## Prepare the environment
-In order to be able to run the scripts you will need to build the QualityControl and O2 software. To this aim, you can follow the instruction provided [here](https://github.com/MYOMAO/QualityControl/blob/master/README.md#installing-qc-with-alibuild) for the QC software (installation based on aliBuild). The script *startanalysis.sh* will load the QualityControl environment with:
+In order to be able to run the scripts you will need to build the QualityControl (origin/master) and O2 (origin/dev) software. Be sure to **build the mentioned versions**. The installation is based on *aliBuild*. For installing aliBuild, see the pre-requisites [here](https://alice-doc.github.io/alice-analysis-tutorial/building/custom.html#prerequisites) and follow [these](https://alice-doc.github.io/alice-analysis-tutorial/building/custom.html#get-or-upgrade-alibuild) instructions for the installation. Then, you need to build the packages. To do so you can follow the standard guide [here](https://alice-doc.github.io/alice-analysis-tutorial/building/build.html#%F0%9F%9B%A0-build-the-packages). The main things to consider are:
+1. [Preparation](https://alice-doc.github.io/alice-analysis-tutorial/building/build.html#prepare-your-source-code) of the souce code. Consider the command for O2. For QualityControl you will need to run the command: 
+```bash
+aliBuild init QualityControl@master --defaults o2
+```
+2. Check the [pre-requisites](https://alice-doc.github.io/alice-analysis-tutorial/building/build.html#check-your-prerequisites-skip-if-using-alidock) with aliDoctor following the command for O2. 
+3. [Build] the O2 software following the specific command line for O2. For QualityControl software use the following command:
+```bash
+aliBuild build QualityControl --defaults o2
+```
+The script *startanalysis.sh* will load the QualityControl environment with:
 ```bash
 alienv load QualityControl/latest
 ```
-**Be sure that this command works on your machine**. If it works only in the installation directory you might want to add the following lines to your *.bashrc*:
-```bash
-export ALIBUILD_WORK_DIR="$HOME/alice/sw"
-eval "`alienv shell-helper`"
-```
-If this is not the case you will have to copy the folder QCanalysis in the folder where the *alienv* command works. 
-Then, you need to have permissions to execute the script *startanalysis.sh*. To do so, just do on your terminal (in the folder where the script is):
+**Be sure that this command works on your machine**. Then, you need to have permissions to execute the script *startanalysis.sh*. To do so, just do on your terminal (in the folder where the script is):
 ```bash
 chmod +x startanalysis.sh
 ```
-Inside the folder there is also a MakeFile needed to compile getObject.cxx. As a **temporary solution**, you need to edit the lines 46,47,48,49,55,56 where you see a path to the "sw/" folder. Edit them by writing the correct path of the sw folder on your computer. 
+Inside the folder there is also a MakeFile needed to compile *getObject.cxx*. As a **temporary solution**, you need to edit the lines 46,47,48,49,55,56 where you see a path to the "sw/" folder. Edit them by writing the correct path of the sw folder on your computer. 
 
 ## Start the analysis
 To start the download (optional) and analysis of the data you simply need to run the script *startanalysis.sh*:
@@ -27,6 +31,9 @@ To start the download (optional) and analysis of the data you simply need to run
 ./startanalysis.sh
 ```
 Then you need to follow the instructions that appear on the terminal window. The workflow is described in the following. **Remember that you can exit the program with Ctrl+c at any moment**. 
+
+### Software update
+Everytime you run the script *startanalysis.sh*, a pull of this repository is done automatically. In case you performed local modifications (as for the Makefile), they will be kept (stash).
 
 ### Choose what to do (main menu)
 When starting the script, it will load automatically the QualityControl modules. After this, a first menu will appear on the terminal allowing the choice of the following options:
@@ -58,15 +65,14 @@ If **option 2** is chosen, the software will compare the number of noisy pixels 
 For this option you will need to have already a file containing a set of histograms to analyse. If this is the case, choosing this option, you will access directly the analysis menu. Choose a single analysis as explained in the paragraph above
 
 #### Option 3 - Analyse data on flp (for threshold scan) 
-This option allows you to analyse data directly on its-flp1 skipping the download from the database. This option can be chosen both if you are working on your compure and on flp1 directly. In the first case, the script recognise automatically that you are not on flp1 and it will ask you to type your CERN username. This is used to make a connection via ssh to flpits1 (and lxplus). You just need to insert first your CERN account password and then the one of the "its" account on flpits1. 
+This option allows you to analyse data directly on FLP skipping the download from the database. This option can be chosen both if you are working on your compure and on FLP directly. The first thing is to choose on which FLP the data you want to analyse are. Type only the number of the FLP. Depending on your choice, if you are not working already on the selected FLP, the script will ask you to type your CERN username. This is used to make a connection via ssh to the selected flp (and lxplus). You just need to insert first your CERN account password and then the one of the "its" account on the selected flp. 
 Then, the script asks to type the layer number.
-Later, the QualityControl environment is loaded on flp1 and the script asks to type a run interval in order to prepare the sample to analyse. If you type starting run = 100 and final run = 200, all the threshold scan runs between 100 and 200 will be included in the analysis. Then you need to type also the number of the first stave in the layer (for example "6" if you are analysing the layer 0 currently under commissioning -> stave numbered from 6 to 11). Then wait few minutes for the preparation of the setup.
+Later, the QualityControl environment is loaded on the flp and the script asks to type the path in which data are saved (tipycally: /data/shifts/ or /data/L0_shifts/). When the path is selected, the script asks you to type a run interval in order to prepare the sample for the analysis. If you type starting run = 100 and final run = 200, all the threshold scan runs between 100 and 200 will be included in the analysis. Then you need to type also the number of the first stave in the layer (for example "6" if you are analysing the layer 0 currently under commissioning -> stave numbered from 6 to 11). Then wait few minutes for the preparation of the setup.
 Then, an analysis menu is presented with the following options:
 1. Average stave thresholds run by run
 2. Compare dead pixels between runs
-If **option 1** is chosen, the software will show you the average threshold (stave by stave on the layer) as a function of the run number. The ROOT macro is run automatically and a list of (good) files for the analysis is shown. Copy and paste the file name in the input line that will appear. The plot is automatically saved in *pdf* and *root* format in the repository *Plots/*. 
-If **option 2** is chosen, the software will compare the number of dead pixels (i.e. having null threshold) run by run. The ROOT macro is run automatically and a list of (good) files for the analysis is shown. Copy and paste the file name in the input line that will appear. Then, a reference run number (**choose a run among the ones in the input file!**) has to be typed. All the runs in the input file will be compared with the chosen reference run. The plot is automatically saved in *pdf* and *root* format in the repository *Plots/*. 
-
+If **option 1** is chosen, the software will show you the average threshold (stave by stave on the layer) as a function of the run number. The ROOT macro is run automatically and a list of (good) files for the analysis is shown. Copy and paste the file name in the input line that will appear. The plot is automatically saved in *pdf* and *root* format in the repository *Plots/* **of the flp selected**. 
+If **option 2** is chosen, the software will compare the number of dead pixels (i.e. having null threshold) run by run. The ROOT macro is run automatically and a list of (good) files for the analysis is shown. Copy and paste the file name in the input line that will appear. Then, a reference run number (**choose a run among the ones in the input file!**) has to be typed. All the runs in the input file will be compared with the chosen reference run. The plot is automatically saved in *pdf* and *root* format in the repository *Plots/* **of the flp selected**. 
 
 ## Contacts
 For any issue, please contact <ivan.ravasenga@cern.ch>.
