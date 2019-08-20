@@ -11,7 +11,7 @@ In order to be able to run the scripts you will need to build the QualityControl
 aliBuild init QualityControl@master --defaults o2
 ```
 2. Check the [pre-requisites](https://alice-doc.github.io/alice-analysis-tutorial/building/build.html#check-your-prerequisites-skip-if-using-alidock) with aliDoctor following the command for O2. 
-3. [Build] the O2 software following the specific command line for O2. For QualityControl software use the following command:
+3. [Build](https://alice-doc.github.io/alice-analysis-tutorial/building/build.html#build-and-rebuild) the O2 software following the specific command line for O2. For QualityControl software use the following command:
 ```bash
 aliBuild build QualityControl --defaults o2
 ```
