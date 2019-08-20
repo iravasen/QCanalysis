@@ -76,7 +76,9 @@ doanalysisinflp(){
        eval $(alienv load QualityControl/latest)
        echo -e "\n=> Preparation of the sample (may take several minutes)\n"
        cd analysismacros
-       find /data/L0_shifts/ -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+       echo -e "In which folder the data are saved? \c"
+       read foldername
+       find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
        python readthrdata.py "IB" 0
        rm datatoanalyse.txt
        analysismenuonflp
@@ -172,7 +174,7 @@ todooption(){
 echo "==== Updating git repository (your modification are kept!) ===="
 updategitrepo
 
-echo "\n==== Loading environment modules ===="
+echo -e "\n==== Loading environment modules ===="
 #export ALIBUILD_WORK_DIR="/home/alidock/.sw"
 eval $(alienv load QualityControl/latest 2> /dev/null)
 
