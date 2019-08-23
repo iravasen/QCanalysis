@@ -50,7 +50,7 @@ void CompareNoisyPixelsInRuns(){
   TIter next(list);
   TKey *key;
   TObject *obj;
-  TH2S *h2;
+  TH2 *h2;
   while((key = ((TKey*)next()))){
     obj = key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
@@ -59,7 +59,7 @@ void CompareNoisyPixelsInRuns(){
        ) {
             cout<<"<W> Object "<<obj->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;
        }
-    h2 = (TH2S*)obj->Clone(obj->GetName());
+    h2 = (TH2*)obj->Clone(obj->GetName());
     if(!h2->GetEntries()) continue;
     string objname = (string)obj->GetName();
     string timestamp = objname.find("run")==string::npos ? objname.substr(objname.find("_")+1, 13) : objname.substr(objname.find("_",3)+1, 13);
@@ -82,7 +82,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
 
   gStyle->SetOptStat(0000);
 
-  std::vector<TH2S*> hmaps;
+  std::vector<TH2*> hmaps;
   std::vector<string> timestamps, runnumbers;
   std::vector<array<long int,4>> noisypix;
   int posrefrun=0;
@@ -94,7 +94,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
   TIter next(list);
   TKey *key;
   TObject *obj;
-  TH2S *h2;
+  TH2 *h2;
   while((key = ((TKey*)next()))){
     obj = key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
@@ -103,7 +103,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
        ) {
             cout<<"<W> Object "<<obj->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;
        }
-    h2 = (TH2S*)obj->Clone(obj->GetName());
+    h2 = (TH2*)obj->Clone(obj->GetName());
     if(!h2->GetEntries()) continue;
     cout<<"... Reading "<<obj->GetName()<<endl;
     hmaps.push_back(h2);

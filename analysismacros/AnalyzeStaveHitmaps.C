@@ -65,7 +65,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum, int 
 
   gStyle->SetOptStat(0000);
 
-  std::vector<TH2S*> hmaps;
+  std::vector<TH2*> hmaps;
   std::vector<string> timestamps, runnumbers;
   int nTimes=0;
   Int_t col[] = {TColor::GetColor("#ff3300"), TColor::GetColor("#ec6e0a"), TColor::GetColor("#daaa14"), TColor::GetColor("#c7e51e"), TColor::GetColor("#85dd69"), TColor::GetColor("#42d6b4"), TColor::GetColor("#00ceff"), TColor::GetColor("#009adf"), TColor::GetColor("#0067c0")};
@@ -77,7 +77,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum, int 
   TIter next(list);
   TKey *key;
   TObject *obj;
-  TH2S *h2;
+  TH2 *h2;
   while((key = ((TKey*)next()))){
     obj = key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
@@ -86,7 +86,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum, int 
        ) {
             cout<<"<W> Object "<<obj->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;
        }
-    h2 = (TH2S*)obj->Clone(obj->GetName());
+    h2 = (TH2*)obj->Clone(obj->GetName());
     if(!h2->GetEntries()) continue;
     cout<<"... Reading "<<obj->GetName()<<endl;
     hmaps.push_back(h2);
