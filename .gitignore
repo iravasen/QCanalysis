@@ -6,3 +6,6 @@
 Plots/
 !analysismacros
 Data/
+analysismacros/*.d
+analysismacros/*.so
+analysismacros/*.pcm

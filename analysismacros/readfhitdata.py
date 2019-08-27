@@ -15,7 +15,7 @@ def readdata(inputfile):
     return data
 
 def insertrun(word):
-    rn = input('Type the {} run number of a threshold scan: '.format(word))
+    rn = input('Type the {} run number of a fake-hit rate scan: '.format(word))
     return rn
 
 def askruns():

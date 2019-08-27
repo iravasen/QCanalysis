@@ -189,7 +189,7 @@ echo -e "\n==== What to do ====\n"
 echo -e "=> Chose an option: \n\n"
 echo -e "\t 1. Download and analyse data"
 echo -e "\t 2. Analyse data only"
-echo -e "\t 3. Analyse data on flp (for threshold scan)"
+echo -e "\t 3. Analyse data on flp"
 echo -e "\n"
 echo -e "Enter option \c"
 todooption

@@ -13,6 +13,7 @@
 #include <TMath.h>
 #include <TSystem.h>
 #include <TGraphErrors.h>
+#include <TTree.h>
 
 using namespace std;
 
@@ -65,11 +66,10 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum){
 
   gStyle->SetOptStat(0000);
 
-  std::vector<TH2*> hmaps;
-  std::vector<string> timestamps, runnumbers;
-  int nTimes=0;
-  Int_t col[] = {TColor::GetColor("#ff3300"), TColor::GetColor("#ec6e0a"), TColor::GetColor("#daaa14"), TColor::GetColor("#c7e51e"), TColor::GetColor("#85dd69"), TColor::GetColor("#42d6b4"), TColor::GetColor("#00ceff"), TColor::GetColor("#009adf"), TColor::GetColor("#0067c0")};
+  Int_t color[] = {TColor::GetColor("#ff3300"), TColor::GetColor("#ec6e0a"), TColor::GetColor("#daaa14"), TColor::GetColor("#c7e51e"), TColor::GetColor("#85dd69"), TColor::GetColor("#42d6b4"), TColor::GetColor("#00ceff"), TColor::GetColor("#009adf"), TColor::GetColor("#0067c0")};
 
+  //Read the tree containing the average thresholds for each chip
+  TFile *infl = new TFile(filepath.c_str());
   TTree *tr = (TTree*)infl->Get("fhitscan");
   int run, stave, chip;
   int hits;
@@ -88,9 +88,9 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum){
     default:
       break;
   }
-  TGraph *gr_stave[numofstaves];
+  TGraphErrors *gr_stave[numofstaves];
   for(int istave=0; istave<numofstaves; istave++)
-    gr_stave[istave] = new TGraph();
+    gr_stave[istave] = new TGraphErrors();
 
   tr->SetBranchAddress("runnum", &run);
   tr->SetBranchAddress("stavenum", &stave);
@@ -157,9 +157,8 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum){
   }
 
   //set style
-  for(int istave=0; istave<numofstaves; istave++){
-    SetStyle(gr_stave[istave], col[istave]);
-  }
+  for(int istave=0; istave<numofstaves; istave++)
+    SetStyle(gr_stave[istave], color[istave]);
 
   //Set labels with a fake histograms
   int npoints = gr_stave[0]->GetN();
@@ -176,15 +175,15 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum){
   canvas->SetTicky();
   canvas->SetMargin(0.0988,0.1,0.194,0.0993);
   TLegend *leg = new TLegend(0.904, 0.197,0.997,0.898);
-  for(int istave=0; istave<numofstaves; istave++){
-    leg->AddEntry(grstave[istave], Form("Stv %d",istave));
+  for(int istave=0; istave<numofstaves; istave++)
+    leg->AddEntry(gr_stave[istave], Form("Stv %d",istave));
 
   hfake->GetYaxis()->SetRangeUser(minno-0.05*minno, maxno+0.05*maxno);
   hfake->GetXaxis()->SetTitleOffset(2.8);
   hfake->SetTitle(Form("%s Layer-%d, %s",isIB?"IB":"OB",layernum, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-  for(int istave=0; istave<numofstaves; istave++){
+  for(int istave=0; istave<numofstaves; istave++)
     gr_stave[istave]->Draw("P L same");
-  }
+
   leg->Draw();
   canvas->SaveAs(Form("../Plots/%s_layer%d_fakehitrate_%s.pdf", isIB?"IB":"OB", layernum, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
   canvas->SaveAs(Form("../Plots/%s_layer%d_fakehitrate_%s.root", isIB?"IB":"OB", layernum, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
