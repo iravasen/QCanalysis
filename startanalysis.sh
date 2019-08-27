@@ -10,7 +10,7 @@ todo(){
   read answer
   case "$answer" in
     1) echo -e "\n=> Starting fake-hit rate analysis run by run"
-       root -l -b -q AnalyzeStaveHitmaps.C++ 
+       root -l -b -q AnalyzeStaveHitmaps.C++
        remove ;;
     2) echo -e "\n=> Starting comparison between runs"
        root -l -b -q CompareNoisyPixelsInRuns.C++
@@ -36,12 +36,33 @@ analysismenu(){
 todoinflp(){
   read answerflp
   case "$answerflp" in
-    1) echo -e "\n=> Starting thresholds analysis run by run"
+    1) find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+       python readthrdata.py $1 $2
+       rm datatoanalyse.txt
+       echo -e "\n=> Starting thresholds analysis run by run"
        root -l -b -q AnalyzeThrScanAvgThr.C++
-       remove ;;
-    2) echo -e "\n=> Starting dead pixel comparison between runs"
+       ;;
+    2) find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+       python readthrdata.py $1 $2
+       rm datatoanalyse.txt
+       echo -e "\n=> Starting dead pixel comparison between runs"
        root -l -b -q CompareDeadPixelsInRuns.C++
-       remove ;;
+       ;;
+    3) find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+       python readthrdata.py $1 $2
+       echo -e "\n=> Starting thresholds analysis run by run"
+       root -l -b -q AnalyzeThrScanAvgThr.C++
+       echo -e "\n=> Starting dead pixel comparison between runs"
+       root -l -b -q CompareDeadPixelsInRuns.C++
+       rm datatoanalyse.txt
+       ;;
+    4) find $foldername -name "hitmap.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+       python readfhitdata.py $1 $2
+       rm datatoanalyse.txt
+       echo -e "\n=> Starting fake-hit rate analysis run by run"
+       root -l -b -q AnalyzeStaveHitmaps_flp.C++
+       ;;
+
     *) echo -e "Invalid option \n"
        echo -e "Retype an option \c"
        todoinflp ;;
@@ -53,9 +74,14 @@ analysismenuonflp(){
   echo "[Threshold scan analyses]"
   echo -e "\t 1. Average stave thresholds run by run"
   echo -e "\t 2. Compare dead pixels between runs"
+  echo -e "\t 3. Option 1 and 2 together"
+  echo "[Analyses on noisy pixels]"
+  echo -e "\t 4. Fake-hit rate run by run"
+  #echo -e "\t 5. Compare noisy pixels between runs"
+  #echo -e "\t 6. Option 4 and 5 together"
   echo -e "\n"
   echo -e "Enter option \c"
-  todoinflp
+  todoinflp $1 $2 # $1 = "IB or OB" and $2 = layer number
 }
 
 updategitrepo(){
@@ -65,54 +91,35 @@ updategitrepo(){
   git stash pop #apply last modifications from the user
 }
 
+startflp(){
+  echo -e "\n=> Starting analysis on flp"
+  echo -e "Load QualityControl environment on flp"
+  eval $(alienv load QualityControl/latest)
+  echo -e "\n=> Preparation of the sample (may take several minutes)\n"
+  cd analysismacros
+  echo -e "In which folder the data are saved? \c"
+  read foldername
+  analysismenuonflp $1 $2 # $1 = "IB or OB" and $2 = layer number
+}
+
+
 doanalysisinflp(){
   echo -e "\n=> Which ITS Layer do you want to analyse [0,1,2,3,4,5,6]? \c"
   read layernum
   case "$layernum" in
     0) cd $1
        updategitrepo
-       echo -e "\n=> Starting analysis on flp"
-       echo -e "Load QualityControl environment on flp"
-       eval $(alienv load QualityControl/latest)
-       echo -e "\n=> Preparation of the sample (may take several minutes)\n"
-       cd analysismacros
-       echo -e "In which folder the data are saved? \c"
-       read foldername
-       find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
-       python readthrdata.py "IB" 0
-       rm datatoanalyse.txt
-       analysismenuonflp
+       startflp "IB" 0
        ;;
     1) cd $1
        updategitrepo
-       echo -e "\n=> Starting analysis on flp"
-       echo -e "Load QualityControl environment on flp"
-       eval $(alienv load QualityControl/latest)
-       echo -e "\n=> Preparation of the sample (may take several minutes)\n"
-       cd analysismacros
-       echo -e "In which folder the data are saved? \c"
-       read foldername
-       find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
-       python readthrdata.py "IB" 1
-       rm datatoanalyse.txt
-       analysismenuonflp
-       ;;
-     
-     2) cd $1
-       updategitrepo
-       echo -e "\n=> Starting analysis on flp"
-       echo -e "Load QualityControl environment on flp"
-       eval $(alienv load QualityControl/latest)
-       echo -e "\n=> Preparation of the sample (may take several minutes)\n"
-       cd analysismacros
-       echo -e "In which folder the data are saved? \c"
-       read foldername
-       find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
-       python readthrdata.py "IB" 2
-       rm datatoanalyse.txt
-       analysismenuonflp
+       startflp "IB" 1
        ;;
 
+     2) cd $1
+       updategitrepo
+       startflp "IB" 2
+       ;;
 
     *) echo -e "\nLayer not yet available"
        doanalysisinflp ;;
