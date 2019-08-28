@@ -43,17 +43,17 @@ CXXFLAGS     += -DUSENCURSES
 SYSLIBS       = -lmenu -lncurses
 endif
 
-QCINC      = -I$(HOME)/QCNew/sw/slc7_x86-64/QualityControl/latest/include
-COMO2INC   = -I$(HOME)/QCNew/sw/slc7_x86-64/Common-O2/latest/include
-O2INC      = -I$(HOME)/QCNew/sw/slc7_x86-64/O2/latest/include
-BOOSTINC   = -I$(HOME)/QCNew/sw/slc7_x86-64/boost/latest/include
+QCINC      = -I$(HOME)/.sw/slc7_x86-64/QualityControl/latest/include
+COMO2INC   = -I$(HOME)/.sw/slc7_x86-64/Common-O2/latest/include
+O2INC      = -I$(HOME)/.sw/slc7_x86-64/O2/latest/include
+BOOSTINC   = -I$(HOME)/.sw/slc7_x86-64/boost/latest/include
 
 ROOTINC    = -I$(ROOTSYS)/include
 #INCLUDES   = $(QCINC) $(COMO2INC) $(O2INC) $(FAIRMQINC) $(FAIRLOGINC) $(MSGSLINC) $(BOOSTINC) $(ARROWINC) $(INFOLOGINC) $(ROOTINC)
 INCLUDES   =  $(BOOSTINC) $(QCINC) $(COMO2INC) $(O2INC) $(ROOTINC)
 CXXFLAGS   += $(ROOTCFLAGS) $(INCLUDES)
-QCLIBS     = -L$(HOME)/QCNew/sw/slc7_x86-64/QualityControl/latest/lib -lQualityControl
-O2LIBS     = -L$(HOME)/QCNew/sw/slc7_x86-64/O2/latest/lib -lO2CCDB
+QCLIBS     = -L$(HOME)/.sw/slc7_x86-64/QualityControl/latest/lib -lQualityControl
+O2LIBS     = -L$(HOME)/.sw/slc7_x86-64/O2/latest/lib -lO2CCDB
 LIBS       = $(QCLIBS) $(O2LIBS) $(ROOTLIBS) $(SYSLIBS)
 
 #------------------------------------------------------------------------------
