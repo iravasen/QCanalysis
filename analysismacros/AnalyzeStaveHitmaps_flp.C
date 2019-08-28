@@ -116,7 +116,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum){
     }
     if(stave!=prevstave && run==prevrun){//change of stave but not of run!
       prevstave=stave;
-      double noiseocc = (double)totalhits/(ntrigger*512.*1024.);
+      double noiseocc = (double)totalhits/(ntrigger*512.*1024.*(double)nChips);
       if(noiseocc>maxno) maxno=noiseocc;
       else if(noiseocc<minno) minno=noiseocc;
       gr_stave[istave] -> SetPoint(irun, gr_stave[istave]->GetN(), noiseocc);
@@ -130,7 +130,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum){
     else if(stave!=prevstave && run!=prevrun){//change of stave and of run!
       prevstave=stave;
       prevrun=run;
-      double noiseocc = (double)totalhits/(ntrigger*512.*1024.);
+      double noiseocc = (double)totalhits/(ntrigger*512.*1024.*(double)nChips);
       if(noiseocc>maxno) maxno=noiseocc;
       else if(noiseocc<minno) minno=noiseocc;
       gr_stave[istave] -> SetPoint(irun, gr_stave[istave]->GetN(), noiseocc);
@@ -144,7 +144,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum){
     }
     else if(i==nentries-1){//for the last entry
       totalhits+=hits; //sum the last number in the tree
-      double noiseocc = (double)totalhits/(ntrigger*512.*1024.);
+      double noiseocc = (double)totalhits/(ntrigger*512.*1024.*(double)nChips);
       if(noiseocc>maxno) maxno=noiseocc;
       else if(noiseocc<minno) minno=noiseocc;
       gr_stave[istave] -> SetPoint(irun, gr_stave[istave]->GetN(), noiseocc);
