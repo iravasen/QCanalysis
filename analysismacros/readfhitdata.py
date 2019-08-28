@@ -54,7 +54,7 @@ def main(barrel=first_arg, layer=second_arg):
     runnum = array('i', [0])
     currstave = array('i', [0])
     currchip = array('i', [0])
-    hits = array('i', [0])
+    hits = array('f', [0])
     col = array('i', [0])
     row = array('i', [0])
 
@@ -66,7 +66,7 @@ def main(barrel=first_arg, layer=second_arg):
     roottree1.Branch("runnum", runnum, "runnum/I")
     roottree1.Branch("stavenum", currstave, "stavenum/I")
     roottree1.Branch("chipnum", currchip, "chipnum/I")
-    roottree1.Branch("hits", hits, "hits/I")
+    roottree1.Branch("hits", hits, "hits/F")
     roottree1.Branch("col", col, "col/I")
     roottree1.Branch("row", row, "row/I")
 
@@ -85,7 +85,8 @@ def main(barrel=first_arg, layer=second_arg):
                         row[0] = i
                         col[0] = j
                         hits[0] = datahit[i][j]
-                        roottree1.Fill()
+                        if(hits[0]>0):
+                            roottree1.Fill()
 
     roottree1.Write()
     ftree.Close()

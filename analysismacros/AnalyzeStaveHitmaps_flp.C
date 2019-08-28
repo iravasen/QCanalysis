@@ -72,7 +72,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum){
   TFile *infl = new TFile(filepath.c_str());
   TTree *tr = (TTree*)infl->Get("fhitscan");
   int run, stave, chip;
-  int hits;
+  float hits;
   int row, col;
   int numofstaves = 6;
   switch(layernum){
@@ -101,8 +101,8 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum){
 
   Long64_t nentries = tr->GetEntries();
   int prevstave, prevrun, istave=0, irun=0, ix=0;
-  int totalhits = 0;
-  double minno=1, maxno=-1;// minimum and maximum threshold to set the correct scale of the plot
+  float totalhits = 0.;
+  double minno=1., maxno=-1.;// minimum and maximum threshold to set the correct scale of the plot
   vector<int> allruns, allstavenum;
   for(Long64_t i=0; i<nentries; i++){
     tr->GetEntry(i);
@@ -122,8 +122,8 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum){
       gr_stave[istave] -> SetPoint(irun, gr_stave[istave]->GetN(), noiseocc);
       double errrel_num = TMath::Sqrt((double)totalhits) / (double)totalhits;//poissonian error
       double errrel_den = 50000. / ntrigger; // because error or number of triggers is +- 1s*50kHz
-      gr_stave[istave]->SetPointError(irun, noiseocc*TMath::Sqrt((errrel_num*errrel_num+errrel_den*errrel_den)));
-      totalhits=0;
+      gr_stave[istave]->SetPointError(irun, 0., noiseocc*TMath::Sqrt((errrel_num*errrel_num+errrel_den*errrel_den)));
+      totalhits=0.;
       istave++;
       if((int)allstavenum.size() < numofstaves) allstavenum.push_back(stave);
     }
@@ -136,7 +136,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum){
       gr_stave[istave] -> SetPoint(irun, gr_stave[istave]->GetN(), noiseocc);
       double errrel_num = TMath::Sqrt((double)totalhits) / (double)totalhits;//poissonian error
       double errrel_den = 50000. / ntrigger; // because error or number of triggers is +- 1s*50kHz
-      gr_stave[istave]->SetPointError(irun, noiseocc*TMath::Sqrt((errrel_num*errrel_num+errrel_den*errrel_den)));
+      gr_stave[istave]->SetPointError(irun, 0., noiseocc*TMath::Sqrt((errrel_num*errrel_num+errrel_den*errrel_den)));
       totalhits=0.;
       irun++;
       istave=0;
@@ -150,10 +150,10 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum){
       gr_stave[istave] -> SetPoint(irun, gr_stave[istave]->GetN(), noiseocc);
       double errrel_num = TMath::Sqrt((double)totalhits) / (double)totalhits;//poissonian error
       double errrel_den = 50000. / ntrigger; // because error or number of triggers is +- 1s*50kHz
-      gr_stave[istave]->SetPointError(irun, noiseocc*TMath::Sqrt((errrel_num*errrel_num+errrel_den*errrel_den)));
+      gr_stave[istave]->SetPointError(irun, 0., noiseocc*TMath::Sqrt((errrel_num*errrel_num+errrel_den*errrel_den)));
     }
     totalhits+=hits;
-    //cout<<run<<"  "<<stave<<"  "<<chip<<"  "<<avgthrchip<<endl;
+    //cout<<run<<"  "<<stave<<"  "<<chip<<"  "<<hits<<endl;
   }
 
   //set style
@@ -176,9 +176,12 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, int layernum){
   canvas->SetMargin(0.0988,0.1,0.194,0.0993);
   TLegend *leg = new TLegend(0.904, 0.197,0.997,0.898);
   for(int istave=0; istave<numofstaves; istave++)
-    leg->AddEntry(gr_stave[istave], Form("Stv %d",istave));
+    leg->AddEntry(gr_stave[istave], Form("Stv %d",allstavenum[istave]));
 
-  hfake->GetYaxis()->SetRangeUser(minno-0.05*minno, maxno+0.05*maxno);
+  hfake->Draw();
+
+  //hfake->GetYaxis()->SetRangeUser(minno-0.05*minno, maxno+0.05*maxno);
+  hfake->GetYaxis()->SetRangeUser(1e-12, 1e-3);
   hfake->GetXaxis()->SetTitleOffset(2.8);
   hfake->SetTitle(Form("%s Layer-%d, %s",isIB?"IB":"OB",layernum, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
   for(int istave=0; istave<numofstaves; istave++)
