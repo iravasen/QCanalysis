@@ -21,11 +21,11 @@
 using namespace std;
 
 //Functions
-std::array<long int,4> CompareTwoRuns(vector<array<int,2>> run1, vector<array<int,2>> run2);
+std::array<long int,4> CompareTwoRuns(vector<array<int,2>> run1/*ref run*/, vector<array<int,2>> run2);
 void SetStyle(TGraphErrors *ge, Color_t col);
 void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, int layernum);
 
-void CompareDeadPixelsInRuns(){
+void CompareNoisyPixelsInRuns_flp(){
   string fpath;
   int nchips=9;
   cout<<"\n\nAvailable file(s) for the analysis (the last should be the file you want!): \n"<<endl;
@@ -44,11 +44,11 @@ void CompareDeadPixelsInRuns(){
   if(nchips==9) isIB=kTRUE;
   else isIB=kFALSE;
 
-  cout<<"Available runs in your file:\n"<<endl;
+  cout<<"Available (non-empty) runs in your file:\n"<<endl;
   int run;
   int prevrun;
   TFile *infile=new TFile(Form("../Data/%s",fpath.c_str()));
-  TTree *tr = (TTree*)infile->Get("thrscan_deadpix");
+  TTree *tr = (TTree*)infile->Get("fhitscan");
   tr->SetBranchAddress("runnum", &run);
   Long64_t nentries = tr->GetEntries();
 
@@ -65,6 +65,7 @@ void CompareDeadPixelsInRuns(){
       cout<<run<<endl;
   }
 
+
   long int runnum;
   cout<<"\n\n=>Insert a run you want to use as a reference for the comparison with all the others: \n"<<endl;
   cin>>runnum;
@@ -79,14 +80,14 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
 
   gStyle->SetOptStat(0000);
 
-  std::vector<TH2S*> hmaps;
   std::vector<string> timestamps, runnumbers;
-  std::vector<array<long int,4>> deadpixinfo;
+  std::vector<array<long int,4>> noisypixinfo;
 
+  //Read the file and the list of plots with entries
   TFile *infl = new TFile(filepath.c_str());
-
-  TTree *tr = (TTree*)infl->Get("thrscan_deadpix");
+  TTree *tr = (TTree*)infl->Get("fhitscan");
   int run, stave, chip, col, row;
+  float hits;
   int numofstaves = 6;
   switch(layernum){
     case 0:
@@ -107,10 +108,11 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
   tr->SetBranchAddress("chipnum", &chip);
   tr->SetBranchAddress("row", &row);
   tr->SetBranchAddress("col", &col);
+  tr->SetBranchAddress("hits", &hits);
   Long64_t nentries = tr->GetEntries();
-  vector<vector<array<int, 2>>> deadpixperrun;
+  vector<vector<array<int, 2>>> noisypixperrun;
   int prevrun;
-  vector<array<int,2>> deadpix;
+  vector<array<int,2>> noisypix;
   array<int,2> colrow;
   vector<int> allruns;
   for(Long64_t i=0; i<nentries; i++){//loop on tree entries
@@ -122,18 +124,18 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
     else if(run!=prevrun){//change of stave and of run!
       allruns.push_back(prevrun);
       prevrun=run;
-      deadpixperrun.push_back(deadpix);
-      deadpix.clear();
+      noisypixperrun.push_back(noisypix);
+      noisypix.clear();
     }
     else if(i==nentries-1){//for the last entry
       prevrun=run;
-      deadpixperrun.push_back(deadpix);
-      deadpix.clear();
+      noisypixperrun.push_back(noisypix);
+      noisypix.clear();
       allruns.push_back(run);
     }
     colrow[0]=col;
     colrow[1]=row;
-    deadpix.push_back(colrow);
+    if(hits>1) noisypix.push_back(colrow); // >1 is to reduce contribution from cosmics
   }
 
   //find position of the ref run
@@ -145,15 +147,15 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
     }
   }
 
-  //Compare all the runs with the reference run chosen by the user
+  //Compare all the runs (non-empty ones) with the reference run chosen by the user
   vector<long int> runlabel;
   for(int irun=0; irun<(int)allruns.size(); irun++){
     if(allruns[irun]==refrun) continue; // do not compare refrun with itself
-    deadpixinfo.push_back(CompareTwoRuns(deadpixperrun[posrefrun], deadpixperrun[irun]));
-    deadpixinfo[deadpixinfo.size()-1][0] = allruns[irun];//save timestamp on run2 (the ref one is known)
+    noisypixinfo.push_back(CompareTwoRuns(noisypixperrun[posrefrun], noisypixperrun[irun]));
+    noisypixinfo[noisypixinfo.size()-1][0] = allruns[irun];//save timestamp on run2 (the ref one is known)
     runlabel.push_back(allruns[irun]);
     //cout<<allruns[irun]<<endl;
-    //cout<<deadpixinfo[deadpixinfo.size()-1][0]<<"  "<<deadpixinfo[deadpixinfo.size()-1][1]<<"  "<<deadpixinfo[deadpixinfo.size()-1][2]<<"  "<<deadpixinfo[deadpixinfo.size()-1][3]<<endl;
+    //cout<<noisypixinfo[noisypixinfo.size()-1][0]<<"  "<<noisypixinfo[noisypixinfo.size()-1][1]<<"  "<<noisypixinfo[noisypixinfo.size()-1][2]<<"  "<<noisypixinfo[noisypixinfo.size()-1][3]<<endl;
   }
 
   //Make plot
@@ -165,23 +167,23 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
   double max = -1;
   double min = 1e35;
 
-  for(int icomp=0; icomp<(int)deadpixinfo.size(); icomp++){//runs are in the correct order already
+  for(int icomp=0; icomp<(int)noisypixinfo.size(); icomp++){//first the older data and last the most recent
     //first couple of bar on the left
     int ipoint = icomp;
     if(!ipoint) xshift=1.;
     else xshift = 3.;
-    ge_nref->SetPoint(ipoint, ipoint*xshift, (double)deadpixinfo[icomp][3]/2.+(double)deadpixinfo[icomp][1]/2.);
-    ge_nref->SetPointError(ipoint, 0.5, (double)deadpixinfo[icomp][1]/2.);
+    ge_nref->SetPoint(ipoint, ipoint*xshift, (double)noisypixinfo[icomp][3]/2.+(double)noisypixinfo[icomp][1]/2.);
+    ge_nref->SetPointError(ipoint, 0.5, (double)noisypixinfo[icomp][1]/2.);
     ge_ncom1->SetPoint(ipoint, ipoint*xshift, 0.);
-    ge_ncom1->SetPointError(ipoint, 0.5, (double)deadpixinfo[icomp][3]/2.);
-    if((double)deadpixinfo[icomp][3]/2.+(double)deadpixinfo[icomp][1]/2. > max) max = (double)deadpixinfo[icomp][3]/2.+(double)deadpixinfo[icomp][1]/2.;
+    ge_ncom1->SetPointError(ipoint, 0.5, (double)noisypixinfo[icomp][3]/2.);
+    if((double)noisypixinfo[icomp][3]/2.+(double)noisypixinfo[icomp][1]/2. > max) max = (double)noisypixinfo[icomp][3]/2.+(double)noisypixinfo[icomp][1]/2.;
 
     //second couple of bar on the right
-    ge_n2->SetPoint(ipoint, ipoint*xshift+1, -(double)deadpixinfo[icomp][3]/2.-(double)deadpixinfo[icomp][2]/2.);
-    ge_n2->SetPointError(ipoint, 0.5, (double)deadpixinfo[icomp][2]/2.);
+    ge_n2->SetPoint(ipoint, ipoint*xshift+1, -(double)noisypixinfo[icomp][3]/2.-(double)noisypixinfo[icomp][2]/2.);
+    ge_n2->SetPointError(ipoint, 0.5, (double)noisypixinfo[icomp][2]/2.);
     ge_ncom2->SetPoint(ipoint, ipoint*xshift+1, 0.);
-    ge_ncom2->SetPointError(ipoint, 0.5, (double)deadpixinfo[icomp][3]/2.);
-    if(-(double)deadpixinfo[icomp][3]/2.-(double)deadpixinfo[icomp][2]/2. < min) min = -(double)deadpixinfo[icomp][3]/2.-(double)deadpixinfo[icomp][2]/2.;
+    ge_ncom2->SetPointError(ipoint, 0.5, (double)noisypixinfo[icomp][3]/2.);
+    if(-(double)noisypixinfo[icomp][3]/2.-(double)noisypixinfo[icomp][2]/2. < min) min = -(double)noisypixinfo[icomp][3]/2.-(double)noisypixinfo[icomp][2]/2.;
   }
 
   //Style
@@ -218,7 +220,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
   //TAxis *ax = ge_nref->GetHistogram()->GetXaxis();
   int counter = 0;
   for(Int_t k=4;k<=hfake->GetNbinsX()-3;k+=3){
-    hfake->GetXaxis()->SetBinLabel(k,Form("run%06ld", runlabel[counter]));
+    hfake->GetXaxis()->SetBinLabel(k, Form("run%06ld", runlabel[counter]));
     counter++;
   }
 
@@ -226,23 +228,23 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
   TLegend *leg = new TLegend(0.876,0.176, 0.994, 0.902);
   leg->SetLineColor(0);
   leg->SetTextFont(42);
-  leg->AddEntry(ge_nref, "#splitline{#dead pix}{ref. run only}", "f");
-  leg->AddEntry(ge_n2, "#splitline{#dead pix}{2nd run only}", "f");
-  leg->AddEntry(ge_ncom1, "#splitline{#dead pix}{both}");
+  leg->AddEntry(ge_nref, "#splitline{#noisy pix}{ref. run only}", "f");
+  leg->AddEntry(ge_n2, "#splitline{#noisy pix}{2nd run only}", "f");
+  leg->AddEntry(ge_ncom1, "#splitline{#noisy pix}{both}");
   leg->Draw("same");
 
-  canvas->SaveAs(Form("../Plots/%s-Layer%d_DeadPixComparison_run%ld_compared_to_run_%s.pdf", isIB?"IB":"OB",layernum,refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-  canvas->SaveAs(Form("../Plots/%s-Layer%d_DeadPixComparison_run%ld_compared_to_run_%s.root", isIB?"IB":"OB",layernum,refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+  canvas->SaveAs(Form("../Plots/%s-Layer%d_NoisyPixComparison_run%ld_compared_to_run_%s.pdf", isIB?"IB":"OB",layernum, refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+  canvas->SaveAs(Form("../Plots/%s-Layer%d_NoisyPixComparison_run%ld_compared_to_run_%s.root", isIB?"IB":"OB",layernum, refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 
 }
 
 //
-// Function to compare two hitmaps --> returns an arrays with timestamp of run2, deadpixinfoInRefRun, deadpixinfoInRun2, deadpixinfoInCommon
+// Function to compare two hitmaps --> returns an arrays with timestamp of run2, noisyPixInRefRun, noisyPixInRun2, noisyPixInCommon
 //
 std::array<long int,4> CompareTwoRuns(vector<array<int,2>> run1/*ref run*/, vector<array<int,2>> run2){
 
-  std::array<long int,4> deadpixinfo = {0, 0, 0, 0};
-  //number of dead pix in refrun_only and in common
+  std::array<long int,4> noisypixinfo = {0, 0, 0, 0};
+  //number of noisy pix in refrun_only and in common
   for(int ipix=0; ipix<(int)run1.size(); ipix++){
     int col1 = run1[ipix][0];
     int row1 = run1[ipix][1];
@@ -250,13 +252,13 @@ std::array<long int,4> CompareTwoRuns(vector<array<int,2>> run1/*ref run*/, vect
 
     for(int ipixs=0; ipixs<(int)run2.size(); ipixs++){
       if(run2[ipixs][0]==col1 && run2[ipixs][1]==row1){//noisy in both runs
-        deadpixinfo[3]++;
+        noisypixinfo[3]++;
         isthere=true;
         break;
       }
     }
     if(!isthere){//noisy only in ref run (run1)
-      deadpixinfo[1]++;
+      noisypixinfo[1]++;
     }
   }
 
@@ -272,11 +274,11 @@ std::array<long int,4> CompareTwoRuns(vector<array<int,2>> run1/*ref run*/, vect
       }
     }
     if(!isthere){//noisy only in 2nd run (run2)
-      deadpixinfo[2]++;
+      noisypixinfo[2]++;
     }
   }
 
-  return deadpixinfo;
+  return noisypixinfo;
 }
 
 //

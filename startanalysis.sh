@@ -33,34 +33,119 @@ analysismenu(){
   cd ..
 }
 
+directanalysisoption{
+  echo -e "\nChoose what to do for the analysis\n"
+  echo -e "\t 1. Preparation of data sample and analysis"
+  echo -e "\t 2. Direct analysis (I have already a data sample)"
+  echo -e "\n"
+  echo -e "Enter option \c"
+  read directoptan
+}
+
 todoinflp(){
   read answerflp
   case "$answerflp" in
-    1) find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
-       python readthrdata.py $1 $2
-       rm datatoanalyse.txt
-       echo -e "\n=> Starting thresholds analysis run by run"
-       root -l -b -q AnalyzeThrScanAvgThr.C++
+    1) directanalysisoption
+       case "$directoptan" in
+         1) find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+            python readthrdata.py $1 $2
+            rm datatoanalyse.txt
+            echo -e "\n=> Starting thresholds analysis run by run"
+            root -l -b -q AnalyzeThrScanAvgThr.C++
+            remove
+            ;;
+         2) echo -e "\n=> Starting thresholds analysis run by run"
+            root -l -b -q AnalyzeThrScanAvgThr.C++
+            remove
+            ;;
+       esac
        ;;
-    2) find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
-       python readthrdata.py $1 $2
-       rm datatoanalyse.txt
-       echo -e "\n=> Starting dead pixel comparison between runs"
-       root -l -b -q CompareDeadPixelsInRuns.C++
+    2) directanalysisoption
+       case "$directoptan" in
+         1) find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+            python readthrdata.py $1 $2
+            rm datatoanalyse.txt
+            echo -e "\n=> Starting dead pixel comparison between runs"
+            root -l -b -q CompareDeadPixelsInRuns.C++
+            remove
+            ;;
+         2) echo -e "\n=> Starting dead pixel comparison between runs"
+            root -l -b -q CompareDeadPixelsInRuns.C++
+            remove
+            ;;
+       esac
        ;;
-    3) find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
-       python readthrdata.py $1 $2
-       echo -e "\n=> Starting thresholds analysis run by run"
-       root -l -b -q AnalyzeThrScanAvgThr.C++
-       echo -e "\n=> Starting dead pixel comparison between runs"
-       root -l -b -q CompareDeadPixelsInRuns.C++
-       rm datatoanalyse.txt
+    3) directanalysisoption
+       case "$directoptan" in
+         1) find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+            python readthrdata.py $1 $2
+            echo -e "\n=> Starting thresholds analysis run by run"
+            root -l -b -q AnalyzeThrScanAvgThr.C++
+            remove
+            echo -e "\n=> Starting dead pixel comparison between runs"
+            root -l -b -q CompareDeadPixelsInRuns.C++
+            remove
+            rm datatoanalyse.txt
+            ;;
+         2) echo -e "\n=> Starting thresholds analysis run by run"
+            root -l -b -q AnalyzeThrScanAvgThr.C++
+            remove
+            echo -e "\n=> Starting dead pixel comparison between runs"
+            root -l -b -q CompareDeadPixelsInRuns.C++
+            remove
+            ;;
+        esac
        ;;
-    4) find $foldername -name "hitmap.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
-       python readfhitdata.py $1 $2
-       rm datatoanalyse.txt
-       echo -e "\n=> Starting fake-hit rate analysis run by run"
-       root -l -b -q AnalyzeStaveHitmaps_flp.C++
+    4)  directanalysisoption
+        case "$directoptan" in
+          1)  find $foldername -name "hitmap.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+              python readfhitdata.py $1 $2
+              rm datatoanalyse.txt
+              echo -e "\n=> Starting fake-hit rate analysis run by run"
+              root -l -b -q AnalyzeStaveHitmaps_flp.C++
+              remove
+              ;;
+          2)  echo -e "\n=> Starting fake-hit rate analysis run by run"
+              root -l -b -q AnalyzeStaveHitmaps_flp.C++
+              remove
+              ;;
+        esac
+       ;;
+    5)  directanalysisoption
+        case "$directoptan" in
+          1)  find $foldername -name "hitmap.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+              python readfhitdata.py $1 $2
+              rm datatoanalyse.txt
+              echo -e "\n=> Starting noisy pixels comparison between runs"
+              root -l -b -q CompareNoisyPixelsInRuns_flp.C++
+              remove
+              ;;
+          2)  echo -e "\n=> Starting noisy pixels comparison between runs"
+              root -l -b -q CompareNoisyPixelsInRuns_flp.C++
+              remove
+              ;;
+        esac
+       ;;
+    6) directanalysisoption
+       case "$directoptan" in
+         1) find $foldername -name "hitmap.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+            python readfhitdata.py $1 $2
+            echo -e "\n=> Starting fake-hit rate analysis run by run"
+            root -l -b -q AnalyzeStaveHitmaps_flp.C++
+            remove
+            echo -e "\n=> Starting noisy pixels comparison between runs"
+            root -l -b -q CompareNoisyPixelsInRuns_flp.C++
+            remove
+            rm datatoanalyse.txt
+            ;;
+         2) echo -e "\n=> Starting fake-hit rate analysis run by run"
+            root -l -b -q AnalyzeStaveHitmaps_flp.C++
+            remove
+            echo -e "\n=> Starting noisy pixels comparison between runs"
+            root -l -b -q CompareNoisyPixelsInRuns_flp.C++
+            remove
+            ;;
+        esac
        ;;
 
     *) echo -e "Invalid option \n"
@@ -77,8 +162,8 @@ analysismenuonflp(){
   echo -e "\t 3. Option 1 and 2 together"
   echo "[Analyses on noisy pixels]"
   echo -e "\t 4. Fake-hit rate run by run"
-  #echo -e "\t 5. Compare noisy pixels between runs"
-  #echo -e "\t 6. Option 4 and 5 together"
+  echo -e "\t 5. Compare noisy pixels between runs"
+  echo -e "\t 6. Option 4 and 5 together"
   echo -e "\n"
   echo -e "Enter option \c"
   todoinflp $1 $2 # $1 = "IB or OB" and $2 = layer number
