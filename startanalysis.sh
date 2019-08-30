@@ -238,14 +238,23 @@ connect(){
 todooption(){
   read answerfirst
   case "$answerfirst" in
-    1) echo -e "\n\e[32m=> Compiling the software for the database\e[39m"
-       make
-       echo -e "\n\e[32m=> Downloading files to analyse\e[39m"
-       ./getObject
+    1) echo -e "\n\e[32m=> Choose what to do with the analysis:\n"
+       echo -e "\t 1. Download data from CCDB and perform the analysis"
+       echo -e "\t 2. Analyse data only (I have already a data sample)\e[39m"
        echo -e "\n"
-       analysismenu ;;
-    2) analysismenu ;;
-    3) username=$(whoami)
+       echo -e "Enter option: \c"
+       read optccdb
+       case "$optccdb" in
+         1) echo -e "\n\e[32m=> Compiling the software for the database\e[39m"
+            make
+            echo -e "\n\e[32m=> Downloading files to analyse\e[39m"
+            ./getObject
+            echo -e "\n"
+            analysismenu ;;
+         2) analysismenu ;;
+       esac
+       ;;
+    2) username=$(whoami)
        hname=$(hostname)
        chooseflp
        if [ $hname == "flpits$flpnum" ]; then
@@ -277,9 +286,8 @@ eval $(alienv load QualityControl/latest 2> /dev/null)
 
 echo -e "\n==== What to do ====\n"
 echo -e "=> Chose an option: \n\n"
-echo -e "\t 1. Download and analyse data"
-echo -e "\t 2. Analyse data only"
-echo -e "\t 3. Analyse data on flp"
+echo -e "\t 1. Download and analyse data from CCDB"
+echo -e "\t 2. Analyse data on FLP"
 echo -e "\n"
 echo -e "\e[39mEnter option \c"
 todooption
