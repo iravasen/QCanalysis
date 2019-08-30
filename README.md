@@ -68,14 +68,30 @@ If option 2 (**Compare noisy pixels between runs**) is chosen, the software will
 For this option you will need to have already a file containing a set of histograms to analyse (downloaded from CCDB!). If this is the case, choosing this option, you will access directly the analysis menu. Choose a single analysis as explained in the previous paragraph (after database downloading). 
 
 #### Option 2 - Analyse data on flp 
-This option allows you to analyse data directly on FLP skipping the download from the database. This option can be chosen both if you are working on your compure and on FLP directly. The first thing is to choose on which FLP the data you want to analyse are. Type only the number of the FLP. Depending on your choice, if you are not working already on the selected FLP, the script will ask you to type your CERN username. This is used to make a connection via ssh to the selected flp (and lxplus). You just need to insert first your CERN account password and then the one of the "its" account on the selected flp. 
-Then, the script asks to type the layer number.
-Later, the QualityControl environment is loaded on the flp and the script asks to type the path in which data are saved (tipycally: /data/shifts/ or /data/L0_shifts/). When the path is selected, the script asks you to type a run interval in order to prepare the sample for the analysis. If you type starting run = 100 and final run = 200, all the threshold scan runs between 100 and 200 will be included in the analysis. Then you need to type also the number of the first stave in the layer (for example "6" if you are analysing the layer 0 currently under commissioning -> stave numbered from 6 to 11). Then wait few minutes for the preparation of the setup.
-Then, an analysis menu is presented with the following options:
+This option allows you to analyse data directly on FLP skipping the download from the database. This option can be chosen both if you are working on your computer and on FLP. First, you need to choose on which FLP the data you want to analyse are. **Type only the number of the FLP**. Depending on your choice, if you are not working already on the selected FLP, the script will ask you to type your CERN username. This is used to make a connection via ssh to the selected flp (through lxplus). You just need to insert first your CERN account password and then the one of the "its" account on the selected flp. 
+Then, the script asks to type the layer number. After this, an update of the repository is automatically done keeping any local (on flp) modifications. 
+Later, the QualityControl environment is loaded on the flp and the script asks to type the path in which data are saved (tipycally: */data/shifts/* or */data/L0_shifts/*). When the path is selected, the script asks you to choose an analysis type:
+
 1. Average stave thresholds run by run
 2. Compare dead pixels between runs
-If **option 1** is chosen, the software will show you the average threshold (stave by stave on the layer) as a function of the run number. The ROOT macro is run automatically and a list of (good) files for the analysis is shown. Copy and paste the file name in the input line that will appear. The plot is automatically saved in *pdf* and *root* format in the repository *Plots/* **of the flp selected**. 
-If **option 2** is chosen, the software will compare the number of dead pixels (i.e. having null threshold) run by run. The ROOT macro is run automatically and a list of (good) files for the analysis is shown. Copy and paste the file name in the input line that will appear. Then, a reference run number (**choose a run among the ones in the input file!**) has to be typed. All the runs in the input file will be compared with the chosen reference run. The plot is automatically saved in *pdf* and *root* format in the repository *Plots/* **of the flp selected**. 
+3. Option 1 and 2 together
+4. Fake-hit rate run by run
+5. Compare noisy pixels between runs
+6. Option 4 and 5 together
 
+In general, once you have selected one of the options above the script asks you whether you want to prepare and analyse a data sample or you want to analyse an already existing sample. You just need to enter the option you want to perform. 
+When you choose to prepare and analyse a data sample, for all the options 1-6 above, the script will ask you to type a run interval. If you choose "starting run = 100" and "final run = 200", all the runs between 100 and 200 will be included in the sample and hence in the analysis. Then, for options 1, 3, 4, 6 you need to type also the number of the first stave in the layer (for example "6" if you are analysing the layer 0 currently under commissioning -> stave numbered from 6 to 11). Now, the details of each option (1-6) will be described. 
+##### Option 1 - Average stave thresholds run by run
+If this option is chosen, the software will show you the average threshold (stave by stave on the layer) as a function of the run number. The ROOT macro is run automatically and a list of files for the analysis is shown. Copy and paste the file name in the input line that will appear. The plot is automatically saved in *pdf* and *root* format in the repository *Plots/* **of the flp selected**.
+##### Option 2 - Compare dead pixels between runs
+If this option is chosen, the software will compare the number of dead pixels (i.e. having null threshold) run by run. The ROOT macro is run automatically and a list of files for the analysis is shown. Copy and paste the file name in the input line that will appear. Then, a reference run number (**choose a run among the ones in the input file!**) has to be typed. All the runs in the input file will be compared with the reference run. The plot is automatically saved in *pdf* and *root* format in the repository *Plots/* **of the flp selected**.
+##### Option 3 - Option 1 and 2 together 
+This option will simply do the option 1 and option 2 at the same time since the data sample for the analysis can be the same. 
+##### Option 4 - Fake-hit rate run by run
+If this option is chosen, the software will show you the fake-hit rate as a function of the run number for all the staves composing the layer. The ROOT macro is run automatically and a list of files for the analysis is shown. Copy and paste the file name in the input line that will appear. The final plot is automatically saved in *pdf* and *root* format in the repository *Plots/* **of the flp selected**.
+##### Option 5 - Compare noisy pixels between runs
+If this option is chosen, the software will compare the number of noisy pixels run by run on all the layer (no stave-by-stave analysis at present). The ROOT macro is run automatically and a list of files for the analysis is shown. Copy and paste the file name in the input line that will appear. Then, a reference run number (**choose a run among the ones in the input file!**) has to be typed. All the runs in the input file will be compared with the reference run. The plot is automatically saved in *pdf* and *root* format in the repository *Plots/* **of the flp selected**.
+##### Option 6 - Option 4 and 5 together
+This option will simply do the option 4 and option 5 at the same time since the data sample for the analysis can be the same.
 ## Contacts
 For any issue, please contact <ivan.ravasenga@cern.ch>.
