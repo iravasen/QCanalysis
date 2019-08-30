@@ -9,3 +9,4 @@ Data/
 analysismacros/*.d
 analysismacros/*.so
 analysismacros/*.pcm
+analysismacros/*.txt

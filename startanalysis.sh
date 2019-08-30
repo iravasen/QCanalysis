@@ -47,7 +47,8 @@ todoinflp(){
   case "$answerflp" in
     1) directanalysisoption
        case "$directoptan" in
-         1) find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+         1) echo -e "\n=> Preparation of the sample (may take several minutes)\n"
+	    find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
             python readthrdata.py $1 $2
             rm datatoanalyse.txt
             echo -e "\n=> Starting thresholds analysis run by run"
@@ -62,7 +63,8 @@ todoinflp(){
        ;;
     2) directanalysisoption
        case "$directoptan" in
-         1) find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+         1) echo -e "\n=> Preparation of the sample (may take several minutes)\n"
+	    find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
             python readthrdata.py $1 $2
             rm datatoanalyse.txt
             echo -e "\n=> Starting dead pixel comparison between runs"
@@ -77,7 +79,8 @@ todoinflp(){
        ;;
     3) directanalysisoption
        case "$directoptan" in
-         1) find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+         1) echo -e "\n=> Preparation of the sample (may take several minutes)\n"
+	    find $foldername -name "thresholds.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
             python readthrdata.py $1 $2
             echo -e "\n=> Starting thresholds analysis run by run"
             root -l -b -q AnalyzeThrScanAvgThr.C++
@@ -98,7 +101,8 @@ todoinflp(){
        ;;
     4)  directanalysisoption
         case "$directoptan" in
-          1)  find $foldername -name "hitmap.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+          1)  echo -e "\n=> Preparation of the sample (may take several minutes)\n"
+	      find $foldername -name "hitmap.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
               python readfhitdata.py $1 $2
               rm datatoanalyse.txt
               echo -e "\n=> Starting fake-hit rate analysis run by run"
@@ -113,7 +117,8 @@ todoinflp(){
        ;;
     5)  directanalysisoption
         case "$directoptan" in
-          1)  find $foldername -name "hitmap.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+          1)  echo -e "\n=> Preparation of the sample (may take several minutes)\n"
+	      find $foldername -name "hitmap.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
               python readfhitdata.py $1 $2
               rm datatoanalyse.txt
               echo -e "\n=> Starting noisy pixels comparison between runs"
@@ -128,7 +133,8 @@ todoinflp(){
        ;;
     6) directanalysisoption
        case "$directoptan" in
-         1) find $foldername -name "hitmap.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
+         1) echo -e "\n=> Preparation of the sample (may take several minutes)\n"
+	    find $foldername -name "hitmap.npy.gz" -print0 | sort -z | xargs -r0 | tr " " "\n" > datatoanalyse.txt
             python readfhitdata.py $1 $2
             echo -e "\n=> Starting fake-hit rate analysis run by run"
             root -l -b -q AnalyzeStaveHitmaps_flp.C++
@@ -180,7 +186,6 @@ startflp(){
   echo -e "\n=> Starting analysis on flp"
   echo -e "Load QualityControl environment on flp"
   eval $(alienv load QualityControl/latest)
-  echo -e "\n=> Preparation of the sample (may take several minutes)\n"
   cd analysismacros
   echo -e "In which folder the data are saved? \c"
   read foldername
