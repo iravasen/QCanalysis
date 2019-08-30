@@ -33,7 +33,7 @@ analysismenu(){
   cd ..
 }
 
-directanalysisoption{
+directanalysisoption(){
   echo -e "\nChoose what to do for the analysis\n"
   echo -e "\t 1. Preparation of data sample and analysis"
   echo -e "\t 2. Direct analysis (I have already a data sample)"
