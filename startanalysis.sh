@@ -284,7 +284,6 @@ todooption(){
 }
 
 # MAIN TASK
-echo "==== \e[32mUpdating git repository (your modification are kept!) ====\e[39m"
 updategitrepo
 
 echo -e "\n\e[32m==== Loading environment modules ===="
