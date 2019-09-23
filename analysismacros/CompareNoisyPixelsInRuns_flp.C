@@ -24,6 +24,8 @@ using namespace std;
 std::array<long int,4> CompareTwoRuns(vector<array<int,2>> run1/*ref run*/, vector<array<int,2>> run2);
 void SetStyle(TGraphErrors *ge, Color_t col);
 void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, int layernum);
+array<int,6> Preparestavearray(const int numofstaves, vector<array<int,2>> noisypix);
+void SetStyle2(TGraph *gr, Int_t col);
 
 void CompareNoisyPixelsInRuns_flp(){
   string fpath;
@@ -82,6 +84,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
 
   std::vector<string> timestamps, runnumbers;
   std::vector<array<long int,4>> noisypixinfo;
+  Int_t color[] = {TColor::GetColor("#ff3300"), TColor::GetColor("#ec6e0a"), TColor::GetColor("#daaa14"), TColor::GetColor("#c7e51e"), TColor::GetColor("#85dd69"), TColor::GetColor("#42d6b4"), TColor::GetColor("#00ceff"), TColor::GetColor("#009adf"), TColor::GetColor("#0067c0"), TColor::GetColor("#0033a1")};
 
   //Read the file and the list of plots with entries
   TFile *infl = new TFile(filepath.c_str());
@@ -158,7 +161,60 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
     //cout<<noisypixinfo[noisypixinfo.size()-1][0]<<"  "<<noisypixinfo[noisypixinfo.size()-1][1]<<"  "<<noisypixinfo[noisypixinfo.size()-1][2]<<"  "<<noisypixinfo[noisypixinfo.size()-1][3]<<endl;
   }
 
-  //Make plot
+  //////////////////////////////////////////////////
+  ///////////Make plot with #dead pix vs run////////
+  //////////////////////////////////////////////////
+  const int NSTAVES = 6; //FIXME
+  TGraph *grnoisyperrun[NSTAVES];
+  array<int,NSTAVES> noisypixperstave;
+  for(int is=0; is<numofstaves; is++)
+    grnoisyperrun[is]=new TGraph();
+
+  double minnoi=1e20, maxnoi=-1;
+  for(int irun=0; irun<(int)allruns.size(); irun++){
+    noisypixperstave=Preparestavearray(NSTAVES, noisypixperrun[irun]);
+    for(int is=0; is<numofstaves; is++){
+      if(noisypixperstave[is]<minnoi) minnoi=noisypixperstave[is];
+      if(noisypixperstave[is]>maxnoi) maxnoi=noisypixperstave[is];
+      grnoisyperrun[is]->SetPoint(irun, irun, noisypixperstave[is]);
+    }
+  }
+  //Style
+  for(int is=0; is<numofstaves; is++)
+    SetStyle2(grnoisyperrun[is], color[is]);
+
+  //Set labels creating a fake histogram
+  int npoints1 = grnoisyperrun[0]->GetN();
+  TH1F *hfake1 = new TH1F("hfake1", "; Run; #Noisy pixels", npoints1, -0.5, (double)npoints1-0.5);
+  for(int ir=0; ir<(int)allruns.size(); ir++)
+      hfake1->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", allruns[ir]));
+
+
+  //Draw
+  TCanvas *canvas1 = new TCanvas();
+  canvas1->cd();
+  canvas1->SetTickx();
+  canvas1->SetTicky();
+  canvas1->SetLogy();
+  canvas1->SetMargin(0.0988,0.1,0.194,0.0993);
+  TLegend *leg1 = new TLegend(0.904, 0.197,0.997,0.898);
+  for(int istave=0; istave<numofstaves; istave++)
+    leg1->AddEntry(grnoisyperrun[istave], Form("Stv%d",istave+numofstaves), "lp");
+  hfake1->Draw();
+  hfake1->GetYaxis()->SetRangeUser(minnoi-0.2*minnoi, maxnoi+0.2*maxnoi);
+  hfake1->GetXaxis()->SetTitleOffset(2.8);
+  hfake1->GetYaxis()->SetTitleOffset(1.4);
+  hfake1->SetTitle(Form("%s Layer-%d - Noisy pixels per run, %s",isIB?"IB":"OB",layernum, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+  for(int istave=0; istave<numofstaves; istave++)
+    grnoisyperrun[istave]->Draw("P L same");
+  leg1->Draw();
+  canvas1->SaveAs(Form("../Plots/%s_layer%d_noisypix_vs_run_%s.pdf", isIB?"IB":"OB", layernum, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+  canvas1->SaveAs(Form("../Plots/%s_layer%d_noisypix_vs_run_%s.root", isIB?"IB":"OB", layernum, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+
+
+  ////////////////////////////////////////////
+  ////////////////Make plot with bars/////////
+  ////////////////////////////////////////////
   TGraphErrors *ge_nref = new TGraphErrors();
   TGraphErrors *ge_n2 = new TGraphErrors();
   TGraphErrors *ge_ncom1 = new TGraphErrors();
@@ -239,6 +295,29 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
 }
 
 //
+// Evaluate dead pix per stave on layer
+//
+array<int,6> Preparestavearray(const int numofstaves, vector<array<int,2>> noisypix){
+
+  array<int,6> numnoi;
+  for(int i=0; i<numofstaves; i++)
+    numnoi[i]=0;
+
+  for(int id=0; id<(int)noisypix.size(); id++){
+    //check the rows
+    int realrow=1000;
+    int rown=noisypix[id][1];
+    int count=0;
+    while(realrow>512){
+      realrow=rown-512*count;
+      count++;
+    }
+    numnoi[count-1]++;
+  }
+  return numnoi;
+}
+
+//
 // Function to compare two hitmaps --> returns an arrays with timestamp of run2, noisyPixInRefRun, noisyPixInRun2, noisyPixInCommon
 //
 std::array<long int,4> CompareTwoRuns(vector<array<int,2>> run1/*ref run*/, vector<array<int,2>> run2){
@@ -289,4 +368,16 @@ void SetStyle(TGraphErrors *ge, Color_t col){
   ge->SetMarkerColor(col);
   ge->SetFillColor(col);
   ge->SetLineColor(col);
+}
+
+//
+//Set Style
+//
+void SetStyle2(TGraph *gr, Int_t col){
+  gr->SetLineColor(col);
+  gr->SetMarkerStyle(20);
+  gr->SetMarkerSize(1.4);
+  gr->SetMarkerColor(col);
+  //h->SetFillStyle(0);
+  //h->SetFillColorAlpha(col,0.8);
 }
