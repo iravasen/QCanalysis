@@ -180,7 +180,6 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
       grdeadperrun[is]->SetPoint(irun, irun, deadpixperstave[is]);
     }
   }
-  cout<<"min: "<<mindead<<endl;
   //Style
   for(int is=0; is<numofstaves; is++)
     SetStyle2(grdeadperrun[is], color[is]);
@@ -197,12 +196,13 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
   canvas1->cd();
   canvas1->SetTickx();
   canvas1->SetTicky();
+  if(mindead-0.2*mindead>0) canvas1->SetLogy();
   canvas1->SetMargin(0.0988,0.1,0.194,0.0993);
   TLegend *leg1 = new TLegend(0.904, 0.197,0.997,0.898);
   for(int istave=0; istave<numofstaves; istave++)
     leg1->AddEntry(grdeadperrun[istave], Form("Stv%d",istave+numofstaves), "lp");
   hfake1->Draw();
-  hfake1->GetYaxis()->SetRangeUser(mindead-0.2*mindead, maxdead+0.2*maxdead);
+  hfake1->GetYaxis()->SetRangeUser(mindead-0.2*mindead>0 ? mindead-0.2*mindead:-5., maxdead+0.2*maxdead);
   hfake1->GetXaxis()->SetTitleOffset(2.8);
   hfake1->GetYaxis()->SetTitleOffset(1.4);
   hfake1->SetTitle(Form("%s Layer-%d - Dead pixels per run, %s",isIB?"IB":"OB",layernum, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
