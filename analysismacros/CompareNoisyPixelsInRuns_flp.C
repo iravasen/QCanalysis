@@ -121,6 +121,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
   for(Long64_t i=0; i<nentries; i++){//loop on tree entries
     tr->GetEntry(i);
     //int pos = TMath::Floor((float)i/((float)nChips*(float)numofstaves));
+    if(hits/(300*50000)<1e-5) continue; //temporary cut
     if(!i){
       prevrun = run;
     }
@@ -195,7 +196,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
   canvas1->cd();
   canvas1->SetTickx();
   canvas1->SetTicky();
-  canvas1->SetLogy();
+  //canvas1->SetLogy();
   canvas1->SetMargin(0.0988,0.1,0.194,0.0993);
   TLegend *leg1 = new TLegend(0.904, 0.197,0.997,0.898);
   for(int istave=0; istave<numofstaves; istave++)
