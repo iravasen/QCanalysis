@@ -121,7 +121,6 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
   for(Long64_t i=0; i<nentries; i++){//loop on tree entries
     tr->GetEntry(i);
     //int pos = TMath::Floor((float)i/((float)nChips*(float)numofstaves));
-    if(hits/(300*50000)<1e-5) continue; //temporary cut
     if(!i){
       prevrun = run;
     }
@@ -137,6 +136,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
       noisypix.clear();
       allruns.push_back(run);
     }
+    if(hits/(300*50000)<1e-5) continue; //temporary cut
     colrow[0]=col;
     colrow[1]=row;
     if(hits>1) noisypix.push_back(colrow); // >1 is to reduce contribution from cosmics
