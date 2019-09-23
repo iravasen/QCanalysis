@@ -201,8 +201,9 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
   for(int istave=0; istave<numofstaves; istave++)
     leg1->AddEntry(grdeadperrun[istave], Form("Stv%d",istave+numofstaves), "lp");
   hfake1->Draw();
-  hfake1->GetYaxis()->SetRangeUser(mindead-0.05*mindead, maxdead+0.05*maxdead);
+  hfake1->GetYaxis()->SetRangeUser(mindead-0.2*mindead, maxdead+0.2*maxdead);
   hfake1->GetXaxis()->SetTitleOffset(2.8);
+  hfake1->GetYaxis()->SetTitleOffset(0.8);
   hfake1->SetTitle(Form("%s Layer-%d - Dead pixels per run, %s",isIB?"IB":"OB",layernum, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
   for(int istave=0; istave<numofstaves; istave++)
     grdeadperrun[istave]->Draw("P L same");
