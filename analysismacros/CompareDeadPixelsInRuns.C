@@ -174,14 +174,14 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
     ge_nref->SetPointError(ipoint, 0.5, (double)deadpixinfo[icomp][1]/2.);
     ge_ncom1->SetPoint(ipoint, ipoint*xshift, 0.);
     ge_ncom1->SetPointError(ipoint, 0.5, (double)deadpixinfo[icomp][3]/2.);
-    if((double)deadpixinfo[icomp][3]/2.+(double)deadpixinfo[icomp][1]/2. > max) max = (double)deadpixinfo[icomp][3]/2.+(double)deadpixinfo[icomp][1]/2.;
+    if((double)deadpixinfo[icomp][3]/2.+(double)deadpixinfo[icomp][1]/2.+(double)deadpixinfo[icomp][1]/2. > max) max = (double)deadpixinfo[icomp][3]/2.+(double)deadpixinfo[icomp][1]/2.+(double)deadpixinfo[icomp][1]/2.;
 
     //second couple of bar on the right
     ge_n2->SetPoint(ipoint, ipoint*xshift+1, -(double)deadpixinfo[icomp][3]/2.-(double)deadpixinfo[icomp][2]/2.);
     ge_n2->SetPointError(ipoint, 0.5, (double)deadpixinfo[icomp][2]/2.);
     ge_ncom2->SetPoint(ipoint, ipoint*xshift+1, 0.);
     ge_ncom2->SetPointError(ipoint, 0.5, (double)deadpixinfo[icomp][3]/2.);
-    if(-(double)deadpixinfo[icomp][3]/2.-(double)deadpixinfo[icomp][2]/2. < min) min = -(double)deadpixinfo[icomp][3]/2.-(double)deadpixinfo[icomp][2]/2.;
+    if(-(double)deadpixinfo[icomp][3]/2.-(double)deadpixinfo[icomp][2]/2.-(double)deadpixinfo[icomp][2]/2. < min) min = -(double)deadpixinfo[icomp][3]/2.-(double)deadpixinfo[icomp][2]/2.-(double)deadpixinfo[icomp][2]/2.;
   }
 
   //Style
