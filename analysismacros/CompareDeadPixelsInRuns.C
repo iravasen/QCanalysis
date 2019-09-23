@@ -23,7 +23,9 @@ using namespace std;
 //Functions
 std::array<long int,4> CompareTwoRuns(vector<array<int,2>> run1, vector<array<int,2>> run2);
 void SetStyle(TGraphErrors *ge, Color_t col);
+void SetStyle2(TGraph *gr, Int_t col);
 void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, int layernum);
+array<int,6> Preparestavearray(const int numofstaves, vector<array<int,2>> deadpix);
 
 void CompareDeadPixelsInRuns(){
   string fpath;
@@ -79,6 +81,9 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
 
   gStyle->SetOptStat(0000);
 
+  Int_t color[] = {TColor::GetColor("#ff3300"), TColor::GetColor("#ec6e0a"), TColor::GetColor("#daaa14"), TColor::GetColor("#c7e51e"), TColor::GetColor("#85dd69"), TColor::GetColor("#42d6b4"), TColor::GetColor("#00ceff"), TColor::GetColor("#009adf"), TColor::GetColor("#0067c0"), TColor::GetColor("#0033a1")};
+
+
   std::vector<TH2S*> hmaps;
   std::vector<string> timestamps, runnumbers;
   std::vector<array<long int,4>> deadpixinfo;
@@ -87,7 +92,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
 
   TTree *tr = (TTree*)infl->Get("thrscan_deadpix");
   int run, stave, chip, col, row;
-  int numofstaves = 6;
+  int numofstaves;
   switch(layernum){
     case 0:
       numofstaves = 6;
@@ -99,6 +104,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
       numofstaves = 10;
       break;
     default:
+      numofstaves=6;
       break;
   }
 
@@ -156,7 +162,57 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
     //cout<<deadpixinfo[deadpixinfo.size()-1][0]<<"  "<<deadpixinfo[deadpixinfo.size()-1][1]<<"  "<<deadpixinfo[deadpixinfo.size()-1][2]<<"  "<<deadpixinfo[deadpixinfo.size()-1][3]<<endl;
   }
 
-  //Make plot
+  //////////////////////////////////////////////////
+  ///////////Make plot with #dead pix vs run////////
+  //////////////////////////////////////////////////
+  const int NSTAVES = 6; //FIXME
+  TGraph *grdeadperrun[NSTAVES];
+  array<int,NSTAVES> deadpixperstave;
+  for(int is=0; is<numofstaves; is++)
+    grdeadperrun[is]=new TGraph();
+
+  double mindead=1e20, maxdead=-1;
+  for(int irun=0; irun<(int)allruns.size(); irun++){
+    deadpixperstave=Preparestavearray(NSTAVES, deadpixperrun[irun]);
+    for(int is=0; is<numofstaves; is++){
+      if(deadpixperstave[is]<mindead) mindead=deadpixperstave[is];
+      if(deadpixperstave[is]>maxdead) maxdead=deadpixperstave[is];
+      grdeadperrun[is]->SetPoint(irun, irun, deadpixperstave[is]);
+    }
+  }
+  //Style
+  for(int is=0; is<numofstaves; is++)
+    SetStyle2(grdeadperrun[is], color[is]);
+
+  //Set labels creating a fake histogram
+  int npoints1 = grdeadperrun[0]->GetN();
+  TH1F *hfake1 = new TH1F("hfake1", "; Run; #Dead pixels", npoints1, -0.5, (double)npoints1-0.5);
+  for(int ir=0; ir<(int)allruns.size(); ir++)
+      hfake1->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", allruns[ir]));
+
+
+  //Draw
+  TCanvas *canvas1 = new TCanvas();
+  canvas1->cd();
+  canvas1->SetTickx();
+  canvas1->SetTicky();
+  canvas1->SetMargin(0.0988,0.1,0.194,0.0993);
+  TLegend *leg1 = new TLegend(0.904, 0.197,0.997,0.898);
+  for(int istave=0; istave<numofstaves; istave++)
+    leg1->AddEntry(grdeadperrun[istave], Form("Stv%d",istave+numofstaves), "lp");
+  hfake1->Draw();
+  hfake1->GetYaxis()->SetRangeUser(mindead-0.05*mindead, maxdead+0.05*maxdead);
+  hfake1->GetXaxis()->SetTitleOffset(2.8);
+  hfake1->SetTitle(Form("%s Layer-%d - Dead pixels per run, %s",isIB?"IB":"OB",layernum, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+  for(int istave=0; istave<numofstaves; istave++)
+    grdeadperrun[istave]->Draw("P L same");
+  leg1->Draw();
+  canvas1->SaveAs(Form("../Plots/%s_layer%d_deadpix_vs_run_%s.pdf", isIB?"IB":"OB", layernum, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+  canvas1->SaveAs(Form("../Plots/%s_layer%d_deadpix_vs_run_%s.root", isIB?"IB":"OB", layernum, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+
+  //////////////////////////////////////////////////
+  ///////////////Make plot with bars////////////////
+  //////////////////////////////////////////////////
   TGraphErrors *ge_nref = new TGraphErrors();
   TGraphErrors *ge_n2 = new TGraphErrors();
   TGraphErrors *ge_ncom1 = new TGraphErrors();
@@ -234,6 +290,30 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun, i
   canvas->SaveAs(Form("../Plots/%s-Layer%d_DeadPixComparison_run%ld_compared_to_run_%s.pdf", isIB?"IB":"OB",layernum,refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
   canvas->SaveAs(Form("../Plots/%s-Layer%d_DeadPixComparison_run%ld_compared_to_run_%s.root", isIB?"IB":"OB",layernum,refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 
+
+}
+
+//
+// Evaluate dead pix per stave on layer
+//
+array<int,6> Preparestavearray(const int numofstaves, vector<array<int,2>> deadpix){
+
+  array<int,6> numdead;
+  for(int i=0; i<numofstaves; i++)
+    numdead[i]=0;
+
+  for(int id=0; id<(int)deadpix.size(); id++){
+    //check the rows
+    int realrow=1000;
+    int rown=deadpix[id][1];
+    int count=0;
+    while(realrow>512){
+      realrow=rown-512*count;
+      count++;
+    }
+    numdead[count-1]++;
+  }
+  return numdead;
 }
 
 //
@@ -287,4 +367,16 @@ void SetStyle(TGraphErrors *ge, Color_t col){
   ge->SetMarkerColor(col);
   ge->SetFillColor(col);
   ge->SetLineColor(col);
+}
+
+//
+//Set Style
+//
+void SetStyle2(TGraph *gr, Int_t col){
+  gr->SetLineColor(col);
+  gr->SetMarkerStyle(20);
+  gr->SetMarkerSize(1.4);
+  gr->SetMarkerColor(col);
+  //h->SetFillStyle(0);
+  //h->SetFillColorAlpha(col,0.8);
 }
