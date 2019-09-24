@@ -38,7 +38,8 @@ int main(int argc, char **argv)
 
   ccdb->connect("ccdb-test.cern.ch:8080", "", "", "");
 
-  std::vector<string> tasks = ccdb->getListOfTasksWithPublications();
+  //std::vector<string> tasks = ccdb->getListOfTasksWithPublications();
+  std::vector<string> tasks = ccdb->getListing();
 
   //Get list of tasks
   std::vector<string>::iterator iTask;
@@ -56,7 +57,7 @@ int main(int argc, char **argv)
 
   //Get list of objects inside the task
   std::vector<string> objects = ccdb->getPublishedObjectNames(taskname);
-
+  
   std::vector<string>::iterator iObj;
   cout << "\n\nObjects for task " << taskname << endl;
   for(iObj = objects.begin(); iObj != objects.end(); iObj++) {
