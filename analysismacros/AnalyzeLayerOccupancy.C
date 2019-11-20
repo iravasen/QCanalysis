@@ -116,9 +116,16 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   //cout<<"Lay: "<<nLayers<<"  Runs: "<<nRuns<<endl;
   TGraph *trend[nLayers][100];
   int ilayer=nLayers-1;
-  for(int ihist=0; ihist<(int)hmaps.size(); ihist++)
-    for(int ibiny=1; ibiny<=hmaps[ihist]->GetNbinsY(); ibiny++)
+  for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){
+    for(int ibiny=1; ibiny<=hmaps[ihist]->GetNbinsY(); ibiny++){
       trend[ilayer][ibiny-1] = new TGraph();
+    }
+    if(ihist>0)
+      if(laynums[ihist-1]!=laynums[ihist]){
+        ilayer--;
+      }
+  }
+  ilayer=nLayers-1;
   TH1F *hproj = new TH1F();
   string histname = hmaps[0]->GetName();
   int irun=0;
