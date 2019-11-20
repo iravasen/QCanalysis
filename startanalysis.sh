@@ -10,13 +10,13 @@ todo(){
   read answer
   case "$answer" in
     1) echo -e "\n\e[32m=> Starting fake-hit rate analysis run by run\e[39m"
-       root -l -b -q AnalyzeStaveHitmaps.C++
+       root -l -b -q AnalyzeLayerOccupancy.C++
        remove ;;
     2) echo -e "\n\e[32m=> Starting comparison between runs\e[39m"
        root -l -b -q CompareNoisyPixelsInRuns.C++
        remove ;;
     3) echo -e "\n\e[32m=> Starting fake-hit rate analysis run by run\e[39m"
-       root -l -b -q AnalyzeStaveHitmaps.C++
+       root -l -b -q AnalyzeLayerOccupancy.C++
        remove
        echo -e "\n\e[32m=> Starting comparison between runs\e[39m"
        root -l -b -q CompareNoisyPixelsInRuns.C++

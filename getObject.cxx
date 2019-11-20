@@ -16,9 +16,11 @@ using namespace std;
 using namespace o2::quality_control::repository;
 
 //functions to download data
-bool DownloadTimestamps(auto *ccdb, string myname, string taskname, string objname);
-bool DownloadRuns(auto *ccdb, string myname, string taskname, string objname);
-TList* GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, vector<long int> timestamps, bool isrunknown, vector<int> runnumber);
+void DownloadTimestamps(auto *ccdb, string myname, string taskname, string objname, TList *list, time_t ts_start, time_t ts_end);
+void DownloadRuns(auto *ccdb, string myname, string taskname, string objname, TList *list, string run1, string run2);
+bool GetListOfHisto(auto* ccdb, string myname, string taskname, TList *list, string objname, int layernum, vector<long int> timestamps, bool isrunknown, vector<int> runnumber);
+bool Download(int choice, auto* ccdb, string myname, string taskname, string objname, TList *list, string run1, string run2, time_t ts_start, time_t ts_end);
+
 
 int main(int argc, char **argv)
 {
@@ -43,21 +45,29 @@ int main(int argc, char **argv)
 
   //Get list of tasks
   std::vector<string>::iterator iTask;
-  cout << "\n\nTasks with publications:" << endl;
+  /*cout << "\n\nTasks with publications:" << endl;
   for(iTask = tasks.begin(); iTask != tasks.end(); iTask++) {
     string task = *iTask;
     cout << task << endl;
-  }
+  }*/
 
   //Enter task name
-  string taskname;
-  cout << "Enter a task name to get its objects [quit to exit]: ";
+  string taskname = "qc/ITS/ITSRawTask";
+  string objname;
+  /*cout << "Enter a task name to get its objects [quit to exit]: ";
   cin >> taskname;
-  if(taskname == "quit") return 0;
+  if(taskname == "quit") return 0;*/
+  int layernum;
+  cout<<endl;
+  cout<<endl;
+  cout<<"Enter the layer number [put -1 for all IB layers]"<<endl;
+  cin>>layernum;
+  if(layernum>=0)
+    objname = Form("Occupancy/Layer%d/Layer%dChipStave",layernum,layernum);
 
   //Get list of objects inside the task
-  std::vector<string> objects = ccdb->getPublishedObjectNames(taskname);
-  
+  /*std::vector<string> objects = ccdb->getPublishedObjectNames(taskname);
+
   std::vector<string>::iterator iObj;
   cout << "\n\nObjects for task " << taskname << endl;
   for(iObj = objects.begin(); iObj != objects.end(); iObj++) {
@@ -71,7 +81,7 @@ int main(int argc, char **argv)
   cout << "Enter a object name to get its content [quit to exit]: ";
   cin >> objname;
   if(objname == "quit") return 0;
-
+  */
   //Chose about run number or time interval
   int choice;
   cout<<endl;
@@ -81,20 +91,108 @@ int main(int argc, char **argv)
   cout<<"[Type 1 or 2]: ";
   cin>>choice;
 
+  //set variables (run interval of timestamp interval)
+  string run1="0", run2="0";
+  time_t ts_start=0, ts_end=0;
+  vector<string> nums; //can contain selected run interval or timestamp interval
   switch(choice){
-    case 1: DownloadRuns(ccdb, myname, taskname, objname); break;
-    case 2: DownloadTimestamps(ccdb, myname, taskname, objname); break;
-    default: return 0;
+    case 1: {
+      cout<<"\n"<<"Run interval [just run number, NO ZEROs in front]"<<endl;
+      cout<<"Enter first  run: ";
+      cin>> run1;
+      cout<<"Enter second run: ";
+      cin>> run2;
+      cout<<"\nAll data in "<<taskname+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+      nums.push_back(run1);
+      nums.push_back(run2);
+      break;
+    }
+
+    case 2:{
+      //Enter time period of the data to be downloaded
+      struct tm datetime_start;
+      struct tm datetime_end;
+      string day, month, hour, min, sec;
+      int year;
+      cout<<"\n"<<"Time period [format (hour 24H): DD MM YYYY HH MM SS]"<<endl;
+      cout<<"Enter start date and time: ";
+      cin>> day >> month >> year >> hour >> min >> sec;
+      string datetime1 = Form("%d%s%s_%s%s%s",year,month.c_str(),day.c_str(),hour.c_str(),min.c_str(),sec.c_str());
+      datetime_start.tm_mday = stoi(day);
+      datetime_start.tm_mon = stoi(month)-1;//-1 because january = 0;
+      datetime_start.tm_year = year-1900;
+      datetime_start.tm_hour = stoi(hour);
+      datetime_start.tm_min = stoi(min);
+      datetime_start.tm_sec = stoi(sec);
+      datetime_start.tm_isdst = -1; //-1 means DST unknown
+      ts_start = mktime(&datetime_start);//get timestamp start
+      ts_start*=1000; //convert in milliseconds
+
+      cout<<"Enter end date and time  : ";
+      cin>> day >> month >> year >> hour >> min >> sec;
+      string datetime2 = Form("%d%s%s_%s%s%s",year,month.c_str(),day.c_str(),hour.c_str(),min.c_str(),sec.c_str());
+      datetime_end.tm_mday = stoi(day);
+      datetime_end.tm_mon = stoi(month)-1;//-1 because january = 0;
+      datetime_end.tm_year = year-1900;
+      datetime_end.tm_hour = stoi(hour);
+      datetime_end.tm_min = stoi(min);
+      datetime_end.tm_sec = stoi(sec);
+      datetime_end.tm_isdst = -1; //-1 means DST unknown
+      ts_end = mktime(&datetime_end);//get timestamp start
+      ts_end*=1000; //convert in milliseconds
+      printf("Timestamp start (ms): %ld\n", (long) ts_start);
+      printf("Timestamp end   (ms): %ld\n", (long) ts_end);
+      nums.push_back(datetime1);
+      nums.push_back(datetime2);
+      break;
+    }
   }
+
+  TList *list = new TList();
+  list->SetName("mylist");
+  list->SetOwner();
+
+  if(layernum>=0){
+    Download(choice, ccdb, myname, taskname, objname, list, run1, run2, ts_start, ts_end);
+  }
+  else if(layernum==-1){
+    for(int ilay=0; ilay<=2; ilay++){
+      objname = Form("Occupancy/Layer%d/Layer%dChipStave",ilay,ilay);
+      Download(choice, ccdb, myname, taskname, objname, list, run1, run2, ts_start, ts_end);
+    }
+  }
+  //other option may be included here (FUTURE)
+
+
+  //Save list of objects into a file
+  //Save files
+  string objname_mod = objname;
+  string taskname_mod = taskname;
+  std::replace(objname_mod.begin(),objname_mod.end(),'/','-');
+  std::replace(taskname_mod.begin(),taskname_mod.end(),'/','-');
+  if(layernum==-1)
+    objname_mod = "all-IB-layers";
+  string suffix;
+  switch(choice){
+    case 1: suffix = "run"; break;
+    case 2: suffix = ""; break;
+    default: suffix="";
+  }
+  TFile *outputfile = new TFile(Form("Data/Output_%s-%s_from_%s%s_to_%s%s.root",taskname_mod.c_str(),objname_mod.c_str(), suffix.c_str(),nums[0].c_str(), suffix.c_str(), nums[1].c_str()), "RECREATE");
+  list->Write();
+  outputfile->Close();
+
+
 
   ccdb->disconnect();
 
+  return 1;
 }//end main
 
 //
 // Download data based on timestamps
 //
-bool DownloadTimestamps(auto* ccdb, string myname, string taskname, string objname){
+void DownloadTimestamps(auto* ccdb, string myname, string taskname, string objname, TList* list, time_t ts_start, time_t ts_end){
 
   //Extract all the time stamps of the object
   o2::ccdb::CcdbApi ccdbApi;
@@ -110,42 +208,6 @@ bool DownloadTimestamps(auto* ccdb, string myname, string taskname, string objna
       timestamps.push_back(word);
     }
   }
-
-  //Enter time period of the data to be downloaded
-  struct tm datetime_start;
-  struct tm datetime_end;
-  time_t ts_start;
-  time_t ts_end;
-  string day, month, hour, min, sec;
-  int year;
-  cout<<"\n"<<"Time period [format (hour 24H): DD MM YYYY HH MM SS]"<<endl;
-  cout<<"Enter start date and time: ";
-  cin>> day >> month >> year >> hour >> min >> sec;
-  string datetime1 = Form("%d%s%s_%s%s%s",year,month.c_str(),day.c_str(),hour.c_str(),min.c_str(),sec.c_str());
-  datetime_start.tm_mday = stoi(day);
-  datetime_start.tm_mon = stoi(month)-1;//-1 because january = 0;
-  datetime_start.tm_year = year-1900;
-  datetime_start.tm_hour = stoi(hour);
-  datetime_start.tm_min = stoi(min);
-  datetime_start.tm_sec = stoi(sec);
-  datetime_start.tm_isdst = -1; //-1 means DST unknown
-  ts_start = mktime(&datetime_start);//get timestamp start
-  ts_start*=1000; //convert in milliseconds
-
-  cout<<"Enter end date and time  : ";
-  cin>> day >> month >> year >> hour >> min >> sec;
-  string datetime2 = Form("%d%s%s_%s%s%s",year,month.c_str(),day.c_str(),hour.c_str(),min.c_str(),sec.c_str());
-  datetime_end.tm_mday = stoi(day);
-  datetime_end.tm_mon = stoi(month)-1;//-1 because january = 0;
-  datetime_end.tm_year = year-1900;
-  datetime_end.tm_hour = stoi(hour);
-  datetime_end.tm_min = stoi(min);
-  datetime_end.tm_sec = stoi(sec);
-  datetime_end.tm_isdst = -1; //-1 means DST unknown
-  ts_end = mktime(&datetime_end);//get timestamp start
-  ts_end*=1000; //convert in milliseconds
-  printf("Timestamp start (ms): %ld\n", (long) ts_start);
-  printf("Timestamp end   (ms): %ld\n", (long) ts_end);
 
   //filter all the timestamps to get the ones within start and end dates (get most recent!!)
   vector <long int> timestamps_selperiod;
@@ -169,31 +231,20 @@ bool DownloadTimestamps(auto* ccdb, string myname, string taskname, string objna
     cout<<timestamps_selperiod[i]<<endl;
   }
 
-  TList *list = GetListOfHisto(ccdb, myname, taskname, objname, timestamps_selperiod, 0, vector<int>());
-  if(list==nullptr){
-    cout<< myname << ": empty list"<<endl;
-    return 0;
-  }
-  //Save files
-  string objname_mod = objname;
-  std::replace(objname_mod.begin(),objname_mod.end(),'/','-');
-  TFile *outputfile = new TFile(Form("Data/Output_%s-%s_from_%s_to_%s.root",taskname.c_str(),objname_mod.c_str(),datetime1.c_str(), datetime2.c_str()), "RECREATE");
-  list->Write();
-  outputfile->Close();
-
-  return 1;
+  GetListOfHisto(ccdb, myname, taskname, list, objname, timestamps_selperiod, 0, vector<int>());
 }
 
 
 //
 // Download data based on run numbers - available in metadata from 03/07/2019 21.49 (run 582 --> fake hit scan)
 //
-bool DownloadRuns(auto* ccdb, string myname, string taskname, string objname){
+void DownloadRuns(auto* ccdb, string myname, string taskname, string objname, TList *list, string run1, string run2 ){
 
   //Extract all the time stamps and run numbers of the object
   o2::ccdb::CcdbApi ccdbApi;
   ccdbApi.init("ccdb-test.cern.ch:8080");
   string objectlist = ccdbApi.list(taskname + "/" + objname,false,"text/plain");
+  cout<<"Ready to get files from "<<taskname<<"/"<<objname<<endl;
   //cout<<objectlist<<endl;
   stringstream ss(objectlist);
   string word;
@@ -217,16 +268,6 @@ bool DownloadRuns(auto* ccdb, string myname, string taskname, string objname){
       break;
     }*/
   }
-  cout<<endl;
-
-  //Enter run interval to be downloaded
-  string run1, run2;
-  cout<<"\n"<<"Run interval [just run number, NO ZEROs in front]"<<endl;
-  cout<<"Enter first  run: ";
-  cin>> run1;
-  cout<<"Enter second run: ";
-  cin>> run2;
-  cout<<"\nAll data in "<<taskname+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
 
   //filter all runs to get the ones within run1 and run2 (get most recent for each run!!)
   vector <long int> timestamps_selperiod;
@@ -254,19 +295,8 @@ bool DownloadRuns(auto* ccdb, string myname, string taskname, string objname){
     cout<<"run"<<runs_selperiod[i]<<" - "<<timestamps_selperiod[i]<<endl;
   }
 
-  TList *list = GetListOfHisto(ccdb, myname, taskname, objname, timestamps_selperiod, 1, runs_selperiod);
-  if(list==nullptr){
-    cout<< myname << ": empty list"<<endl;
-    return 0;
-  }
-  //Save files
-  string objname_mod = objname;
-  std::replace(objname_mod.begin(),objname_mod.end(),'/','-');
-  TFile *outputfile = new TFile(Form("Data/Output_%s-%s_from_run%s_to_run%s.root",taskname.c_str(),objname_mod.c_str(),run1.c_str(), run2.c_str()), "RECREATE");
-  list->Write();
-  outputfile->Close();
+  GetListOfHisto(ccdb, myname, taskname, list, objname, timestamps_selperiod, 1, runs_selperiod);
 
-  return 1;
 }
 
 
@@ -275,20 +305,24 @@ bool DownloadRuns(auto* ccdb, string myname, string taskname, string objname){
 //
 //Get list of histogram inside an object
 //
-TList* GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, vector<long int> timestamps, bool isrunknown, vector<int>runnumbers){
+bool GetListOfHisto(auto* ccdb, string myname, string taskname, TList *list, string objname, vector<long int> timestamps, bool isrunknown, vector<int>runnumbers){
   //Getting root files from the database and save them in 1 file
-  TList *list = new TList();
-  list->SetOwner();
-  list->SetName("mylist");
+  //TList *list = new TList();
+  //list->SetOwner();
+  //list->SetName("mylist");
   TH2 *h2s;// = new TH2();
   TH1 *h1s;// = new TH1();
   cout<<"\n"<<"... Getting files from the database"<<endl;
   o2::quality_control::core::MonitorObject *monitor;
+
+  //Get layer number from object name
+  string lnum = objname.substr(objname.find("Layer")+5,1);
+
   for(int i=0; i<(int)timestamps.size();i++){
     monitor = ccdb->retrieve(taskname, objname, timestamps[i]);
     if (monitor == nullptr) {
       cerr << myname << ": failed to get MonitorObject for timestamp: " << timestamps[i]<< endl;
-      return nullptr;
+      return 0;
     }
     //std::unique_ptr<TObject> obj(monitor->getObject());
     TObject *obj = monitor->getObject();
@@ -300,15 +334,42 @@ TList* GetListOfHisto(auto* ccdb, string myname, string taskname, string objname
     //h1s->Reset();
     //h2s->Reset();
     if(strstr(c,"TH1")!=nullptr){
-      h1s = (TH1*)obj->Clone(Form("h1%s_%ld",isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]));
+      h1s = (TH1*)obj->Clone(Form("h1_L%s%s_%ld", lnum.c_str(), isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]));
       list->Add(h1s);
     }
+    //cout<<"BEFORE IF"<<endl;
     if(strstr(c,"TH2")!=nullptr){
-      h2s = (TH2*)obj->Clone(Form("h2%s_%ld",isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]));
+      h2s = (TH2*)obj->Clone(Form("h2_L%s%s_%ld", lnum.c_str(), isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]));
       list->Add(h2s);
+      //cout<<"INSIDE IF"<<endl;
     }
+    //cout<<"AFTER IF"<<endl;
     //h->Delete();
   }
+  //cout<<"END OF LOOP"<<endl;
+  return 1;
+  //return list;
+}
 
-  return list;
+//
+// Download depending on the choice
+//
+bool Download(int choice, auto* ccdb, string myname, string taskname, string objname, TList *list, string run1, string run2, time_t ts_start, time_t ts_end){
+
+  switch(choice){
+    case 1: {
+      DownloadRuns(ccdb, myname, taskname, objname, list, run1, run2);
+      break;//download runs data
+    }
+
+    case 2: {
+      DownloadTimestamps(ccdb, myname, taskname, objname, list, ts_start, ts_end); //download
+      break;
+    }
+
+    default: return 0;
+  }
+
+  return 1;
+
 }
