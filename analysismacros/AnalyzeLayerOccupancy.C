@@ -163,7 +163,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     hfake->SetTitle(Form("Layer-%s, %s",laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     hfake->Draw();
     for(int istave=0; istave<hmaps[ilay*nRuns]->GetNbinsY(); istave++)
-      trend[ilay][istave]->Draw("PL same");
+      trend[ilay][istave]->Draw("P same");
     leg->Draw("same");
     canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s.pdf", laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s.root", laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
