@@ -178,4 +178,44 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     delete leg;
   }
 
+  //Make GIF with TH2 for each run and for each layer
+  irun=1;
+  ilayer=nLayers-1;
+  gStyle->SetPalette(1);
+  for(int ilay=0; ilay<nLayers; ilay++)//remove images if they exist already 
+    gSystem->Unlink(Form("../Plots/Layer%s_fakehitratemap_%s.gif", laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+  for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){// start from the last in order to have the runs from the oldest to the newest
+    TCanvas *canvas = new TCanvas();
+    canvas->cd();
+    canvas->SetLogz();
+    canvas->SetTickx();
+    canvas->SetTicky();
+    canvas->SetRightMargin(0.15);
+    hmaps[ihist]->Draw("colz");
+    hmaps[ihist]->SetMinimum(1e-14);
+    hmaps[ihist]->SetMaximum(1e-3);
+    hmaps[ihist]->GetZaxis()->SetTitle("Fake-hit Rate (/event/pixel)");
+    hmaps[ihist]->SetTitle(Form("Layer-%s, Run %06d (%d/%d)", laynums[ilayer*nRuns].c_str(), stoi(runnumbers[ihist]), irun,nRuns));
+    canvas->Print(Form("../Plots/Layer%s_fakehitratemap_%s.gif+40", laynums[ilayer*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    irun++;
+    if(!ihist && nLayers==1){
+      canvas->Print(Form("../Plots/Layer%s_fakehitratemap_%s.gif++40++", laynums[ilayer*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      break;
+    }
+    if(nLayers>1){
+      if(ihist>0){
+        if(laynums[ihist-1]!=laynums[ihist]){
+          canvas->Print(Form("../Plots/Layer%s_fakehitratemap_%s.gif++40++", laynums[ilayer*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+          ilayer--;
+          irun=1;
+        }
+      }
+      else if(!ihist && !ilayer){
+        canvas->Print(Form("../Plots/Layer%s_fakehitratemap_%s.gif++40++", laynums[ilayer*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      }
+    }
+
+    delete canvas;
+  }
+
 }
