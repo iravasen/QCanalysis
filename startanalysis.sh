@@ -21,6 +21,9 @@ todo(){
        echo -e "\n\e[32m=> Starting comparison between runs\e[39m"
        root -l -b -q CompareNoisyPixelsInRuns.C++
        remove ;;
+    4) echo -e "\n\e[32m=> Starting fake-hit rate correlation analysis\e[39m"
+       root -l -b -q CompareLayerOccupancy.C++
+       remove ;;
     *) echo -e "Invalid option \n"
        echo -e "Retype an option \c"
        todo ;;
@@ -32,7 +35,8 @@ analysismenu(){
   echo "[Analyses on noisy pixels]"
   echo -e "\t 1. Fake-hit rate run by run"
   echo -e "\t 2. Compare noisy pixels between runs"
-  echo -e "\t 3. Option 1 and 2 together\e[39m"
+  echo -e "\t 3. Option 1 and 2 together"
+  echo -e "\t 4. Fake-hit rate correlation analysis (reference run to be chosen)\e[39m"
   echo -e "\n"
   echo -e "Enter option \c"
   cd analysismacros
