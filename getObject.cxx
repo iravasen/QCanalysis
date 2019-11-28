@@ -18,8 +18,11 @@ using namespace o2::quality_control::repository;
 //functions to download data
 void DownloadTimestamps(auto *ccdb, string myname, string taskname, string objname, TList *list, time_t ts_start, time_t ts_end);
 void DownloadRuns(auto *ccdb, string myname, string taskname, string objname, TList *list, string run1, string run2);
-bool GetListOfHisto(auto* ccdb, string myname, string taskname, TList *list, string objname, int layernum, vector<long int> timestamps, bool isrunknown, vector<int> runnumber);
+bool GetListOfHisto(auto* ccdb, string myname, string taskname, TList *list, string objname, int layernum, vector<long int> timestamps, bool isrunknown, bool isperstave, vector<int> runnumber);
 bool Download(int choice, auto* ccdb, string myname, string taskname, string objname, TList *list, string run1, string run2, time_t ts_start, time_t ts_end);
+string GetOptName(int opt);
+
+const int nStavesInLay[3] = {12, 16, 20};
 
 
 int main(int argc, char **argv)
@@ -50,20 +53,29 @@ int main(int argc, char **argv)
     string task = *iTask;
     cout << task << endl;
   }*/
-
-  //Enter task name
   string taskname = "qc/ITS/ITSRawTask";
   string objname;
-  /*cout << "Enter a task name to get its objects [quit to exit]: ";
-  cin >> taskname;
-  if(taskname == "quit") return 0;*/
+  //Choose what to download
+  int opt;
+  cout<<endl;
+  cout<<endl;
+  cout<<"Choose what to download:"<<endl;
+  cout<<"1. Layer fake-hit rate maps (fake-hit rate runs)"<<endl;
+  cout<<"2. Layer hitmaps (fake-hit rate runs)"<<endl;
+  cout<<endl;
+  cout<<"Enter the option: ";
+  cin>>opt;
+  if(opt<1 || opt>2){
+    cout<<"Invalid option"<<endl;
+    return 0;
+  }
+
+  //Choose the layer number
   int layernum;
   cout<<endl;
   cout<<endl;
   cout<<"Enter the layer number [put -1 for all IB layers]"<<endl;
   cin>>layernum;
-  if(layernum>=0)
-    objname = Form("Occupancy/Layer%d/Layer%dChipStave",layernum,layernum);
 
   //Get list of objects inside the task
   /*std::vector<string> objects = ccdb->getPublishedObjectNames(taskname);
@@ -152,15 +164,44 @@ int main(int argc, char **argv)
   list->SetName("mylist");
   list->SetOwner();
 
-  if(layernum>=0){
-    Download(choice, ccdb, myname, taskname, objname, list, run1, run2, ts_start, ts_end);
+  //Download depending on the option (opt)
+  switch(opt){
+    case 1: {
+      if(layernum>=0){
+        objname = Form("Occupancy/Layer%d/Layer%dChipStave",layernum,layernum);
+        Download(choice, ccdb, myname, taskname, objname, list, run1, run2, ts_start, ts_end);
+      }
+      else if(layernum==-1){
+        for(int ilay=0; ilay<=2; ilay++){
+          objname = Form("Occupancy/Layer%d/Layer%dChipStave",ilay,ilay);
+          Download(choice, ccdb, myname, taskname, objname, list, run1, run2, ts_start, ts_end);
+        }
+      }
+    }//end case 1
+
+    case 2: {
+
+      if(layernum>=0){
+        //std::vector<string> objects = ccdb->getPublishedObjectNames(taskname+Form("/Occupancy/Layer%d",layernum));
+        //std::vector<string>::iterator iObj;
+        //cout << "\n\nObjects for " << taskname+Form("/Occupancy/Layer%d",layernum) << endl;
+        for(int istave=0; istave<nStavesInLay[layernum]; istave++){
+          Download(choice, ccdb, myname, taskname, Form("/Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), list, run1, run2, ts_start, ts_end);
+        }
+      }
+      else if(layernum==-1){
+        for(int ilay=0; ilay<=2; ilay++){
+          //std::vector<string> objects = ccdb->getPublishedObjectNames(taskname+Form("/Occupancy/Layer%d",ilay));
+          //std::vector<string>::iterator iObj;
+          //cout << "\n\nObjects for " << taskname+Form("/Occupancy/Layer%d",layernum) << endl;
+          for(int istave=0; istave<nStavesInLay[ilay]; istave++){
+            Download(choice, ccdb, myname, taskname, Form("/Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), list, run1, run2, ts_start, ts_end);
+          }
+        }//end loop on layers
+      }
+    }//end case 2
   }
-  else if(layernum==-1){
-    for(int ilay=0; ilay<=2; ilay++){
-      objname = Form("Occupancy/Layer%d/Layer%dChipStave",ilay,ilay);
-      Download(choice, ccdb, myname, taskname, objname, list, run1, run2, ts_start, ts_end);
-    }
-  }
+
   //other option may be included here (FUTURE)
 
 
@@ -170,19 +211,21 @@ int main(int argc, char **argv)
   string taskname_mod = taskname;
   std::replace(objname_mod.begin(),objname_mod.end(),'/','-');
   std::replace(taskname_mod.begin(),taskname_mod.end(),'/','-');
+  string layername;
   if(layernum==-1)
-    objname_mod = "all-IB-layers";
+    layername = "all-IB-layers";
+  else
+    layername = Form("Layer%d",layernum);
   string suffix;
   switch(choice){
     case 1: suffix = "run"; break;
     case 2: suffix = ""; break;
     default: suffix="";
   }
-  TFile *outputfile = new TFile(Form("Data/Output_%s-%s_from_%s%s_to_%s%s.root",taskname_mod.c_str(),objname_mod.c_str(), suffix.c_str(),nums[0].c_str(), suffix.c_str(), nums[1].c_str()), "RECREATE");
+  string optname = GetOptName(opt);
+  TFile *outputfile = new TFile(Form("Data/Output_%s_%s_from_%s%s_to_%s%s.root",layername.c_str(), optname.c_str(), suffix.c_str(),nums[0].c_str(), suffix.c_str(), nums[1].c_str()), "RECREATE");
   list->Write();
   outputfile->Close();
-
-
 
   ccdb->disconnect();
 
@@ -231,7 +274,9 @@ void DownloadTimestamps(auto* ccdb, string myname, string taskname, string objna
     cout<<timestamps_selperiod[i]<<endl;
   }
 
-  GetListOfHisto(ccdb, myname, taskname, list, objname, timestamps_selperiod, 0, vector<int>());
+  bool isperstave = 0;
+  if(objname.find("HITMAP")!=string::npos) isperstave = 1;
+  GetListOfHisto(ccdb, myname, taskname, list, objname, timestamps_selperiod, 0, isperstave, vector<int>());
 }
 
 
@@ -295,7 +340,9 @@ void DownloadRuns(auto* ccdb, string myname, string taskname, string objname, TL
     cout<<"run"<<runs_selperiod[i]<<" - "<<timestamps_selperiod[i]<<endl;
   }
 
-  GetListOfHisto(ccdb, myname, taskname, list, objname, timestamps_selperiod, 1, runs_selperiod);
+  bool isperstave = 0;
+  if(objname.find("HITMAP")!=string::npos) isperstave = 1;
+  GetListOfHisto(ccdb, myname, taskname, list, objname, timestamps_selperiod, 1, isperstave, runs_selperiod);
 
 }
 
@@ -305,7 +352,7 @@ void DownloadRuns(auto* ccdb, string myname, string taskname, string objname, TL
 //
 //Get list of histogram inside an object
 //
-bool GetListOfHisto(auto* ccdb, string myname, string taskname, TList *list, string objname, vector<long int> timestamps, bool isrunknown, vector<int>runnumbers){
+bool GetListOfHisto(auto* ccdb, string myname, string taskname, TList *list, string objname, vector<long int> timestamps, bool isrunknown, bool isperstave, vector<int>runnumbers){
   //Getting root files from the database and save them in 1 file
   //TList *list = new TList();
   //list->SetOwner();
@@ -317,6 +364,13 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, TList *list, str
 
   //Get layer number from object name
   string lnum = objname.substr(objname.find("Layer")+5,1);
+  string stvnum = "0";
+  if(isperstave){
+    stvnum = objname.substr(objname.find("Stave")+5,2);
+    if(stvnum.find("/")!=string::npos)
+      stvnum = objname.substr(objname.find("Stave")+5,1);
+  }
+
 
   for(int i=0; i<(int)timestamps.size();i++){
     monitor = ccdb->retrieve(taskname, objname, timestamps[i]);
@@ -334,12 +388,12 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, TList *list, str
     //h1s->Reset();
     //h2s->Reset();
     if(strstr(c,"TH1")!=nullptr){
-      h1s = (TH1*)obj->Clone(Form("h1_L%s%s_%ld", lnum.c_str(), isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]));
+      h1s = (TH1*)obj->Clone(Form("h1_L%s%s%s_%ld", lnum.c_str(), isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]));
       list->Add(h1s);
     }
     //cout<<"BEFORE IF"<<endl;
     if(strstr(c,"TH2")!=nullptr){
-      h2s = (TH2*)obj->Clone(Form("h2_L%s%s_%ld", lnum.c_str(), isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]));
+      h2s = (TH2*)obj->Clone(Form("h2_L%s%s%s_%ld", lnum.c_str(), isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]));
       list->Add(h2s);
       //cout<<"INSIDE IF"<<endl;
     }
@@ -372,4 +426,15 @@ bool Download(int choice, auto* ccdb, string myname, string taskname, string obj
 
   return 1;
 
+}
+
+//
+// Get name depending on the option
+//
+string GetOptName(int opt){
+  switch(opt){
+    case 1: return "FHRMAPS";
+    case 2: return "HITMAPS";
+    default: return "0";
+  }
 }
