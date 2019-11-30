@@ -6,7 +6,6 @@
 #include <TList.h>
 #include <TFile.h>
 #include <TCanvas.h>
-#include <TKey.h>
 #include <TColor.h>
 #include <TStyle.h>
 #include <TLegend.h>
@@ -26,7 +25,7 @@ void AnalyzeLayerOccupancy(){
   string fpath;
   int nchips=9;
   cout<<"\n\n=> Available file(s) for the analysis (the last should be the file you want!): \n"<<endl;
-  gSystem->Exec("ls ../Data -Art | tail -n 500");
+  gSystem->Exec("ls ../Data/*FHRMAPS_HITMAPS* -Art | tail -n 500");
   cout<<"\nCopy file name: ";
   cin>>fpath;
   cout<<endl;
@@ -46,7 +45,7 @@ void AnalyzeLayerOccupancy(){
 
 
   //Call
-  DoAnalysis("../Data/"+fpath, nchips, isIB);
+  DoAnalysis(fpath, nchips, isIB);
 
 }
 
@@ -76,14 +75,12 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
-  TList *list = infile->GetListOfKeys();
+  //TList *list = infile->GetListOfKeys();
+  TList *list = (TList*)infile->Get("fhrmaps");
   list->ls();
   TIter next(list);
-  TKey *key;
-  TObject *obj;
   TH2 *h2;
-  while((key = ((TKey*)next()))){
-    obj = key->ReadObj();
+  while(TObject *obj = next()){
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
          && (!obj->InheritsFrom("TH2"))
 	       && (!obj->InheritsFrom("TH1"))
@@ -182,7 +179,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   irun=1;
   ilayer=nLayers-1;
   gStyle->SetPalette(1);
-  for(int ilay=0; ilay<nLayers; ilay++)//remove images if they exist already 
+  for(int ilay=0; ilay<nLayers; ilay++)//remove images if they exist already
     gSystem->Unlink(Form("../Plots/Layer%s_fakehitratemap_%s.gif", laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){// start from the last in order to have the runs from the oldest to the newest
     TCanvas *canvas = new TCanvas();

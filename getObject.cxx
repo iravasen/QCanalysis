@@ -21,6 +21,7 @@ void DownloadRuns(auto *ccdb, string myname, string taskname, string objname, TL
 bool GetListOfHisto(auto* ccdb, string myname, string taskname, TList *list, string objname, int layernum, vector<long int> timestamps, bool isrunknown, bool isperstave, vector<int> runnumber);
 bool Download(int choice, auto* ccdb, string myname, string taskname, string objname, TList *list, string run1, string run2, time_t ts_start, time_t ts_end);
 string GetOptName(int opt);
+string GetListName(int opt, int ilist);
 
 const int nStavesInLay[3] = {12, 16, 20};
 
@@ -54,18 +55,17 @@ int main(int argc, char **argv)
     cout << task << endl;
   }*/
   string taskname = "qc/ITS/ITSRawTask";
-  string objname;
+
   //Choose what to download
   int opt;
   cout<<endl;
   cout<<endl;
   cout<<"Choose what to download:"<<endl;
-  cout<<"1. Layer fake-hit rate maps (fake-hit rate runs)"<<endl;
-  cout<<"2. Layer hitmaps (fake-hit rate runs)"<<endl;
+  cout<<"1. Fake-hit scan data"<<endl;
   cout<<endl;
   cout<<"Enter the option: ";
   cin>>opt;
-  if(opt<1 || opt>2){
+  if(opt<1 || opt>1){
     cout<<"Invalid option"<<endl;
     return 0;
   }
@@ -114,7 +114,6 @@ int main(int argc, char **argv)
       cin>> run1;
       cout<<"Enter second run: ";
       cin>> run2;
-      cout<<"\nAll data in "<<taskname+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
       nums.push_back(run1);
       nums.push_back(run2);
       break;
@@ -160,57 +159,65 @@ int main(int argc, char **argv)
     }
   }
 
-  TList *list = new TList();
-  list->SetName("mylist");
-  list->SetOwner();
+  //Decide how many lists are needed
+  int nListElements = 2;
+  switch(opt){
+    case 1: nListElements = 2; break;
+    default: nListElements = 2;
+  }
+
+  TList *list[nListElements];
+  for(int il=0; il<nListElements; il++){
+    list[il] = new TList();
+    list[il]->SetName(Form("mylist_%d",il));
+    list[il]->SetOwner();
+  }
 
   //Download depending on the option (opt)
   switch(opt){
     case 1: {
       if(layernum>=0){
-        objname = Form("Occupancy/Layer%d/Layer%dChipStave",layernum,layernum);
-        Download(choice, ccdb, myname, taskname, objname, list, run1, run2, ts_start, ts_end);
-      }
+        for(int il=0; il<nListElements; il++){//loop on lists
+          if(!il){
+            string objname = Form("Occupancy/Layer%d/Layer%dChipStave",layernum,layernum);
+            cout<<"\nAll data in "<<taskname+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+            Download(choice, ccdb, myname, taskname, objname, list[il], run1, run2, ts_start, ts_end);
+          }
+          else{
+            for(int istave=0; istave<nStavesInLay[layernum]; istave++){
+              Download(choice, ccdb, myname, taskname, Form("/Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), list[il], run1, run2, ts_start, ts_end);
+            }
+          }
+
+        }//end loop on lists
+      }//end if layernum>=0
+
       else if(layernum==-1){
-        for(int ilay=0; ilay<=2; ilay++){
-          objname = Form("Occupancy/Layer%d/Layer%dChipStave",ilay,ilay);
-          Download(choice, ccdb, myname, taskname, objname, list, run1, run2, ts_start, ts_end);
-        }
-      }
+        for(int il=0; il<nListElements; il++){//loop on lists
+          if(!il){
+            for(int ilay=0; ilay<=2; ilay++){
+              string objname = Form("Occupancy/Layer%d/Layer%dChipStave",ilay,ilay);
+              Download(choice, ccdb, myname, taskname, objname, list[il], run1, run2, ts_start, ts_end);
+            }
+          }
+          else{
+            for(int ilay=0; ilay<=2; ilay++){
+              for(int istave=0; istave<nStavesInLay[ilay]; istave++){
+                Download(choice, ccdb, myname, taskname, Form("/Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), list[il], run1, run2, ts_start, ts_end);
+              }
+            }
+          }
+        }//end loop on lists
+      }//end if layernum==-1
     }//end case 1
 
-    case 2: {
-
-      if(layernum>=0){
-        //std::vector<string> objects = ccdb->getPublishedObjectNames(taskname+Form("/Occupancy/Layer%d",layernum));
-        //std::vector<string>::iterator iObj;
-        //cout << "\n\nObjects for " << taskname+Form("/Occupancy/Layer%d",layernum) << endl;
-        for(int istave=0; istave<nStavesInLay[layernum]; istave++){
-          Download(choice, ccdb, myname, taskname, Form("/Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), list, run1, run2, ts_start, ts_end);
-        }
-      }
-      else if(layernum==-1){
-        for(int ilay=0; ilay<=2; ilay++){
-          //std::vector<string> objects = ccdb->getPublishedObjectNames(taskname+Form("/Occupancy/Layer%d",ilay));
-          //std::vector<string>::iterator iObj;
-          //cout << "\n\nObjects for " << taskname+Form("/Occupancy/Layer%d",layernum) << endl;
-          for(int istave=0; istave<nStavesInLay[ilay]; istave++){
-            Download(choice, ccdb, myname, taskname, Form("/Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), list, run1, run2, ts_start, ts_end);
-          }
-        }//end loop on layers
-      }
-    }//end case 2
-  }
+  }//end switch
 
   //other option may be included here (FUTURE)
 
 
   //Save list of objects into a file
   //Save files
-  string objname_mod = objname;
-  string taskname_mod = taskname;
-  std::replace(objname_mod.begin(),objname_mod.end(),'/','-');
-  std::replace(taskname_mod.begin(),taskname_mod.end(),'/','-');
   string layername;
   if(layernum==-1)
     layername = "all-IB-layers";
@@ -224,7 +231,11 @@ int main(int argc, char **argv)
   }
   string optname = GetOptName(opt);
   TFile *outputfile = new TFile(Form("Data/Output_%s_%s_from_%s%s_to_%s%s.root",layername.c_str(), optname.c_str(), suffix.c_str(),nums[0].c_str(), suffix.c_str(), nums[1].c_str()), "RECREATE");
-  list->Write();
+  for(int il=0; il<nListElements; il++){
+    string listname = GetListName(opt, il);
+    list[il]->Write(listname.c_str(),1);
+  }
+
   outputfile->Close();
 
   ccdb->disconnect();
@@ -433,8 +444,22 @@ bool Download(int choice, auto* ccdb, string myname, string taskname, string obj
 //
 string GetOptName(int opt){
   switch(opt){
-    case 1: return "FHRMAPS";
-    case 2: return "HITMAPS";
+    case 1: return "FHRMAPS_HITMAPS";
+    default: return "0";
+  }
+}
+
+//
+// Get name to assign to the output list
+//
+string GetListName(int opt, int ilist){
+  switch(opt){
+    case 1:{
+      if(!ilist)
+        return "fhrmaps";
+      else
+        return "hitmaps";
+    }
     default: return "0";
   }
 }

@@ -15,11 +15,8 @@ todo(){
     2) echo -e "\n\e[32m=> Starting comparison between runs\e[39m"
        root -l -b -q CompareNoisyPixelsInRuns.C++
        remove ;;
-    3) echo -e "\n\e[32m=> Starting fake-hit rate analysis run by run\e[39m"
-       root -l -b -q AnalyzeLayerOccupancy.C++
-       remove
-       echo -e "\n\e[32m=> Starting comparison between runs\e[39m"
-       root -l -b -q CompareNoisyPixelsInRuns.C++
+    3) echo -e "\n\e[32m=> Starting fake-hit rate analysis masking hot pixels\e[39m"
+       root -l -b -q MaskNoisyPixelsInRuns.C++
        remove ;;
     4) echo -e "\n\e[32m=> Starting fake-hit rate correlation analysis\e[39m"
        root -l -b -q CompareLayerOccupancy.C++
@@ -34,8 +31,8 @@ analysismenu(){
   echo -e "\n\e[32m=> Choose the analysis you want to perform \n"
   echo "[Analyses on noisy pixels]"
   echo -e "\t 1. Fake-hit rate run by run"
-  echo -e "\t 2. Compare noisy pixels between runs"
-  echo -e "\t 3. Option 1 and 2 together"
+  echo -e "\t 2. Compare number of noisy pixels between runs"
+  echo -e "\t 3. Fake-hit rate study with hot pixels masking"
   echo -e "\t 4. Fake-hit rate correlation analysis (reference run to be chosen)\e[39m"
   echo -e "\n"
   echo -e "Enter option \c"

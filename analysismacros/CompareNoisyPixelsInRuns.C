@@ -7,7 +7,6 @@
 #include <TList.h>
 #include <TFile.h>
 #include <TCanvas.h>
-#include <TKey.h>
 #include <TColor.h>
 #include <TStyle.h>
 #include <TLegend.h>
@@ -28,7 +27,7 @@ void CompareNoisyPixelsInRuns(){
   string fpath;
   int nchips=9;
   cout<<"\n\nAvailable file(s) for the analysis (the last should be the file you want!): \n"<<endl;
-  gSystem->Exec("ls ../Data -Art | tail -n 500");
+  gSystem->Exec("ls ../Data/*FHRMAPS_HITMAPS* -Art | tail -n 500");
   cout<<"\nCopy file name: ";
   cin>>fpath;
   cout<<endl;
@@ -47,15 +46,12 @@ void CompareNoisyPixelsInRuns(){
   }
 
   cout<<"Available runs in your file:\n"<<endl;
-  TFile *infile=new TFile(Form("../Data/%s",fpath.c_str()));
-  TList *list = infile->GetListOfKeys();
+  TFile *infile=new TFile(fpath.c_str());
+  TList *list = (TList*)infile->Get("hitmaps");
   TIter next(list);
-  TKey *key;
-  TObject *obj;
   TH2 *h2;
   vector<string> stavenums;
-  while((key = ((TKey*)next()))){
-    obj = key->ReadObj();
+  while(TObject *obj = next()){
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
          && (!obj->InheritsFrom("TH2"))
 	       && (!obj->InheritsFrom("TH1"))
@@ -81,7 +77,7 @@ void CompareNoisyPixelsInRuns(){
   cout<<"\n\n=>Insert a run you want to use as a reference for the comparison with all the others: \n"<<endl;
   cin>>refrun;
 
-  DoAnalysis("../Data/"+fpath, nchips, isIB, refrun);
+  DoAnalysis(fpath, nchips, isIB, refrun);
 }
 
 //
@@ -100,14 +96,10 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun){
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
-  TList *list = infile->GetListOfKeys();
-  list->ls();
+  TList *list = (TList*)infile->Get("hitmaps");
   TIter next(list);
-  TKey *key;
-  TObject *obj;
   TH2 *h2;
-  while((key = ((TKey*)next()))){
-    obj = key->ReadObj();
+  while(TObject *obj = next()){
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
          && (!obj->InheritsFrom("TH2"))
 	       && (!obj->InheritsFrom("TH1"))
