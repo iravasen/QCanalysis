@@ -12,6 +12,7 @@
 #include <TMath.h>
 #include <TSystem.h>
 #include <TGraph.h>
+#include <TKey.h>
 
 using namespace std;
 
@@ -75,23 +76,25 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
-  //TList *list = infile->GetListOfKeys();
-  TList *list = (TList*)infile->Get("fhrmaps");
-  list->ls();
+  TList *list = infile->GetListOfKeys();
+  TKey *key;
+  TObject *obj;
   TIter next(list);
   TH2 *h2;
-  while(TObject *obj = next()){
+  while((key = ((TKey*)next()))){
+    obj = key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
          && (!obj->InheritsFrom("TH2"))
 	       && (!obj->InheritsFrom("TH1"))
        ) {
             cout<<"<W> Object "<<obj->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;
        }
+    string objname = (string)obj->GetName();
+    if(objname.find("Stv")!=string::npos) break;
     h2 = (TH2*)obj->Clone(obj->GetName());
     if(!h2->GetEntries()) continue;
     cout<<"... Reading "<<obj->GetName()<<endl;
     hmaps.push_back(h2);
-    string objname = (string)obj->GetName();
     string timestamp = objname.find("run")==string::npos ? objname.substr(objname.find("_",2)+1, 13) : objname.substr(objname.find("_",6)+1, 13);
     string runnum =  objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
     string laynum = objname.substr(objname.find("L")+1,1);
@@ -132,9 +135,9 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       trend[ilayer][ibiny-1]->SetName(Form("gr_L%s_stave%d",laynums[ihist].c_str(),ibiny-1));
       trend[ilayer][ibiny-1]->SetPoint(irun, irun, hproj->Integral()/nChips);
       if((ibiny-1)<hmaps[ihist]->GetNbinsY()/2)
-        SetStyle(trend[ilayer][ibiny-1], col[ibiny-1], 20);
+        SetStyle(trend[ilayer][ibiny-1], col[ibiny-1], 24);
       else
-        SetStyle(trend[ilayer][ibiny-1], col[ibiny-1-hmaps[ihist]->GetNbinsY()/2], 22);
+        SetStyle(trend[ilayer][ibiny-1], col[ibiny-1-hmaps[ihist]->GetNbinsY()/2], 26);
     }
     irun++;
     if(ihist>0)

@@ -16,6 +16,7 @@
 #include <TLine.h>
 #include <TText.h>
 #include <TSystem.h>
+#include <TKey.h>
 
 using namespace std;
 
@@ -71,21 +72,25 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
 
   //Read the file and the list of plots with entries (hitmaps!)
   TFile *infile=new TFile(filepath_hit.c_str());
-  TList *list = (TList*)infile->Get("hitmaps");
+  TList *list = (TList*)infile->GetListOfKeys();
   TIter next(list);
+  TObject *obj;
+  TKey *key;
   TH2 *h2;
-  while(TObject *obj = next()){
+  while((key=((TKey*)next()))){
+    obj = key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
          && (!obj->InheritsFrom("TH2"))
 	       && (!obj->InheritsFrom("TH1"))
        ) {
             cout<<"<W> Object "<<obj->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;
        }
+    string objname = (string)obj->GetName();
+    if(objname.find("Stv")==string::npos) continue;
     h2 = (TH2*)obj->Clone(obj->GetName());
     //if(!h2->GetEntries()) continue;
     cout<<"... Reading "<<obj->GetName()<<endl;
     hmaps.push_back(h2);
-    string objname = (string)obj->GetName();
     string timestamp = objname.find("run")==string::npos ? objname.substr(objname.find("_",2)+1, 13) : objname.substr(objname.find("_",6)+1, 13);
     string runnum =  objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
     string laynum = objname.substr(objname.find("L")+1,1);
@@ -119,17 +124,22 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
   nStavesInLay.push_back(cstv+1);//in case of 1 layer or for last layer
 
   //Read file with fhr maps for each layer --> ONLY TO EXTRACT NUMBER OF TRIGGERS!!
-  TList *list2 = (TList*)infile->Get("fhrmaps");
+  TList *list2 = (TList*)infile->GetListOfKeys();
   TIter next2(list2);
   TH2 *h2_2[nRuns];
+  TObject *obj2;
+  TKey *key2;
   int cntrun=0;
-  while(TObject *obj2 = next2()){
+  while((key2=((TKey*)next2()))){
+    obj2 = key2->ReadObj();
     if ((strcmp(obj2->IsA()->GetName(),"TProfile")!=0)
          && (!obj2->InheritsFrom("TH2"))
 	       && (!obj2->InheritsFrom("TH1"))
        ) {
             cout<<"<W> Object "<<obj2->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;
        }
+    string objname2 = (string)obj2->GetName();
+    if(objname2.find("Stv")!=string::npos) break;
     h2_2[cntrun] = (TH2*)obj2->Clone(obj2->GetName());
     cntrun++;
     if(cntrun==nRuns) break;
@@ -207,7 +217,7 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
     for(int is=0; is<nStavesInLay[ilay];is++){
       TH1F *proj = (TH1F*)hFhrStv[ilay][is]->ProjectionX(Form("proj_%d%d",ilay,is));
       proj->Scale(1./nRuns); //Divide by the number of runs
-      SetStyle(proj, col[is<nStavesInLay[ilay]/2 ? is : is-nStavesInLay[ilay]/2],is<nStavesInLay[ilay]/2 ? 20:22);
+      SetStyle(proj, col[is<nStavesInLay[ilay]/2 ? is : is-nStavesInLay[ilay]/2],is<nStavesInLay[ilay]/2 ? 24:26);
       proj->Draw("PL same");
       leg.AddEntry(proj, Form("Stv%d",is),"pl");
     }

@@ -15,6 +15,7 @@
 #include <TLine.h>
 #include <TText.h>
 #include <TSystem.h>
+#include <TKey.h>
 
 using namespace std;
 
@@ -47,20 +48,24 @@ void CompareNoisyPixelsInRuns(){
 
   cout<<"Available runs in your file:\n"<<endl;
   TFile *infile=new TFile(fpath.c_str());
-  TList *list = (TList*)infile->Get("hitmaps");
+  TList *list = (TList*)infile->GetListOfKeys();
   TIter next(list);
+  TObject *obj;
+  TKey *key;
   TH2 *h2;
   vector<string> stavenums;
-  while(TObject *obj = next()){
+  while((key = ((TKey*)next()))){
+    obj=key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
          && (!obj->InheritsFrom("TH2"))
 	       && (!obj->InheritsFrom("TH1"))
        ) {
             cout<<"<W> Object "<<obj->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;
        }
+    string objname = (string)obj->GetName();
+    if(objname.find("Stv")==string::npos) continue;
     h2 = (TH2*)obj->Clone(obj->GetName());
     //if(!h2->GetEntries()) continue;
-    string objname = (string)obj->GetName();
     string runnum =  objname.substr(objname.find("run")+3, 6);
     string stvnum = objname.substr(objname.find("Stv")+3,2);
     if(stvnum.find("_")!=string::npos)
@@ -96,21 +101,25 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun){
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
-  TList *list = (TList*)infile->Get("hitmaps");
+  TList *list = (TList*)infile->GetListOfKeys();
   TIter next(list);
+  TObject *obj;
+  TKey *key;
   TH2 *h2;
-  while(TObject *obj = next()){
+  while((key=((TKey*)next()))){
+    obj = key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
          && (!obj->InheritsFrom("TH2"))
 	       && (!obj->InheritsFrom("TH1"))
        ) {
             cout<<"<W> Object "<<obj->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;
        }
+    string objname = (string)obj->GetName();
+    if(objname.find("Stv")==string::npos) continue;
     h2 = (TH2*)obj->Clone(obj->GetName());
     //if(!h2->GetEntries()) continue;
     cout<<"... Reading "<<obj->GetName()<<endl;
     hmaps.push_back(h2);
-    string objname = (string)obj->GetName();
     string timestamp = objname.find("run")==string::npos ? objname.substr(objname.find("_",2)+1, 13) : objname.substr(objname.find("_",6)+1, 13);
     string runnum =  objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
     string laynum = objname.substr(objname.find("L")+1,1);
