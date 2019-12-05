@@ -52,7 +52,6 @@ void CompareNoisyPixelsInRuns(){
   TIter next(list);
   TObject *obj;
   TKey *key;
-  TH2 *h2;
   vector<string> stavenums;
   while((key = ((TKey*)next()))){
     obj=key->ReadObj();
@@ -64,8 +63,6 @@ void CompareNoisyPixelsInRuns(){
        }
     string objname = (string)obj->GetName();
     if(objname.find("Stv")==string::npos) continue;
-    h2 = (TH2*)obj->Clone(obj->GetName());
-    //if(!h2->GetEntries()) continue;
     string runnum =  objname.substr(objname.find("run")+3, 6);
     string stvnum = objname.substr(objname.find("Stv")+3,2);
     if(stvnum.find("_")!=string::npos)
@@ -116,7 +113,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun){
        }
     string objname = (string)obj->GetName();
     if(objname.find("Stv")==string::npos) continue;
-    h2 = (TH2*)obj->Clone(obj->GetName());
+    h2 = (TH2*)obj;
     //if(!h2->GetEntries()) continue;
     cout<<"... Reading "<<obj->GetName()<<endl;
     hmaps.push_back(h2);
@@ -149,11 +146,6 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun){
     stavenums.push_back(stvnum);
   }
   nStavesInLay.push_back(cstv+1);//in case of 1 layer or for last layer
-
-  /*cout<<"Staves in Lay: "<<nStavesInLay[0]<<endl;
-  cout<<"nRuns: "<<nRuns<<endl;
-  cout<<"nLayers: "<<nLayers<<endl;
-  cout<<"SizeOf posrefrun: "<<posrefrun.size()<<endl;*/
 
   //Compare all the runs (non-empty ones) with the reference run chosen by the user
   vector<string> runlabel;

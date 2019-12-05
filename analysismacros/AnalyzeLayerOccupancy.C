@@ -91,7 +91,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
        }
     string objname = (string)obj->GetName();
     if(objname.find("Stv")!=string::npos) break;
-    h2 = (TH2*)obj->Clone(obj->GetName());
+    h2 = (TH2*)obj;
     if(!h2->GetEntries()) continue;
     cout<<"... Reading "<<obj->GetName()<<endl;
     hmaps.push_back(h2);

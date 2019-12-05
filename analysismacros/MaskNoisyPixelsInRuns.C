@@ -74,10 +74,9 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
   TFile *infile=new TFile(filepath_hit.c_str());
   TList *list = (TList*)infile->GetListOfKeys();
   TIter next(list);
-  TObject *obj;
   TKey *key;
-  TH2 *h2;
-  while((key=((TKey*)next()))){
+  TObject *obj;
+  while((key=(TKey*)next())){
     obj = key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
          && (!obj->InheritsFrom("TH2"))
@@ -87,7 +86,7 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
        }
     string objname = (string)obj->GetName();
     if(objname.find("Stv")==string::npos) continue;
-    h2 = (TH2*)obj->Clone(obj->GetName());
+    TH2 *h2 = (TH2*)obj;
     //if(!h2->GetEntries()) continue;
     cout<<"... Reading "<<obj->GetName()<<endl;
     hmaps.push_back(h2);
@@ -120,6 +119,7 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
     if((int)stavenums.size()>1 && stvnum!=stavenums[stavenums.size()-2])
       continue;
     runlabel.push_back(runnum);
+
   }
   nStavesInLay.push_back(cstv+1);//in case of 1 layer or for last layer
 
@@ -127,8 +127,8 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
   TList *list2 = (TList*)infile->GetListOfKeys();
   TIter next2(list2);
   TH2 *h2_2[nRuns];
-  TObject *obj2;
   TKey *key2;
+  TObject *obj2;
   int cntrun=0;
   while((key2=((TKey*)next2()))){
     obj2 = key2->ReadObj();
@@ -140,7 +140,7 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
        }
     string objname2 = (string)obj2->GetName();
     if(objname2.find("Stv")!=string::npos) break;
-    h2_2[cntrun] = (TH2*)obj2->Clone(obj2->GetName());
+    h2_2[cntrun] = (TH2*)obj2;
     cntrun++;
     if(cntrun==nRuns) break;
     //if(!h2->GetEntries()) continue;
@@ -150,16 +150,13 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
   //Calculate number of triggers for each run
   cout<<endl;
   cout<<"... Extract the number of triggers (events) from for each run"<<endl;
-  double ntrig[nRuns];
+  vector<double> ntrig;
   for(int ir=0; ir<nRuns; ir++){
     double fhr_run = h2_2[ir]->GetBinContent(1,1);
     double hits_chip = hmaps[ir]->Integral(1,256,1,512);
-    ntrig[ir] = hits_chip/(512.*1024.*fhr_run);
-    if(!ir) cout<<"~"<<ntrig[ir]<<" triggers"<<endl;
+    ntrig.push_back(hits_chip/(512.*1024.*fhr_run));
+    if(!ir) cout<<"~"<<ntrig[ntrig.size()-1]<<" triggers"<<endl;
   }
-  /*cout<<"Staves in Lay: "<<nStavesInLay[0]<<endl;
-  cout<<"nRuns: "<<nRuns<<endl;
-  cout<<"nLayers: "<<nLayers<<endl;*/
 
   //Start masking hottest pixels for each stave in each run
   cout<<endl;
@@ -181,7 +178,7 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
     for(int is=0; is<nStavesInLay[ilay]; is++)
       hFhrStv[ilay][is] = new TH2F(Form("h2FhrStv_%s_%d", laynums[ilay*nRuns*nStavesInLay[ilay]].c_str(),is), Form("Layer-%s - Stave-%d; # Hot Pixel Masked;Run", laynums[ilay*nRuns*nStavesInLay[ilay]].c_str(),is),nMasked+1, -0.5, nMasked+0.5, nRuns, 0.5, nRuns+0.5);
 
-  //Fill 3D histogram
+  //Fill histogram
   int ilayer = nLayers-1;
   int istave = nStavesInLay[ilayer]-1;
   irun=0;
@@ -225,104 +222,6 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
     cnv.SaveAs(Form("../Plots/Layer%s_FHRpixmask_%s.pdf", laynums[ilay*nRuns*nStavesInLay[ilay]].c_str(),filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str()));
     cnv.SaveAs(Form("../Plots/Layer%s_FHRpixmask_%s.root", laynums[ilay*nRuns*nStavesInLay[ilay]].c_str(),filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str()));
   }
-  /*
-
-  //Legend
-  TLegend *leg = new TLegend(0.876,0.176, 0.994, 0.902);
-  leg->SetLineColor(0);
-  leg->SetTextFont(42);
-  leg->AddEntry(ge_nref[0], "#splitline{#noisy pix}{ref. run only}", "f");
-  leg->AddEntry(ge_n2[0], "#splitline{#noisy pix}{2nd run only}", "f");
-  leg->AddEntry(ge_ncom1[0], "#splitline{#noisy pix}{both}");
-
-  //Draw plot for each layer
-  for(int ilay=0; ilay<nLayers; ilay++){
-    TCanvas *canvas = new TCanvas(Form("mycanvas_%d",ilay), Form("mycanvas_%d",ilay), 1300, 800);
-    canvas->SetMargin(0.08, 0.1271, 0.1759, 0.0996);
-    canvas->cd();
-
-    //fake histo (just for the axes)
-    double x2,y2;
-    ge_ncom2[ilay]->GetPoint(ge_ncom2[ilay]->GetN()-1, x2,y2);
-    TH1F *hfake = new TH1F("hfake","hfake", (int)x2+6, -3, x2+3);
-    //draw labels on x axis
-    int counter = 0;
-    for(Int_t k=4;k<=hfake->GetNbinsX()-3;k+=3){
-      hfake->GetXaxis()->SetBinLabel(k, Form("run%s",runlabel[counter].c_str()));
-      counter++;
-    }
-    hfake->Draw();
-    //canvas->SetLogy();
-    hfake->SetTitle(Form("Layer-%s - %s%06ld compared to all",laynums[ilay*nRuns*nStavesInLay[ilay]].c_str(), filepath.find("run")==string::npos? "":"run",refrun));
-    ge_nref[ilay]->Draw("P E2 same");
-    ge_ncom1[ilay]->Draw("E2 same");
-    ge_ncom2[ilay]->Draw("E2 same");
-    ge_n2[ilay]->Draw("E2 same");
-    hfake->GetYaxis()->SetRangeUser(min+0.1*min, max+0.1*max);
-    //hfake->GetYaxis()->SetLabelColor(kWhite);
-    hfake->GetYaxis()->SetTickLength(0.005);
-    hfake->GetYaxis()->SetMaxDigits(4);
-    TLine *lineref = new TLine(-0.5, 0, x2+0.5, 0);
-    lineref->SetLineColor(kGray-1);
-    lineref->SetLineStyle(2);
-    lineref->Draw("same");
-
-    //draw legend
-    leg->Draw("same");
-
-    canvas->SaveAs(Form("../Plots/Layer%s_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf", laynums[ilay*nRuns*nStavesInLay[ilay]].c_str(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-    canvas->SaveAs(Form("../Plots/Layer%s_NoisyPixComparison_%s%ld_compared_to_run_%s.root", laynums[ilay*nRuns*nStavesInLay[ilay]].c_str(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-
-    delete canvas;
-    delete hfake;
-    delete lineref;
-  }//end loop on layers
-
-  //Draw plot for each stave
-  //Draw
-  for(int ilay=0; ilay<nLayers; ilay++){
-    for(int is=0; is<nStavesInLay[ilay]; is++){
-      TCanvas *canvas = new TCanvas(Form("mycanvas_%d_%d",ilay,is), Form("mycanvas_%d_%d",ilay,is), 1300, 800);
-      canvas->SetMargin(0.08, 0.1271, 0.1759, 0.0996);
-      canvas->cd();
-
-      //fake histo (just for the axes)
-      double x2,y2;
-      ge_ncom2_stave[ilay][is]->GetPoint(ge_ncom2_stave[ilay][is]->GetN()-1, x2,y2);
-      TH1F *hfake = new TH1F("hfake","hfake", (int)x2+6, -3, x2+3);
-      //draw labels on x axis
-      int counter = 0;
-      for(Int_t k=4;k<=hfake->GetNbinsX()-3;k+=3){
-        hfake->GetXaxis()->SetBinLabel(k, Form("run%s",runlabel[counter].c_str()));
-        counter++;
-      }
-      hfake->Draw();
-      //canvas->SetLogy();
-      hfake->SetTitle(Form("Layer-%s - Stave-%d - %s%06ld compared to all",laynums[ilay*nRuns*nStavesInLay[ilay]].c_str(), is, filepath.find("run")==string::npos? "":"run",refrun));
-      ge_nref_stave[ilay][is]->Draw("P E2 same");
-      ge_ncom1_stave[ilay][is]->Draw("E2 same");
-      ge_ncom2_stave[ilay][is]->Draw("E2 same");
-      ge_n2_stave[ilay][is]->Draw("E2 same");
-      hfake->GetYaxis()->SetRangeUser(mins[ilay][is]+0.1*mins[ilay][is], maxs[ilay][is]+0.1*maxs[ilay][is]);
-      //hfake->GetYaxis()->SetLabelColor(kWhite);
-      hfake->GetYaxis()->SetTickLength(0.005);
-      hfake->GetYaxis()->SetMaxDigits(4);
-      TLine *lineref = new TLine(-0.5, 0, x2+0.5, 0);
-      lineref->SetLineColor(kGray-1);
-      lineref->SetLineStyle(2);
-      lineref->Draw("same");
-
-      leg->Draw("same");
-
-      if(!ilay && !is) canvas->SaveAs(Form("../Plots/%sAllStaves_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf[",nLayers==1 ? Form("Layer%s_",laynums[ilay*nRuns*nStavesInLay[ilay]].c_str()) : "AllLayers_",filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-      canvas->SaveAs(Form("../Plots/%sAllStaves_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf",nLayers==1 ? Form("Layer%s_",laynums[ilay*nRuns*nStavesInLay[ilay]].c_str()) : "AllLayers_",filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-      if(ilay==nLayers-1 && is==nStavesInLay[ilay]-1) canvas->SaveAs(Form("../Plots/%sAllStaves_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf]",nLayers==1 ? Form("Layer%s_",laynums[ilay*nRuns*nStavesInLay[ilay]].c_str()) : "AllLayers_",filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-
-      delete canvas;
-      delete hfake;
-      delete lineref;
-    }
-  }*/
 
 }
 

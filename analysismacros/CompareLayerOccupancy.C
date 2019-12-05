@@ -50,7 +50,6 @@ void CompareLayerOccupancy(){
   TIter next(list);
   TKey *key;
   TObject *obj;
-  TH2 *h2;
   vector<string> laynums;
   while((key = ((TKey*)next()))){
     obj = key->ReadObj();
@@ -62,8 +61,6 @@ void CompareLayerOccupancy(){
        }
     string objname = (string)obj->GetName();
     if(objname.find("Stv")!=string::npos) break;
-    h2 = (TH2*)obj->Clone(obj->GetName());
-    if(!h2->GetEntries()) continue;
     string runnum =  objname.substr(objname.find("run")+3, 6);
     string laynum = objname.substr(objname.find("L")+1,1);
     laynums.push_back(laynum);
@@ -114,7 +111,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun){
        }
     string objname = (string)obj->GetName();
     if(objname.find("Stv")!=string::npos) break;
-    h2 = (TH2*)obj->Clone(obj->GetName());
+    h2 = (TH2*)obj;
     if(!h2->GetEntries()) continue;
     cout<<"... Reading "<<obj->GetName()<<endl;
     hmaps.push_back(h2);
