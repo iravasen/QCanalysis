@@ -289,7 +289,7 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
   vector <long int> timestamps_selperiod;
   vector <int> runs_selperiod;
   int counter=0;
-  for(int irun=0; irun<(int)runs.size()-1; irun++){
+  for(int irun=0; irun<(int)runs.size(); irun++){
     if(stoi(runs[irun])>=stoi(run1) && stoi(runs[irun])<=stoi(run2)){
       counter++;
       if(counter==1){
@@ -345,7 +345,8 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
 
   for(int i=0; i<(int)timestamps.size();i++){
 
-    MonitorObject *monitor = ccdb->retrieve(taskname, objname, timestamps[i]);
+    //MonitorObject *monitor = ccdb->retrieve(taskname, objname, timestamps[i]);
+    auto monitor = ccdb->retrieveMO(taskname, objname, timestamps[i]);
 
     if (monitor == nullptr) {
       cerr << myname << ": failed to get MonitorObject for timestamp: " << timestamps[i]<< endl;
@@ -374,7 +375,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
 
     delete h1s;
     delete h2s;
-    delete monitor;
+    //delete monitor;
     delete obj;
   }
 
