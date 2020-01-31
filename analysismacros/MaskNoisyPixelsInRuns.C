@@ -208,7 +208,7 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
     cnv.SetTickx();
     cnv.SetTicky();
     cnv.SetMargin(0.0988,0.1,0.1,0.0993);
-    TH1F *hframe = cnv.DrawFrame(-0.5,1e-14,nMasked+0.5,1e-3,Form("Layer %s - Average FHR %s; # Hot Pixel masked ; FHR (/event/pixel)",laynums[ilay*nRuns*nStavesInLay[ilay]].c_str(),filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str()));
+    TH1F *hframe = cnv.DrawFrame(-0.5,1e-14,nMasked+0.5,1e-3,Form("Layer %s - Average FHR %s; # Hot Pixel Clusters masked ; FHR (/event/pixel)",laynums[ilay*nRuns*nStavesInLay[ilay]].c_str(),filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str()));
     //legend
     TLegend leg(0.904, 0.127,0.997,0.898);
     for(int is=0; is<nStavesInLay[ilay];is++){
