@@ -17,12 +17,13 @@
 #include <TText.h>
 #include <TSystem.h>
 #include <TKey.h>
+#include <TLatex.h>
 
 using namespace std;
 
 const int nMasked = 100;
 //Functions
-std::array<float,nMasked+1> GetFHRwithMasking(TH2 *hmap, const int nchips, double ntrig);
+std::array<float,nMasked+1> GetFHRwithMasking(TH2 *hmap, const int nchips, double ntrig, TH2 *hhotmap);
 void SetStyle(TH1 *h, Int_t col, Style_t mkr);
 void DoAnalysis(string filepath_hit, const int nChips, bool isIB);
 
@@ -142,7 +143,7 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
     if(objname2.find("Stv")!=string::npos) break;
     h2_2[cntrun] = (TH2*)obj2;
     cntrun++;
-    if(cntrun==nRuns) break;
+    if(cntrun==nRuns+1) break;
     //if(!h2->GetEntries()) continue;
     cout<<"... Reading "<<obj2->GetName()<<endl;
   }
@@ -158,13 +159,17 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
     if(!ir) cout<<"~"<<ntrig[ntrig.size()-1]<<" triggers"<<endl;
   }
 
-  //Start masking hottest pixels for each stave in each run
+  //Start masking hottest pixels for each stave in each run, Fill also the histo with the hot pixel maps for each stave
   cout<<endl;
-  cout<<"... Analysing FHR with (hot) pixel masking"<<endl;
+  cout<<"... Analysing FHR with (hot) pixel masking (Making also hot pixel map)"<<endl;
   vector<array<float,nMasked+1>> fhrall;
+  TH2F *hHotMap[nLayers][20];
+  for(int ilay=0; ilay<nLayers; ilay++)
+    for(int istave=0; istave<20; istave++)
+      hHotMap[ilay][istave] = new TH2F(Form("hHotMap_L%s_Stv%d",laynums[ilay*nRuns*nStavesInLay[ilay]].c_str(), istave), "; ; ", 2304,-0.5,2303.5, 128,-0.5,127.5);
   int irun = nRuns-1;
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){ //start from the bottom in order to start with the oldest run
-    fhrall.push_back(GetFHRwithMasking(hmaps[ihist],nChips,ntrig[irun]));
+    fhrall.push_back(GetFHRwithMasking(hmaps[ihist],nChips,ntrig[irun],hHotMap[nLayers==1 ? 0 : stoi(laynums[ihist])][stoi(stavenums[ihist])]));
     irun--;
     if(ihist>0){
       if(stavenums[ihist-1]!=stavenums[ihist]){
@@ -223,12 +228,61 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
     cnv.SaveAs(Form("../Plots/Layer%s_FHRpixmask_%s.root", laynums[ilay*nRuns*nStavesInLay[ilay]].c_str(),filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str()));
   }
 
+  //Draw hot pixel maps for each layer
+  for(int ilay=0; ilay<nLayers; ilay++){
+    TCanvas cnv(Form("cnv_%d",ilay), Form("cnv_%d",ilay),800,1200);
+    cnv.SetTopMargin(0.4);
+    cnv.Divide(1,nStavesInLay[ilay],0,0);
+    for(int istave=0; istave<nStavesInLay[ilay]; istave++){
+      hHotMap[ilay][istave]->SetMarkerStyle(20);
+      hHotMap[ilay][istave]->SetMarkerSize(0.6);
+      hHotMap[ilay][istave]->SetMarkerColor(kRed);
+      hHotMap[ilay][istave]->SetLineColor(kRed);
+
+      cnv.cd(istave+1);
+      cnv.GetPad(istave+1)->SetTickx();
+      cnv.GetPad(istave+1)->SetTicky();
+      cnv.GetPad(istave+1)->SetRightMargin(0.01);
+      if(!istave) cnv.GetPad(istave+1)->SetTopMargin(0.1);
+
+      hHotMap[ilay][istave]->Draw("P X+");
+      hHotMap[ilay][istave]->GetXaxis()->SetTickLength(0.005);
+      hHotMap[ilay][istave]->GetYaxis()->SetTickLength(0.005);
+      hHotMap[ilay][istave]->GetYaxis()->SetLabelSize(0.13);
+      hHotMap[ilay][istave]->GetXaxis()->SetLabelSize(0.13);
+      if(istave>0){
+        hHotMap[ilay][istave]->GetXaxis()->SetLabelOffset(999);
+        hHotMap[ilay][istave]->GetXaxis()->SetTickLength(0.05);
+        hHotMap[ilay][istave]->GetXaxis()->SetNdivisions(530);
+      }
+      else{
+        hHotMap[ilay][istave]->GetXaxis()->SetLabelOffset(0.003);
+        hHotMap[ilay][istave]->GetXaxis()->SetNdivisions(530);
+        hHotMap[ilay][istave]->GetXaxis()->SetTickLength(0.05);
+      }
+
+      TLatex lat;
+      lat.SetTextAngle(90);
+      lat.SetNDC();
+      lat.SetTextSize(0.15);
+      lat.DrawLatex(0.04,0.3,Form("Stv%d",istave));
+    }
+    cnv.cd();
+    TLatex lat;
+    lat.SetNDC();
+    lat.SetTextSize(0.03);
+    lat.DrawLatex(0.01,0.98,Form("L%s",laynums[ilay*nRuns*nStavesInLay[ilay]].c_str()));
+
+    cnv.SaveAs(Form("../Plots/Layer%s_Hotpixmap_%s.pdf", laynums[ilay*nRuns*nStavesInLay[ilay]].c_str(),filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str()));
+    cnv.SaveAs(Form("../Plots/Layer%s_Hotpixmap_%s.root", laynums[ilay*nRuns*nStavesInLay[ilay]].c_str(),filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str()));
+  }
+
 }
 
 //
 // Function to compare two hitmaps --> returns an arrays with timestamp of run2, noisyPixInRefRun, noisyPixInRun2, noisyPixInCommon
 //
-std::array<float,nMasked+1> GetFHRwithMasking(TH2 *hmap, const int nchips, double ntrig){
+std::array<float,nMasked+1> GetFHRwithMasking(TH2 *hmap, const int nchips, double ntrig, TH2 *hhotmap){
 
   array<float,nMasked+1> fhrstave;
 
@@ -240,6 +294,7 @@ std::array<float,nMasked+1> GetFHRwithMasking(TH2 *hmap, const int nchips, doubl
     int binmax_x, binmax_y, binmax_z;
     hmap->GetBinXYZ(binmax, binmax_x, binmax_y, binmax_z);
     hmap->SetBinContent(binmax_x, binmax_y, 0);
+    hhotmap->SetBinContent(binmax_x, binmax_y, 1);
     //cout<<iter<<" FHR: "<<fhr<<endl;
     //cout<<"Masking binx: "<<binmax_x<<"  biny: "<<binmax_y<<endl;
   }
