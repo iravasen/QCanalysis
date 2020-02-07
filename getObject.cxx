@@ -68,6 +68,15 @@ int main(int argc, char **argv)
   cout<<"Enter the layer number [put -1 for all IB layers]"<<endl;
   cin>>layernum;
 
+  //Ask whether attach a error report to the results
+  bool adderrordata = false;
+  string erranswer = "n";
+  cout<<endl;
+  cout<<"Error plots needed? [y/n]"<<endl;
+  cin>>erranswer;
+  if(erranswer=="y")
+    adderrordata = true;
+
   //Chose about run number or time interval
   int choice;
   cout<<endl;
@@ -139,6 +148,8 @@ int main(int argc, char **argv)
     case 1: nListElements = 2; break;
     default: nListElements = 2;
   }
+  if(adderrordata)
+    nListElements+=1;
 
   //CCDB api initialization
   o2::ccdb::CcdbApi ccdbApi;
@@ -157,7 +168,7 @@ int main(int argc, char **argv)
     default: suffix="";
   }
   string optname = GetOptName(opt);
-  outputfile = new TFile(Form("Data/Output_%s_%s_from_%s%s_to_%s%s.root",layername.c_str(), optname.c_str(), suffix.c_str(),nums[0].c_str(), suffix.c_str(), nums[1].c_str()), "RECREATE");
+  outputfile = new TFile(Form("Data/Output_%s_%s_from_%s%s_to_%s%s%s.root",layername.c_str(), optname.c_str(), suffix.c_str(),nums[0].c_str(), suffix.c_str(), nums[1].c_str(), adderrordata? "_w_error_data":""), "RECREATE");
   outputfile->cd();
 
   //Download depending on the option (opt)
@@ -165,14 +176,26 @@ int main(int argc, char **argv)
     case 1: {
       if(layernum>=0){
         for(int il=0; il<nListElements; il++){//loop on lists
-          if(!il){
-            string objname = Form("Occupancy/Layer%d/Layer%dChipStave",layernum,layernum);
-            cout<<"\nAll data in "<<taskname+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-            Download(choice, ccdb, ccdbApi, myname, taskname, objname, run1, run2, ts_start, ts_end);
-          }
-          else{
-            for(int istave=0; istave<nStavesInLay[layernum]; istave++){
-              Download(choice, ccdb, ccdbApi, myname, taskname, Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), run1, run2, ts_start, ts_end);
+          switch(il){
+            case 0: {
+              string objname = Form("Occupancy/Layer%d/Layer%dChipStave",layernum,layernum);
+              cout<<"\nAll data in "<<taskname+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+              Download(choice, ccdb, ccdbApi, myname, taskname, objname, run1, run2, ts_start, ts_end);
+              break;
+            }
+
+            case 1: {
+              for(int istave=0; istave<nStavesInLay[layernum]; istave++){
+                Download(choice, ccdb, ccdbApi, myname, taskname, Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), run1, run2, ts_start, ts_end);
+              }
+              break;
+            }
+
+            case 2: {//error files
+              string objname = "General/ErrorFile";
+              cout<<"\nAll data in "<<taskname+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+              Download(choice, ccdb, ccdbApi, myname, taskname, objname, run1, run2, ts_start, ts_end);
+              break;
             }
           }
 
@@ -181,18 +204,30 @@ int main(int argc, char **argv)
 
       else if(layernum==-1){
         for(int il=0; il<nListElements; il++){//loop on lists
-          if(!il){
-            for(int ilay=0; ilay<=2; ilay++){
-              string objname = Form("Occupancy/Layer%d/Layer%dChipStave",ilay,ilay);
+          switch(il){
+            case 0: {
+              for(int ilay=0; ilay<=2; ilay++){
+                string objname = Form("Occupancy/Layer%d/Layer%dChipStave",ilay,ilay);
+                cout<<"\nAll data in "<<taskname+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+                Download(choice, ccdb, ccdbApi, myname, taskname, objname, run1, run2, ts_start, ts_end);
+              }
+              break;
+            }
+
+            case 1: {
+              for(int ilay=0; ilay<=2; ilay++){
+                for(int istave=0; istave<nStavesInLay[ilay]; istave++){
+                  Download(choice, ccdb, ccdbApi, myname, taskname, Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), run1, run2, ts_start, ts_end);
+                }
+              }
+              break;
+            }
+
+            case 2: {//error files
+              string objname = "General/ErrorFile";
               cout<<"\nAll data in "<<taskname+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
               Download(choice, ccdb, ccdbApi, myname, taskname, objname, run1, run2, ts_start, ts_end);
-            }
-          }
-          else{
-            for(int ilay=0; ilay<=2; ilay++){
-              for(int istave=0; istave<nStavesInLay[ilay]; istave++){
-                Download(choice, ccdb, ccdbApi, myname, taskname, Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), run1, run2, ts_start, ts_end);
-              }
+              break;
             }
           }
         }//end loop on lists
@@ -362,13 +397,25 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
 
     //if(strstr(c,"TH1")!=nullptr){
     if(c.find("TH1")!=string::npos){
-      h1s = dynamic_cast<TH1*>(obj->Clone(Form("h1_L%s%s%s_%ld", lnum.c_str(), isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i])));
+      string histname = "";
+      if(objname.find("Error")==string::npos)
+        histname = Form("h1_L%s%s%s_%ld", lnum.c_str(), isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+      else
+        histname = Form("h1_err%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+
+      h1s = dynamic_cast<TH1*>(obj->Clone(histname.c_str()));
       outputfile->cd();
       h1s->Write();
     }
     //if(strstr(c,"TH2")!=nullptr){
     if(c.find("TH2")!=string::npos){
-      h2s = dynamic_cast<TH2*>(obj->Clone(Form("h2_L%s%s%s_%ld", lnum.c_str(), isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i])));
+      string histname = "";
+      if(objname.find("Error")==string::npos)
+        histname = Form("h2_L%s%s%s_%ld", lnum.c_str(), isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+      else
+        histname = Form("h2_err%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+
+      h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
       outputfile->cd();
       h2s->Write();
     }
