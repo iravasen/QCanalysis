@@ -326,7 +326,7 @@ std::array<float,nMasked+1> GetFHRwithMasking(TH2 *hmap, const int nchips, doubl
     int binmax_x, binmax_y, binmax_z;
     hmap->GetBinXYZ(binmax, binmax_x, binmax_y, binmax_z);
     hmap->SetBinContent(binmax_x, binmax_y, 0);
-    hhotmap->SetBinContent(binmax_x, binmax_y, 1);
+    if(totalhits!=0) hhotmap->SetBinContent(binmax_x, binmax_y, 1);
     //cout<<iter<<" FHR: "<<fhr<<endl;
     //cout<<"Masking binx: "<<binmax_x<<"  biny: "<<binmax_y<<endl;
   }
