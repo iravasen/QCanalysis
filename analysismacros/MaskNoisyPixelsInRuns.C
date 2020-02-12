@@ -247,7 +247,7 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
     for(int is=0; is<nStavesInLay[ilay];is++){
       TH1F *proj = (TH1F*)hFhrStv[ilay][is]->ProjectionX(Form("proj_%d%d",ilay,is));
       int runswohits = GetNrunsWOhits(hFhrStv[ilay][is]);
-      cout<<runswohits<<endl;
+      //cout<<runswohits<<endl;
       proj->Scale(1./(nRuns-runswohits)); //Divide by the number of runs minus the ones without hits
       SetStyle(proj, col[is<nStavesInLay[ilay]/2 ? is : is-nStavesInLay[ilay]/2],is<nStavesInLay[ilay]/2 ? 24:26);
       proj->Draw("PL same");
@@ -320,7 +320,7 @@ std::array<float,nMasked+1> GetFHRwithMasking(TH2 *hmap, const int nchips, doubl
     long int totalhits = hmap->Integral();
     float fhr = (float)totalhits / (512.*1024.*nchips*ntrig);
     if(!nchips) fhr=0.;
-    cout<<fhr<<endl;
+    //cout<<fhr<<endl;
     fhrstave[iter] = fhr;
     int binmax = hmap->GetMaximumBin();
     int binmax_x, binmax_y, binmax_z;
