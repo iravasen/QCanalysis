@@ -54,6 +54,7 @@ If option 1 (**Download data from CCDB and perform the analysis**) is chosen, th
 
 only this option is available at present. 
 Now you need to enter the layer number. At present only the Inner Barrel data are saved into the database so, the possibile layer numbers are 0, 1 or 2. If "-1" is typed, the data of all the three IB layers are downloaded at the same time. 
+Later, you need to choose whether to download Inner Barrel Bottom (IBB) or Inner Barrel Top (IBT) data. Simply type a B (or b) or a T (or t), respectively. The next thing to choose is related to the error plots: if you type "y", the error plots in CCDB path qc/ITS/ITSRawTask/General/ErrorFile (ITSRawTask can be also ITSRawTaskIBB1 or 2 in case IBB is chosen) are also dowloaded and saved in the same file of the other data. 
 
 Then menu with the following options will appear:
 
@@ -71,12 +72,14 @@ After the downloading of the data, a menu with the available analyses is shown (
 2. Compare number of noisy pixels between runs
 3. Fake-hit rate study with hot pixels masking
 4. Fake-hit rate correlation analysis (reference run to be chosen)
+5. Error analysis for all runs
 
 If option 1 (**Fake-hit rate run by run**) is chosen, the software will show you the fake-hit rate as a function of the run number for all the chips in a Stave. The ROOT macro is run automatically and a list of (good) files for the analysis is shown. Copy and paste the file name in the input line that will appear. The final plot(s) is(are) automatically saved in *pdf* and *root* format in the repository *Plots/*. Also *gifs* are created (run-by-run animation). 
 If option 2 (**Compare noisy pixels between runs**) is chosen, the software will compare the number of noisy pixels run by run. The ROOT macro is run automatically and a list of files for the analysis is shown. Copy and paste the file name in the input line that will appear. Then, a reference run number (**choose a run among the ones in the input file!**) has to be typed. All the runs in the input file will be compared with the chosen reference run. The plot(s) is(are) automatically saved in *pdf* and *root* format in the repository *Plots/*. In particular a summary plot for the layer(s) is created and then, a pdf containing plots of single staves is also added to the output in case of deeper investigations. 
 If option 3 (**Fake-hit rate study with hot pixels masking**) is chosen, the fake-hit rate is studied as a function of the number of hot pixel masked. An average of all runs is shown. By default the 100 hottest pixels are masked. Note that in this case a single pixel corresponds to a cluster of 4x4 pixels. Furthermore, the pixels masked in each run are shown in a map for each layer and each stave. The plot(s) is(are) automatically saved in *pdf* and *root* format in the repository *Plots/*. 
 If option 4 (**Fake-hit rate correlation analysis (reference run to be chosen**) is chosen, a correlation of the fake-hit rate is studied: a reference run has to be chosen and the chip fake-hit rates of this run are correlated to the rates in all the other runs within the selected interval. The plot(s) is(are) automatically saved in *pdf* and *root* format in the repository *Plots/*. 
 For all the options, in case of multiple layers, the plots are created layer by layer automatically. 
+If option 5 (**Error analysis for all runs**) is chosen, the software makes a single plot summing also the errors found in the set of runs chosen for the analysis. The colored scale represents the frequency of the different errors. A legend shows the meening of each error ID. The x-axis shows the file ID that is linked to the 24 staves of IBT or IBB. 
 
 ##### Option 2 - Analyse data only (I have already a data sample)
 For this option you will need to have already a file containing a set of histograms to analyse (downloaded from CCDB!). If this is the case, choosing this option, you will access directly the analysis menu. Choose a single analysis as explained in the previous paragraph. 
