@@ -133,7 +133,19 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     for(int ibiny=1; ibiny<=hmaps[ihist]->GetNbinsY(); ibiny++){//loop on y bins (staves)
       TH1D *hproj = hmaps[ihist]->ProjectionX("proj",ibiny,ibiny); //single stave
       trend[ilayer][ibiny-1]->SetName(Form("gr_L%s_stave%d",laynums[ihist].c_str(),ibiny-1));
-      trend[ilayer][ibiny-1]->SetPoint(irun, irun, hproj->Integral()/nChips);
+      int deadchips = 0;
+      for(int ibinx=1; ibinx<=hmaps[ihist]->GetNbinsX(); ibinx++){//evaluate the number of disabled chips
+        if(hmaps[ihist]->GetBinContent(ibinx,ibiny)<1e-15)
+          deadchips++;
+      }
+      if(deadchips>0)
+        cout<<"Layer "<<laynums[ihist]<<" Stave "<<ibiny-1<<" Run: "<<runnumbers[ihist]<<" --> Chips active:"<<nChips-deadchips<<endl;
+
+      if(deadchips!=nChips)
+        trend[ilayer][ibiny-1]->SetPoint(irun, irun, hproj->Integral()/(nChips-deadchips));
+      else
+        trend[ilayer][ibiny-1]->SetPoint(irun, irun, 0.);
+
       if((ibiny-1)<hmaps[ihist]->GetNbinsY()/2)
         SetStyle(trend[ilayer][ibiny-1], col[ibiny-1], 24);
       else

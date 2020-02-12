@@ -44,9 +44,6 @@ int main(int argc, char **argv)
 
   ccdb->connect("ccdb-test.cern.ch:8080", "", "", "");
 
-  //taskname
-  string taskname = "qc/ITS/ITSRawTask";
-
   //Choose what to download
   int opt;
   cout<<endl;
@@ -67,6 +64,22 @@ int main(int argc, char **argv)
   cout<<endl;
   cout<<"Enter the layer number [put -1 for all IB layers]"<<endl;
   cin>>layernum;
+
+  //taskname
+  string taskname = "qc/ITS/ITSRawTask";
+
+  //Choose the side: top or bottom
+  string side;
+  cout<<endl;
+  cout<<"Top or Bottom? [T/B]"<<endl;
+  cin>>side;
+  if(side=="T" || side=="t")
+    taskname = "qc/ITS/ITSRawTask";
+  else if(side=="B" || side=="b"){
+    if(layernum<0) taskname = "qc/ITS/ITSRawTaskIBB2";
+    else if(layernum==2) taskname = "qc/ITS/ITSRawTaskIBB1";
+    else taskname = "qc/ITS/ITSRawTaskIBB2";
+  }
 
   //Ask whether attach a error report to the results
   bool adderrordata = false;
@@ -209,7 +222,9 @@ int main(int argc, char **argv)
               for(int ilay=0; ilay<=2; ilay++){
                 string objname = Form("Occupancy/Layer%d/Layer%dChipStave",ilay,ilay);
                 cout<<"\nAll data in "<<taskname+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+                if(ilay==2 && (side=="B" || side=="b")) taskname = "qc/ITS/ITSRawTaskIBB1";
                 Download(choice, ccdb, ccdbApi, myname, taskname, objname, run1, run2, ts_start, ts_end);
+                taskname = "qc/ITS/ITSRawTaskIBB2";
               }
               break;
             }
@@ -217,7 +232,9 @@ int main(int argc, char **argv)
             case 1: {
               for(int ilay=0; ilay<=2; ilay++){
                 for(int istave=0; istave<nStavesInLay[ilay]; istave++){
+                  if(ilay==2 && (side=="B" || side=="b")) taskname = "qc/ITS/ITSRawTaskIBB1";
                   Download(choice, ccdb, ccdbApi, myname, taskname, Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), run1, run2, ts_start, ts_end);
+                  taskname = "qc/ITS/ITSRawTaskIBB2";
                 }
               }
               break;
@@ -227,6 +244,11 @@ int main(int argc, char **argv)
               string objname = "General/ErrorFile";
               cout<<"\nAll data in "<<taskname+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
               Download(choice, ccdb, ccdbApi, myname, taskname, objname, run1, run2, ts_start, ts_end);
+              if(side=="B" || side=="b"){
+                taskname = "qc/ITS/ITSRawTaskIBB1";
+                Download(choice, ccdb, ccdbApi, myname, taskname, objname, run1, run2, ts_start, ts_end);
+              }
+
               break;
             }
           }

@@ -24,6 +24,8 @@ using namespace std;
 const int nMasked = 100;
 //Functions
 std::array<float,nMasked+1> GetFHRwithMasking(TH2 *hmap, const int nchips, double ntrig, TH2 *hhotmap);
+int GetNchipsActive(TH2 *hmap, int maxchip);
+int GetNrunsWOhits(TH2 *hFhrStv);
 void SetStyle(TH1 *h, Int_t col, Style_t mkr);
 void DoAnalysis(string filepath_hit, const int nChips, bool isIB);
 
@@ -141,6 +143,8 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
        }
     string objname2 = (string)obj2->GetName();
     if(objname2.find("Stv")!=string::npos) break;
+    //TH2 *h2temp = (TH2*)obj2;
+    //if(!h2temp->GetEntries()) continue;
     h2_2[cntrun] = (TH2*)obj2;
     cntrun++;
     if(cntrun==nRuns+1) break;
@@ -154,9 +158,30 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
   vector<double> ntrig;
   for(int ir=0; ir<nRuns; ir++){
     double fhr_run = h2_2[ir]->GetBinContent(1,1);
-    double hits_chip = hmaps[ir]->Integral(1,256,1,512);
+    int stavefound = 0;
+    if(fhr_run<1e-15){
+      for(int ibinx=1; ibinx<=h2_2[ir]->GetNbinsX(); ibinx++){
+        for(int ibiny=h2_2[ir]->GetNbinsY(); ibiny>=1; ibiny--){
+          fhr_run = h2_2[ir]->GetBinContent(ibinx,ibiny);
+          if(fhr_run>1e-15) {
+            stavefound = ibiny-1;
+            break;
+          }
+        }
+        if(fhr_run>1e-15) break;
+      }
+    }
+    if(fhr_run<1e-15){
+      fhr_run = -1.;
+      ntrig.push_back(-1.);
+      cout<<"Run "<<runlabel[ir]<<" has "<<ntrig[ntrig.size()-1]<<" triggers (ignored in the calculation of the average fhr)"<<endl;
+      continue;
+      //cout<<"INVALID FHR... setting it to -1"<<endl;
+    }
+
+    double hits_chip = hmaps[stavefound*nRuns+ir]->Integral(1,256,1,512);
     ntrig.push_back(hits_chip/(512.*1024.*fhr_run));
-    if(!ir) cout<<"~"<<ntrig[ntrig.size()-1]<<" triggers"<<endl;
+    cout<<"Run "<<runlabel[ir]<<" has "<<ntrig[ntrig.size()-1]<<" triggers"<<endl;
   }
 
   //Start masking hottest pixels for each stave in each run, Fill also the histo with the hot pixel maps for each stave
@@ -169,7 +194,10 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
       hHotMap[ilay][istave] = new TH2F(Form("hHotMap_L%s_Stv%d",laynums[ilay*nRuns*nStavesInLay[ilay]].c_str(), istave), "; ; ", 2304,-0.5,2303.5, 128,-0.5,127.5);
   int irun = nRuns-1;
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){ //start from the bottom in order to start with the oldest run
-    fhrall.push_back(GetFHRwithMasking(hmaps[ihist],nChips,ntrig[irun],hHotMap[nLayers==1 ? 0 : stoi(laynums[ihist])][stoi(stavenums[ihist])]));
+    int nchipsactive = GetNchipsActive(hmaps[ihist],nChips);
+    if(nchipsactive<nChips)
+      cout<<"Layer "<<laynums[ihist]<<" Stave "<<stavenums[ihist]<<" Run: "<<runnumbers[ihist]<<" --> Chips active:"<<nchipsactive<<endl;
+    fhrall.push_back(GetFHRwithMasking(hmaps[ihist],nchipsactive,ntrig[irun],hHotMap[nLayers==1 ? 0 : stoi(laynums[ihist])][stoi(stavenums[ihist])]));
     irun--;
     if(ihist>0){
       if(stavenums[ihist-1]!=stavenums[ihist]){
@@ -218,7 +246,9 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
     TLegend leg(0.904, 0.127,0.997,0.898);
     for(int is=0; is<nStavesInLay[ilay];is++){
       TH1F *proj = (TH1F*)hFhrStv[ilay][is]->ProjectionX(Form("proj_%d%d",ilay,is));
-      proj->Scale(1./nRuns); //Divide by the number of runs
+      int runswohits = GetNrunsWOhits(hFhrStv[ilay][is]);
+      cout<<runswohits<<endl;
+      proj->Scale(1./(nRuns-runswohits)); //Divide by the number of runs minus the ones without hits
       SetStyle(proj, col[is<nStavesInLay[ilay]/2 ? is : is-nStavesInLay[ilay]/2],is<nStavesInLay[ilay]/2 ? 24:26);
       proj->Draw("PL same");
       leg.AddEntry(proj, Form("Stv%d",is),"pl");
@@ -289,6 +319,8 @@ std::array<float,nMasked+1> GetFHRwithMasking(TH2 *hmap, const int nchips, doubl
   for(int iter=0; iter<nMasked+1; iter++){
     long int totalhits = hmap->Integral();
     float fhr = (float)totalhits / (512.*1024.*nchips*ntrig);
+    if(!nchips) fhr=0.;
+    cout<<fhr<<endl;
     fhrstave[iter] = fhr;
     int binmax = hmap->GetMaximumBin();
     int binmax_x, binmax_y, binmax_z;
@@ -302,6 +334,35 @@ std::array<float,nMasked+1> GetFHRwithMasking(TH2 *hmap, const int nchips, doubl
   return fhrstave;
 
 }
+
+//
+//Function to return the number of active (i.e. enabled) chips in a stave
+//
+int GetNchipsActive(TH2 *hmap, int maxchip){
+  int ix1=1;
+  int ix2=256;
+  int activechips = maxchip;
+  while(ix2<=hmap->GetNbinsX()){
+    if((hmap->Integral(ix1,ix2,1,128)<1e-15))
+      activechips--;
+    ix1=ix2+1;
+    ix2+=256;
+  }
+  return activechips;
+}
+
+//
+//Function to return the number of runs in which a stave has no hits
+//
+int GetNrunsWOhits(TH2 *hFhrStv){
+  int runswohits = 0;
+  for(int iy=1; iy<=hFhrStv->GetNbinsY(); iy++){
+    if(hFhrStv->GetBinContent(1,iy)<1e-15)
+      runswohits++;
+  }
+  return runswohits;
+}
+
 //
 //Set Style
 //
