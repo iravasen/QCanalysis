@@ -224,7 +224,7 @@ int main(int argc, char **argv)
                 cout<<"\nAll data in "<<taskname+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
                 if(ilay==2 && (side=="B" || side=="b")) taskname = "qc/ITS/ITSRawTaskIBB1";
                 Download(choice, ccdb, ccdbApi, myname, taskname, objname, run1, run2, ts_start, ts_end);
-                taskname = "qc/ITS/ITSRawTaskIBB2";
+                if(side=="B" || side=="b") taskname = "qc/ITS/ITSRawTaskIBB2";
               }
               break;
             }
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
                 for(int istave=0; istave<nStavesInLay[ilay]; istave++){
                   if(ilay==2 && (side=="B" || side=="b")) taskname = "qc/ITS/ITSRawTaskIBB1";
                   Download(choice, ccdb, ccdbApi, myname, taskname, Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), run1, run2, ts_start, ts_end);
-                  taskname = "qc/ITS/ITSRawTaskIBB2";
+                  if(side=="B" || side=="b") taskname = "qc/ITS/ITSRawTaskIBB2";
                 }
               }
               break;
