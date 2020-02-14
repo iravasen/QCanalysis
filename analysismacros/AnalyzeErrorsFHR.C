@@ -17,7 +17,7 @@
 using namespace std;
 
 void SetStyle(TGraph *h, Int_t col, Style_t mkr);
-void DoAnalysis(string filepath, const int nChips, bool isIB);
+void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns);
 
 //
 // MAIN
@@ -44,9 +44,23 @@ void AnalyzeErrorsFHR(){
     else isIB=kFALSE;
   }
 
+  //Choose whether to skip runs
+  string skipans, skipruns;
+  cout<<endl;
+  cout<<"Would you like to skip some run(s)? [y/n] ";
+  cin>>skipans;
+  if(skipans=="y" || skipans=="Y"){
+    cout<<endl;
+    cout<<"Specify run number(s) separated by comma (no white spaces!):";
+    cin>>skipruns;
+    cout<<endl;
+  }
+  else
+    skipruns=" ";
+
 
   //Call
-  DoAnalysis(fpath, nchips, isIB);
+  DoAnalysis(fpath, nchips, isIB, skipruns);
 
 }
 
@@ -65,7 +79,7 @@ void SetStyle(TGraph *h, Int_t col, Style_t mkr){
 //
 // Analyse data
 //
-void DoAnalysis(string filepath, const int nChips, bool isIB){
+void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns){
 
   gStyle->SetOptStat(0000);
 
@@ -92,10 +106,13 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     if(objname.find("err")==string::npos) continue;
     h2 = (TH2*)obj;
     if(!h2->GetEntries()) continue;
-    cout<<"... Reading "<<obj->GetName()<<endl;
-    herr.push_back(h2);
     string timestamp = objname.find("run")==string::npos ? objname.substr(objname.find("_",2)+1, 13) : objname.substr(objname.find("_",6)+1, 13);
     string runnum =  objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
+
+    if(skipruns.find(runnum)!=string::npos) continue; //eventually skip runs specified by the user
+
+    cout<<"... Reading "<<obj->GetName()<<endl;
+    herr.push_back(h2);
     timestamps.push_back(timestamp);
     runnumbers.push_back(runnum);
     nTimes++;

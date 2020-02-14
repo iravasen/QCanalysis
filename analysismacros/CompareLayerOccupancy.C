@@ -77,7 +77,7 @@ void CompareLayerOccupancy(){
     if(objname.find("Stv")!=string::npos) break;
     string runnum =  objname.substr(objname.find("run")+3, 6);
     string laynum = objname.substr(objname.find("L")+1,1);
-    
+
     if(skipruns.find(runnum)!=string::npos) continue; //eventually skip runs specified by the user
 
     laynums.push_back(laynum);
