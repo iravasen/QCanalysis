@@ -17,7 +17,7 @@
 using namespace std;
 
 void SetStyle(TGraph *h, Int_t col, Style_t mkr);
-void DoAnalysis(string filepath, const int nChips, bool isIB);
+void DoAnalysis(string filepath, const int nChips, string skipruns, bool isIB);
 
 //
 // MAIN
@@ -44,9 +44,22 @@ void AnalyzeLayerOccupancy(){
     else isIB=kFALSE;
   }
 
+  string skipans, skipruns;
+  cout<<endl;
+  cout<<"Would you like to skip some run(s)? [y/n] ";
+  cin>>skipans;
+  if(skipans=="y" || skipans=="Y"){
+    cout<<endl;
+    cout<<"Specify run number(s) separated by comma (no white spaces!):";
+    cin>>skipruns;
+    cout<<endl;
+  }
+  else
+    skipruns=" ";
+
 
   //Call
-  DoAnalysis(fpath, nchips, isIB);
+  DoAnalysis(fpath, nchips, skipruns, isIB);
 
 }
 
@@ -65,7 +78,7 @@ void SetStyle(TGraph *h, Int_t col, Style_t mkr){
 //
 // Analyse data
 //
-void DoAnalysis(string filepath, const int nChips, bool isIB){
+void DoAnalysis(string filepath, const int nChips, string skipruns, bool isIB){
 
   gStyle->SetOptStat(0000);
 
@@ -94,10 +107,11 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     h2 = (TH2*)obj;
     if(!h2->GetEntries()) continue;
     cout<<"... Reading "<<obj->GetName()<<endl;
-    hmaps.push_back(h2);
     string timestamp = objname.find("run")==string::npos ? objname.substr(objname.find("_",2)+1, 13) : objname.substr(objname.find("_",6)+1, 13);
     string runnum =  objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
     string laynum = objname.substr(objname.find("L")+1,1);
+    if(skipruns.find(runnum)!=string::npos) continue;// eventually skip runs if specified
+    hmaps.push_back(h2);
     //cout<<runnum<<"  "<<timestamp<<endl;
     timestamps.push_back(timestamp);
     runnumbers.push_back(runnum);

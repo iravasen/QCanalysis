@@ -27,7 +27,7 @@ std::array<float,nMasked+1> GetFHRwithMasking(TH2 *hmap, const int nchips, doubl
 int GetNchipsActive(TH2 *hmap, int maxchip);
 int GetNrunsWOhits(TH2 *hFhrStv);
 void SetStyle(TH1 *h, Int_t col, Style_t mkr);
-void DoAnalysis(string filepath_hit, const int nChips, bool isIB);
+void DoAnalysis(string filepath_hit, const int nChips, string skipruns, bool isIB);
 
 
 void MaskNoisyPixelsInRuns(){
@@ -53,13 +53,26 @@ void MaskNoisyPixelsInRuns(){
     else isIB=kFALSE;
   }
 
-  DoAnalysis(fpath, nchips, isIB);
+  string skipans, skipruns;
+  cout<<endl;
+  cout<<"Would you like to skip some run(s)? [y/n] ";
+  cin>>skipans;
+  if(skipans=="y" || skipans=="Y"){
+    cout<<endl;
+    cout<<"Specify run number(s) separated by comma (no white spaces!):";
+    cin>>skipruns;
+    cout<<endl;
+  }
+  else
+    skipruns=" ";
+
+  DoAnalysis(fpath, nchips, skipruns, isIB);
 }
 
 //
 // Analysis
 //
-void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
+void DoAnalysis(string filepath_hit, const int nChips, string skipruns, bool isIB){
 
   gStyle->SetOptStat(0000);
 
@@ -92,7 +105,6 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
     TH2 *h2 = (TH2*)obj;
     //if(!h2->GetEntries()) continue;
     cout<<"... Reading "<<obj->GetName()<<endl;
-    hmaps.push_back(h2);
     string timestamp = objname.find("run")==string::npos ? objname.substr(objname.find("_",2)+1, 13) : objname.substr(objname.find("_",6)+1, 13);
     string runnum =  objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
     string laynum = objname.substr(objname.find("L")+1,1);
@@ -100,6 +112,9 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
     if(stvnum.find("_")!=string::npos){
       stvnum = objname.substr(objname.find("Stv")+3,1);
     }
+    if(skipruns.find(runnum)!=string::npos) continue; //eventually skip runs specified by the user
+
+    hmaps.push_back(h2);
 
     if((int)stavenums.size()>1 && stvnum!=stavenums[stavenums.size()-1])
       cstv++;
@@ -145,6 +160,9 @@ void DoAnalysis(string filepath_hit, const int nChips, bool isIB){
     if(objname2.find("Stv")!=string::npos) break;
     //TH2 *h2temp = (TH2*)obj2;
     //if(!h2temp->GetEntries()) continue;
+    string runnum =  objname2.find("run")==string::npos ? "norun":objname2.substr(objname2.find("run")+3, 6);
+    if(skipruns.find(runnum)!=string::npos) continue; //eventually skip runs specified by the user
+
     h2_2[cntrun] = (TH2*)obj2;
     cntrun++;
     if(cntrun==nRuns+1) break;
