@@ -17,7 +17,7 @@
 
 using namespace std;
 
-void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun);
+void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, long int refrun);
 
 //
 // MAIN
@@ -44,6 +44,20 @@ void CompareLayerOccupancy(){
     else isIB=kFALSE;
   }
 
+  //Choose whether to skip runs
+  string skipans, skipruns;
+  cout<<endl;
+  cout<<"Would you like to skip some run(s)? [y/n] ";
+  cin>>skipans;
+  if(skipans=="y" || skipans=="Y"){
+    cout<<endl;
+    cout<<"Specify run number(s) separated by comma (no white spaces!):";
+    cin>>skipruns;
+    cout<<endl;
+  }
+  else
+    skipruns=" ";
+
   cout<<"Available runs in your file:\n"<<endl;
   TFile *infile=new TFile(fpath.c_str());
   TList *list = (TList*)infile->GetListOfKeys();
@@ -63,6 +77,9 @@ void CompareLayerOccupancy(){
     if(objname.find("Stv")!=string::npos) break;
     string runnum =  objname.substr(objname.find("run")+3, 6);
     string laynum = objname.substr(objname.find("L")+1,1);
+    
+    if(skipruns.find(runnum)!=string::npos) continue; //eventually skip runs specified by the user
+
     laynums.push_back(laynum);
     //cout<<"run: "<<runnum<<"   timestamp: "<<timestamp<<"    laynum: "<<laynum<<endl;
     if((int)laynums.size()>1 && laynum!=laynums[laynums.size()-2])
@@ -78,14 +95,14 @@ void CompareLayerOccupancy(){
 
 
   //Call
-  DoAnalysis(fpath, nchips, isIB, refrun);
+  DoAnalysis(fpath, nchips, isIB, skipruns, refrun);
 
 }
 
 //
 // Analyse data
 //
-void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun){
+void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, long int refrun){
 
   gStyle->SetOptStat(0000);
 
@@ -113,11 +130,15 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, long int refrun){
     if(objname.find("Stv")!=string::npos) break;
     h2 = (TH2*)obj;
     if(!h2->GetEntries()) continue;
-    cout<<"... Reading "<<obj->GetName()<<endl;
-    hmaps.push_back(h2);
     string timestamp = objname.find("run")==string::npos ? objname.substr(objname.find("_",2)+1, 13) : objname.substr(objname.find("_",6)+1, 13);
     string runnum =  objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
     string laynum = objname.substr(objname.find("L")+1,1);
+
+    if(skipruns.find(runnum)!=string::npos) continue; //eventually skip runs specified by the user
+
+    cout<<"... Reading "<<obj->GetName()<<endl;
+    hmaps.push_back(h2);
+
     //cout<<runnum<<"  "<<timestamp<<endl;
     timestamps.push_back(timestamp);
     runnumbers.push_back(runnum);
