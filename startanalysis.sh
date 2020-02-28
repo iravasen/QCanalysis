@@ -312,7 +312,7 @@ echo -e "========== Welcome to QCanalysis ===========\e[39m"
 echo -e "\e[31m== Any issue? Call Ivan Ravasenga: 165305 ==\e[39m"
 echo -e "\n\e[32m============================================\e[39m"
 
-#updategitrepo
+updategitrepo
 
 echo -e "\n\e[32m==== Loading environment modules ===="
 eval $(alienv load QualityControl/latest 2> /dev/null)
