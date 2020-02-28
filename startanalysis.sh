@@ -260,7 +260,7 @@ todooption(){
          1) echo -e "\n\e[32m=> Compiling the software for the database\e[39m"
             make
             echo -e "\n\e[32m=> Downloading files to analyse\e[39m"
-            ./getObject
+            ./getObject expert
             echo -e "\n"
             analysismenu ;;
          2) analysismenu ;;
@@ -288,17 +288,43 @@ todooption(){
   esac
 }
 
+doexpert(){
+  echo -e "\n===== What to do ====\n"
+  echo -e "=> Chose an option: \n\n"
+  echo -e "\t 1. Download and analyse data from CCDB"
+  echo -e "\t 2. Analyse data on FLP"
+  echo -e "\n"
+  echo -e "\e[39mEnter option \c"
+  todooption
+}
+
+doshifters(){
+     echo -e "\n\e[32m=> Compiling the software for the database\e[39m"
+     make
+     echo -e "\n\e[32m=> Downloading files to analyse\e[39m"
+     ./getObject shifter
+     echo -e "\n"
+}
+
 # MAIN TASK
-updategitrepo
+echo -e "\n\e[32m============================================\n"
+echo -e "========== Welcome to QCanalysis ===========\e[39m"
+echo -e "\e[31m== Any issue? Call Ivan Ravasenga: 165305 ==\e[39m"
+echo -e "\n\e[32m============================================\e[39m"
+
+#updategitrepo
 
 echo -e "\n\e[32m==== Loading environment modules ===="
-#export ALIBUILD_WORK_DIR="/home/alidock/.sw"
 eval $(alienv load QualityControl/latest 2> /dev/null)
 
-echo -e "\n==== What to do ====\n"
-echo -e "=> Chose an option: \n\n"
-echo -e "\t 1. Download and analyse data from CCDB"
-echo -e "\t 2. Analyse data on FLP"
+#Choose mode: shifter / expert mode
+echo -e "\n==== Choose mode ====\n"
+echo -e "1. Shifter mode"
+echo -e "2. Expert mode"
 echo -e "\n"
 echo -e "\e[39mEnter option \c"
-todooption
+read answeroption
+case "$answeroption" in
+  1) doshifters ;;
+  2) doexpert ;;
+esac
