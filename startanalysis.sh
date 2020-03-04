@@ -304,6 +304,8 @@ doshifters(){
      echo -e "\n\e[32m=> Downloading files to analyse\e[39m"
      ./getObject shifter
      echo -e "\n"
+     echo -e "\n\e[32m=> Starting analysis run by run and preparation of the 24h Report \e[39m"
+     root -l -b -q ReportFHR_shifters.C++
 }
 
 # MAIN TASK
