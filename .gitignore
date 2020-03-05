@@ -5,6 +5,7 @@
 !Makefile
 Plots/
 !analysismacros
+!logs
 Data/
 analysismacros/*.d
 analysismacros/*.so
