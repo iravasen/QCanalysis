@@ -630,5 +630,11 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     }
   }
 
+  //scp to copy the shift report (only on flp6)
+  string user = (string)gSystem->GetFromPipe("whoami");
+  if(user=="its"){
+    gSystem->Exec(Form("scp ../Plots/ShiftReport24h_FHR_%s_%s.pdf palpidefs@pceped02.cern.ch:/home/palpidefs/Downloads", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+  }
+
 
 }
