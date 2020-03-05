@@ -305,7 +305,9 @@ doshifters(){
      ./getObject shifter
      echo -e "\n"
      echo -e "\n\e[32m=> Starting analysis run by run and preparation of the 24h Report \e[39m"
+     cd analysismacros
      root -l -b -q ReportFHR_shifters.C++
+     cd ..
 }
 
 # MAIN TASK
