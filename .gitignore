@@ -5,9 +5,10 @@
 !Makefile
 Plots/
 !analysismacros
-!logs
 Data/
 analysismacros/*.d
 analysismacros/*.so
 analysismacros/*.pcm
 analysismacros/*.txt
+logs/*.log
+!logs/
