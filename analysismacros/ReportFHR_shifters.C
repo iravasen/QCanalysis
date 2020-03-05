@@ -2,6 +2,8 @@
 #include "inc/constants.h"
 #include "inc/utilities.h"
 
+#include <cstdio>
+
 using namespace std;
 
 void DoAnalysis(string filepath, const int nChips, bool isIB);
@@ -14,9 +16,7 @@ void ReportFHR_shifters(){
   int nchips=9;
   //cout<<"\n\n=> Available file(s) for the analysis (the last should be the file you want!): \n"<<endl;
   string fpath = (string)gSystem->GetFromPipe("ls ../Data/*FHRMAPS_HITMAPS* -Art | tail -n 1"); //take most recent data file
-  cout<<endl;
-  cout<<"... Opening file: "<<fpath<<endl;
-  cout<<endl;
+
   bool isIB;
   if(fpath.find("IB")!=string::npos){
     isIB = kTRUE;
@@ -43,6 +43,8 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
 
   string localdatetime = GetCurrentDateTime(1);
 
+  std::freopen(Form("../logs/log_%s.log",localdatetime.c_str()), "w", stdout);
+
   std::vector<TH2*> hmapsFHR;
   std::vector<TH2*> hmapsHIT;
 
@@ -51,6 +53,9 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   Int_t col[] = {TColor::GetColor("#ff3300"), TColor::GetColor("#ec6e0a"), TColor::GetColor("#daaa14"), TColor::GetColor("#c7e51e"), TColor::GetColor("#85dd69"), TColor::GetColor("#42d6b4"), TColor::GetColor("#00ceff"), TColor::GetColor("#009adf"), TColor::GetColor("#0067c0"), TColor::GetColor("#0033a1")};
 
   //Read the file and the list of plots with entries
+  cout<<endl;
+  cout<<"... Opening file: "<<filepath<<endl;
+  cout<<endl;
   TFile *infile=new TFile(filepath.c_str());
   TList *list = infile->GetListOfKeys();
   TKey *key;
