@@ -638,7 +638,11 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   //scp to copy the shift report (only on flp6)
   string user = (string)gSystem->GetFromPipe("whoami");
   if(user=="its"){
-    gSystem->Exec(Form("scp ../Plots/ShiftReport24h_FHR_%s_%s.pdf palpidefs@pceped02.cern.ch:/home/palpidefs/Downloads", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    cout<<endl;
+    cout<<"... Copying the Report on eos"<<endl;
+    cout<<endl;
+    cout<<"Insert the password of user itsshift (see Shifter_Instructions.txt on the desktop of the right computer!):"<<endl;
+    gSystem->Exec(Form("scp ../Plots/ShiftReport24h_FHR_%s_%s.pdf itsshift@lxplus.cern.ch:/eos/user/i/itsshift/Reports24h", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
   }
 
 
