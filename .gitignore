@@ -1,15 +1,9 @@
-*
-/*/
 getObject
-!*.*
 *.o
-!Makefile
 Plots/
-!analysismacros
 Data/
 analysismacros/*.d
 analysismacros/*.so
 analysismacros/*.pcm
 analysismacros/*.txt
 logs/*.log
-!logs/
