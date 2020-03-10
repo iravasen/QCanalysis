@@ -30,6 +30,12 @@ todo(){
     7) echo -e "\n\e[32m=> Starting dead pixel analysis run by run\e[39m"
        root -l -b -q AnalyzeLayerDeadPixels.C++
        remove ;;
+    7) echo -e "\n\e[32m=> Starting threshold correlation analysis\e[39m"
+       root -l -b -q CompareLayerThresholds.C++
+       remove ;;
+    7) echo -e "\n\e[32m=> Starting dead-pixels correlation analysis\e[39m"
+       root -l -b -q CompareLayerDeadPixels.C++
+       remove ;;
     *) echo -e "Invalid option \n"
        echo -e "Retype an option \c"
        todo ;;
@@ -47,7 +53,9 @@ analysismenu(){
   echo -e "\n"
   echo "[Analyses on Threshold runs]"
   echo -e "\t 6. Average threshold run by run"
-  echo -e "\t 7. Total dead pixels run by run\e[39m"
+  echo -e "\t 7. Total dead pixels run by run"
+  echo -e "\t 8. Threshold correlation analysis (reference run to be chosen)"
+  echo -e "\t 9. Dead-pixels correlation analysis (reference run to be chosen)\e[39m"
   echo -e "\n"
   echo -e "Enter option \c"
   cd analysismacros
