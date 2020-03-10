@@ -1,5 +1,6 @@
-/*
+*
 /*/
+getObject
 !*.*
 *.o
 !Makefile
