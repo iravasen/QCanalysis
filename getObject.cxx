@@ -8,6 +8,7 @@
 #include "CCDB/CcdbApi.h"
 #include <TBufferJSON.h>
 #include <TH2.h>
+#include <THnSparse.h>
 #include <TFile.h>
 
 using namespace std;
@@ -270,6 +271,10 @@ bool RunShifter(auto *ccdb, string myname){
       }//end if layernum==-1
     }//end case 1
 
+    case 2: {
+
+    }
+
   }//end switch
 
   outputfile->Close();
@@ -288,11 +293,12 @@ bool RunExpert(auto *ccdb, string myname){
   cout<<endl;
   cout<<"Choose what to download:"<<endl;
   cout<<"1. Fake-hit scan data"<<endl;
+  cout<<"2. Threshold scan data"<<endl;
   cout<<endl;
   cout<<"Enter the option: ";
   cin>>opt;
-  if(opt<1 || opt>1){
-    cout<<"Invalid option"<<endl;
+  if(opt<1 || opt>2){
+    cout<<"Invalid option. Doing nothing."<<endl;
     return 0;
   }
 
@@ -313,29 +319,50 @@ bool RunExpert(auto *ccdb, string myname){
   cout<<"Top or Bottom? [T/B]"<<endl;
   cin>>side;
 
-  if(side=="B" || side=="b"){
-    if(layernum<0) {
-      taskname[0] = "qc/ITS/ITSRawTaskIBB2";
-      taskname[1] = "qc/ITS/ITSRawTaskIBB3";
-      taskname[2] = "qc/ITS/ITSRawTaskIBB1";
+  //set the task name
+  switch(opt){
+    case 1: {// fake-hit
+      if(side=="B" || side=="b"){
+        if(layernum<0) {
+          taskname[0] = "qc/ITS/ITSRawTaskIBB2";
+          taskname[1] = "qc/ITS/ITSRawTaskIBB3";
+          taskname[2] = "qc/ITS/ITSRawTaskIBB1";
 
-      tasknamealt[0] = "qc/ITS/ITSRawTaskIBB2";
-      tasknamealt[1] = "qc/ITS/ITSRawTaskIBB2";
-      tasknamealt[2] = "qc/ITS/ITSRawTaskIBB1";
+          tasknamealt[0] = "qc/ITS/ITSRawTaskIBB2";
+          tasknamealt[1] = "qc/ITS/ITSRawTaskIBB2";
+          tasknamealt[2] = "qc/ITS/ITSRawTaskIBB1";
+        }
+        else if(layernum==1) {taskname[1] = "qc/ITS/ITSRawTaskIBB3"; tasknamealt[1] = "qc/ITS/ITSRawTaskIBB2";}
+        else if(layernum==2) {taskname[2] = "qc/ITS/ITSRawTaskIBB1"; tasknamealt[2] = "qc/ITS/ITSRawTaskIBB1";}
+        else {taskname[0] = "qc/ITS/ITSRawTaskIBB2"; tasknamealt[0] = "qc/ITS/ITSRawTaskIBB2";}
+      }
     }
-    else if(layernum==1) {taskname[1] = "qc/ITS/ITSRawTaskIBB3"; tasknamealt[1] = "qc/ITS/ITSRawTaskIBB2";}
-    else if(layernum==2) {taskname[2] = "qc/ITS/ITSRawTaskIBB1"; tasknamealt[2] = "qc/ITS/ITSRawTaskIBB1";}
-    else {taskname[0] = "qc/ITS/ITSRawTaskIBB2"; tasknamealt[0] = "qc/ITS/ITSRawTaskIBB2";}
-  }
+
+    case 2: { //thr scan
+      if(side=="B" || side=="b"){
+        taskname[0] = "qc/ITS/THTest2";
+        taskname[1] = "qc/ITS/THTest3";
+        taskname[2] = "qc/ITS/THTest";
+
+        tasknamealt[0] = "qc/ITS/THTest2";
+        tasknamealt[1] = "qc/ITS/THTest3";
+        tasknamealt[2] = "qc/ITS/THTest";
+      }
+    }
+  }//end of switch
+
+
 
   //Ask whether attach a error report to the results
   bool adderrordata = false;
   string erranswer = "n";
-  cout<<endl;
-  cout<<"Error plots needed? [y/n]"<<endl;
-  cin>>erranswer;
-  if(erranswer=="y")
-    adderrordata = true;
+  if(opt==1){//only is user selects to download FHR
+    cout<<endl;
+    cout<<"Error plots needed? [y/n]"<<endl;
+    cin>>erranswer;
+    if(erranswer=="y")
+      adderrordata = true;
+  }
 
   //Chose about run number or time interval
   int choice;
@@ -406,6 +433,7 @@ bool RunExpert(auto *ccdb, string myname){
   int nListElements = 2;
   switch(opt){
     case 1: nListElements = 2; break;
+    case 2: nListElements = 3; break;
     default: nListElements = 2;
   }
   if(adderrordata)
@@ -493,6 +521,69 @@ bool RunExpert(auto *ccdb, string myname){
         }//end loop on lists
       }//end if layernum==-1
     }//end case 1
+
+    case 2: {// thresholds
+      if(layernum>=0){
+        for(int il=0; il<nListElements; il++){//loop on lists
+          switch(il){
+            case 0: {
+              string objname = Form("Threshold/Layer%d/Threshold_Vs_Chip_and_Stave",layernum);
+              cout<<"\nAll data in "<<taskname[layernum]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+              Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], objname, run1, run2, (long)ts_start, (long)ts_end);
+              break;
+            }
+
+            case 1: {
+              string objname = Form("DeadPixel/Layer%d/DeadPixel_Vs_Chip_and_Stave",layernum);
+              cout<<"\nAll data in "<<taskname[layernum]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+              Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], objname, run1, run2, (long)ts_start, (long)ts_end);
+              break;
+            }
+
+            case 2: {
+              for(int istave=0; istave<nStavesInLay[layernum]; istave++){
+                Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",layernum,istave), run1, run2, (long)ts_start, (long)ts_end);
+              }
+              break;
+            }
+          }
+
+        }//end loop on lists
+      }//end if layernum>=0
+
+      else if(layernum==-1){
+        for(int il=0; il<nListElements; il++){//loop on lists
+          switch(il){
+            case 0: {
+              for(int ilay=0; ilay<=2; ilay++){
+                string objname = Form("Threshold/Layer%d/Threshold_Vs_Chip_and_Stave",ilay);
+                cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+                Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], objname, run1, run2, (long)ts_start, (long)ts_end);
+              }
+              break;
+            }
+
+            case 1: {
+              for(int ilay=0; ilay<=2; ilay++){
+                string objname = Form("DeadPixel/Layer%d/DeadPixel_Vs_Chip_and_Stave",ilay);
+                cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+                Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], objname, run1, run2, (long)ts_start, (long)ts_end);
+                break;
+              }
+            }
+
+            case 2: {
+              for(int ilay=0; ilay<=2; ilay++){
+                for(int istave=0; istave<nStavesInLay[ilay]; istave++){
+                  Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",ilay,istave), run1, run2, (long)ts_start, (long)ts_end);
+                }
+              }
+              break;
+            }
+          }
+        }//end loop on lists
+      }//end if layernum==-1
+    }// end of case 2
 
   }//end switch
 
@@ -703,6 +794,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
     string c = obj->ClassName();
     TH2 *h2s = 0x0;
     TH1 *h1s = 0x0;
+    THnSparse *hSp = 0x0;
 
     //if(strstr(c,"TH1")!=nullptr){
     if(c.find("TH1")!=string::npos){
@@ -729,8 +821,21 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
       h2s->Write();
     }
 
+    if(c.find("THnSparse")!=string::npos){
+      string histname = "";
+      if(objname.find("Error")==string::npos)
+        histname = Form("hsparse_L%s%s%s_%ld", lnum.c_str(), isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+      else
+        histname = Form("hsparse_err%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+
+      hSp = dynamic_cast<THnSparse*>(obj->Clone(histname.c_str()));
+      outputfile->cd();
+      hSp->Write();
+    }
+
     delete h1s;
     delete h2s;
+    delete hSp;
     //delete monitor;
     delete obj;
   }
@@ -767,6 +872,7 @@ bool Download(int choice, auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, 
 string GetOptName(int opt){
   switch(opt){
     case 1: return "FHRMAPS_HITMAPS";
+    case 2: return "THRMAPS_DEADPIXMAPS";
     default: return "0";
   }
 }

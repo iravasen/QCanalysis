@@ -24,6 +24,12 @@ todo(){
     5) echo -e "\n\e[32m=> Starting analysis of the errors for all runs\e[39m"
        root -l -b -q AnalyzeErrorsFHR.C++
        remove ;;
+    6) echo -e "\n\e[32m=> Starting threshold analysis run by run\e[39m"
+       root -l -b -q AnalyzeLayerThresholds.C++
+       remove ;;
+    7) echo -e "\n\e[32m=> Starting dead pixel analysis run by run\e[39m"
+       root -l -b -q AnalyzeLayerDeadPixels.C++
+       remove ;;
     *) echo -e "Invalid option \n"
        echo -e "Retype an option \c"
        todo ;;
@@ -32,12 +38,16 @@ todo(){
 
 analysismenu(){
   echo -e "\n\e[32m=> Choose the analysis you want to perform \n"
-  echo "[Analyses on noisy pixels]"
+  echo "[Analyses on Fake-Hit Rate runs]"
   echo -e "\t 1. Fake-hit rate run by run"
   echo -e "\t 2. Compare number of noisy pixels between runs"
   echo -e "\t 3. Fake-hit rate study with hot pixels masking"
   echo -e "\t 4. Fake-hit rate correlation analysis (reference run to be chosen)"
-  echo -e "\t 5. Error analysis for all runs\e[39m"
+  echo -e "\t 5. Error analysis for all runs"
+  echo -e "\n"
+  echo "[Analyses on Threshold runs]"
+  echo -e "\t 6. Average threshold run by run"
+  echo -e "\t 7. Total dead pixels run by run\e[39m"
   echo -e "\n"
   echo -e "Enter option \c"
   cd analysismacros
