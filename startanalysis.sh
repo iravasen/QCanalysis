@@ -39,6 +39,9 @@ todo(){
     10) echo -e "\n\e[32m=> Starting comparison of dead-pixels between runs\e[39m"
        root -l -b -q CompareLayerDeadPixelsInRuns.C++
        remove ;;
+    10) echo -e "\n\e[32m=> Starting preparation of dead-pixel map\e[39m"
+       root -l -b -q MakeDeadPixelMap.C++
+       remove ;;
     *) echo -e "Invalid option \n"
        echo -e "Retype an option \c"
        todo ;;
@@ -60,6 +63,7 @@ analysismenu(){
   echo -e "\t 8.  Threshold correlation analysis (reference run to be chosen)"
   echo -e "\t 9.  Dead-pixels correlation analysis (reference run to be chosen)\e[39m"
   echo -e "\t 10. Compare number of dead-pixels between runs"
+  echo -e "\t 11. Make dead-pixels map for layer(s)"
   echo -e "\n"
   echo -e "Enter option \c"
   cd analysismacros
