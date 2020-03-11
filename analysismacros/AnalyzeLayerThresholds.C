@@ -99,6 +99,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool isIB){
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
          && (!obj->InheritsFrom("TH2"))
 	       && (!obj->InheritsFrom("TH1"))
+         && (!obj->InheritsFrom("THnSparse"))
        ) {
             cout<<"<W> Object "<<obj->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;
        }

@@ -62,6 +62,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   TObject *obj;
   TIter next(list);
   TH2 *h2;
+  bool isfirst = true;
   while((key = ((TKey*)next()))){
     obj = key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
@@ -86,8 +87,10 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       }
       stavenums.push_back(stvnum);
       hmapsHIT.push_back(h2);
-      if((int)stavenums.size()>1 && stvnum!=stavenums[stavenums.size()-2])
+      if((int)stavenums.size()>1 && stvnum!=stavenums[stavenums.size()-2] && isfirst){
+        isfirst=false;
         continue;
+      }
       runlabel.push_back(runnum);
     }
     else{// FHR maps
@@ -513,7 +516,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       //draw labels on x axis
       int counter = runlabel.size()-1;
       for(Int_t k=4;k<=hfake->GetNbinsX()-3;k+=3){
-        if(runlabel[counter]==refrun[iref]){
+        if(stol(runlabel[counter])==refrun[iref]){
           k-=3;
           counter--;
           continue;
