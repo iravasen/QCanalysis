@@ -65,9 +65,9 @@ analysismenu(){
   echo -e "\t 7.  Average threshold run by run"
   echo -e "\t 8.  Total dead pixels run by run"
   echo -e "\t 9.  Threshold correlation analysis (reference run to be chosen)"
-  echo -e "\t 10. Dead-pixels correlation analysis (reference run to be chosen)\e[39m"
+  echo -e "\t 10. Dead-pixels correlation analysis (reference run to be chosen)"
   echo -e "\t 11. Compare number of dead-pixels between runs"
-  echo -e "\t 12. Make dead-pixels map for layer(s)"
+  echo -e "\t 12. Make dead-pixels map for layer(s)\e[39m"
   echo -e "\n"
   echo -e "Enter option \c"
   cd analysismacros
@@ -319,10 +319,10 @@ todooption(){
 }
 
 doexpert(){
-  echo -e "\n===== What to do ====\n"
+  echo -e "\n\e[32m===== What to do ====\n"
   echo -e "=> Chose an option: \n\n"
   echo -e "\t 1. Download and analyse data from CCDB"
-  echo -e "\t 2. Analyse data on FLP"
+  echo -e "\t 2. Analyse data on FLP\e[39m"
   echo -e "\n"
   echo -e "\e[39mEnter option \c"
   todooption
