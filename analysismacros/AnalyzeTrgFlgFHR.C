@@ -22,7 +22,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns);
 //
 // MAIN
 //
-void AnalyzeErrorsFHR(){
+void AnalyzeTrgFlgFHR(){
   string fpath;
   int nchips=9;
   cout<<"\n\n=> Available file(s) for the analysis (the last should be the file you want!): \n"<<endl;
@@ -104,7 +104,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns){
             cout<<"<W> Object "<<obj->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;
        }
     string objname = (string)obj->GetName();
-    if(objname.find("err")==string::npos) continue;
+    if(objname.find("trg")==string::npos) continue;
     h2 = (TH2*)obj;
     string timestamp = objname.find("run")==string::npos ? objname.substr(objname.find("_",2)+1, 13) : objname.substr(objname.find("_",6)+1, 13);
     string runnum =  objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
@@ -144,11 +144,11 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns){
     max[ilay] = -1.;
   for(int iplot=0; iplot<(int)herr.size(); iplot++){
     TH1D *hproj = (TH1D*)herr[iplot]->ProjectionY(Form("herr_%d",iplot));
-    for(int ibin=1; ibin<=hproj->GetNbinsX(); ibin++){
+    for(int ibin=1; ibin<=hSummary[0]->GetNbinsY(); ibin++){
       if(ir==0){
         trend[stoi(laynums[iplot])][ibin-1] = new TGraph();
-        trend[stoi(laynums[iplot])][ibin-1]->SetName(Form("gr_L%s_errID%d",laynums[iplot].c_str(),ibin));
-        SetStyle(trend[stoi(laynums[iplot])][ibin-1], col[ibin<=10?ibin-1:ibin<=20?ibin-11:ibin-21], ibin<=10?24:ibin<=20?25:26);
+        trend[stoi(laynums[iplot])][ibin-1]->SetName(Form("gr_L%s_trgID%d",laynums[iplot].c_str(),ibin));
+        SetStyle(trend[stoi(laynums[iplot])][ibin-1], col[ibin<=10?ibin-1:ibin-11], ibin<=10?24:25);
       }
       trend[stoi(laynums[iplot])][ibin-1]->SetPoint(ir,ir, hproj->GetBinContent(ibin));
       if(hproj->GetBinContent(ibin)>max[stoi(laynums[iplot])])
@@ -166,9 +166,9 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns){
     canvas.SetTickx();
     canvas.SetTicky();
     canvas.SetLogz();
-    canvas.SetMargin(0.0988,0.2,0.194,0.0993);
+    canvas.SetMargin(0.18,0.2,0.194,0.0993);
     canvas.SetRightMargin(0.15);
-    hSummary[ilay]->SetTitle(Form("Errors L%d, %s", nLayers>1 ? ilay:stoi(laynums[0]),filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
+    hSummary[ilay]->SetTitle(Form("Trigger & Flags L%d, %s", nLayers>1 ? ilay:stoi(laynums[0]),filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
     hSummary[ilay]->Draw("colz");
     //hSummary[ilay]->GetXaxis()->SetNdivisions(530);
     //hSummary[ilay]->GetYaxis()->SetNdivisions(516);
@@ -181,8 +181,8 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns){
     hSummary[ilay]->GetZaxis()->SetTitleSize(0.05);
     hSummary[ilay]->GetZaxis()->SetTitleOffset(0.9);
 
-    if(!ilay) canvas.SaveAs(Form("../Plots/IB_FHRErrorPlotSummary_%s.pdf[", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-    canvas.SaveAs(Form("../Plots/IB_FHRErrorPlotSummary_%s.pdf", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    if(!ilay) canvas.SaveAs(Form("../Plots/IB_FHRTrgFlgPlotSummary_%s.pdf[", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    canvas.SaveAs(Form("../Plots/IB_FHRTrgFlgPlotSummary_%s.pdf", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
   }
 
   //Draw trends
@@ -192,10 +192,9 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns){
       hfake->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[(int)runnumbers.size()/nLayers-1-ir])));
 
   TLegend *leg = new TLegend(0.904, 0.197,0.997,0.898);
-  leg->SetHeader("Error IDs");
-  leg->SetNColumns(2);
+  leg->SetHeader("IDs");
   for(int iid=1; iid<=hSummary[0]->GetNbinsY();iid++)
-    leg->AddEntry(trend[0][iid-1], Form("%d",iid), "p");
+    leg->AddEntry(trend[0][iid-1], Form("%s",hSummary[0]->GetYaxis()->GetBinLabel(iid)), "p");
 
   for(int ilay=0; ilay<nLayers; ilay++){
     TCanvas canvas;
@@ -206,7 +205,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns){
     canvas.SetMargin(0.0988,0.1,0.194,0.0993);
 
     hfake->GetXaxis()->SetTitleOffset(2.8);
-    hfake->SetTitle(Form("Layer-%d, Error trends %s",nLayers>1 ? ilay:stoi(laynums[0]), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    hfake->SetTitle(Form("Layer-%d, Trigger & Flag trends %s",nLayers>1 ? ilay:stoi(laynums[0]), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     hfake->GetYaxis()->SetRangeUser(1, 10*max[ilay]);
     hfake->GetXaxis()->SetTitleOffset(2.8);
     hfake->Draw();
@@ -214,8 +213,8 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns){
       trend[ilay][iid-1]->Draw("P same");
     }
     leg->Draw("same");
-    canvas.SaveAs(Form("../Plots/IB_FHRErrorPlotSummary_%s.pdf", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-    if(ilay==nLayers-1) canvas.SaveAs(Form("../Plots/IB_FHRErrorPlotSummary_%s.pdf]", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    canvas.SaveAs(Form("../Plots/IB_FHRTrgFlgPlotSummary_%s.pdf", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    if(ilay==nLayers-1) canvas.SaveAs(Form("../Plots/IB_FHRTrgFlgPlotSummary_%s.pdf]", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
   }
 
 }
