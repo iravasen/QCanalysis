@@ -167,12 +167,14 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
 
   //find max for plots (same for all staves)
   double max = -1.;
-  for(int ihist=0; ihist<(int)hmaps.size(); ihist++){
-    if(hmaps[ihist]->GetMaximum()>max)
-      max=hmaps[ihist]->GetMaximum();
-  }
+  for(int ihist=0; ihist<(int)hmaps.size(); ihist++)
+    for(int ix=1; ix<=hmaps[ihist]->GetNbinsX();ix++)
+      for(int iy=1; iy<=hmaps[ihist]->GetNbinsY();iy++)
+        if(hmaps[ihist]->GetBinContent(ix,iy)>max)
+          max=hmaps[ihist]->GetBinContent(ix,iy);
+
   double maxlimit = max+0.5*max;
-  int nbins = (int)(max+0.5*max-0.9)*2.5;
+  int nbins = (int)(max+0.5*max-0.9)*1.0;
 
   TH2D *hCorr[nLayers];
 
@@ -205,6 +207,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
   gStyle->SetPalette(1);
   //Draw
   TLine *line = new TLine(1,1,maxlimit,maxlimit);
+  line->SetLineStyle(2);
   for(int ilay=0; ilay<nLayers; ilay++){
     TCanvas *canvas = new TCanvas();
     canvas->cd();
