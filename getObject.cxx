@@ -601,8 +601,8 @@ bool RunExpert(auto *ccdb, string myname){
                 string objname = Form("DeadPixel/Layer%d/DeadPixel_Vs_Chip_and_Stave",ilay);
                 cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
                 Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], objname, run1, run2, (long)ts_start, (long)ts_end, ilay);
-                break;
               }
+              break;
             }
 
             case 2: {
