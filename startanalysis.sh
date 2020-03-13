@@ -40,7 +40,7 @@ todo(){
        root -l -b -q CompareLayerDeadPixels.C++
        remove ;;
     11) echo -e "\n\e[32m=> Starting comparison of dead-pixels between runs\e[39m"
-       root -l -b -q CompareLayerDeadPixelsInRuns.C++
+       root -l -b -q CompareDeadPixelsInRuns.C++
        remove ;;
     12) echo -e "\n\e[32m=> Starting preparation of dead-pixel map\e[39m"
        root -l -b -q MakeDeadPixelMap.C++
