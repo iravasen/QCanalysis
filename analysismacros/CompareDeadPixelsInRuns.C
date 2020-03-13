@@ -204,7 +204,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
     irun++;
 
     //cout<<noisypix[noisypix.size()-1][0]<<"  "<<noisypix[noisypix.size()-1][1]<<"  "<<noisypix[noisypix.size()-1][2]<<"  "<<noisypix[noisypix.size()-1][3]<<"  "<<noisypix[noisypix.size()-1][4]<<endl;
-    if(ilayer==nLayers-1 && stavenums[ihist]==stavenums[0])
+    if(ilayer==nLayers-1)
       runlabel.push_back(runnumbers[ihist]);
 
     if(ihist>0){
@@ -269,37 +269,36 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
   int nstaves = posrefrun.size();
   double maxs[nLayers][100];
   double mins[nLayers][100];
-  for(int ilay=nLayers-1; ilay>=0; ilay--){
-    for(int is=nstaves-1; is>=0; is--){
-      int isidx = noisypix[cnt][3];
-      maxs[ilay][isidx] = -1.;
-      mins[ilay][isidx] = 1e35;
-      ge_nref_stave[ilay][isidx] = new TGraphErrors();
-      ge_ncom1_stave[ilay][isidx] = new TGraphErrors();
-      ge_n2_stave[ilay][isidx] = new TGraphErrors();
-      ge_ncom2_stave[ilay][isidx] = new TGraphErrors();
-      for(int ir=0; ir<nRuns-1; ir++){//first the older data and last the most recent
-        if(!ir) xshift=1.;
-        else xshift = 3.;
-        ge_nref_stave[ilay][isidx]->SetPoint(ir, ir*xshift, (double)noisypix[cnt][2]/2.+(double)noisypix[cnt][0]/2.);
-        ge_nref_stave[ilay][isidx]->SetPointError(ir, 0.5, (double)noisypix[cnt][0]/2.);
-        ge_ncom1_stave[ilay][isidx]->SetPoint(ir, ir*xshift, 0.);
-        ge_ncom1_stave[ilay][isidx]->SetPointError(ir, 0.5, (double)noisypix[cnt][2]/2.);
-        if((double)noisypix[cnt][2]/2.+(double)noisypix[cnt][0] > maxs[ilay][isidx]) maxs[ilay][isidx] = (double)noisypix[cnt][2]/2.+(double)noisypix[cnt][0];
+  while(cnt<(int)noisypix.size()){
+    int isidx = noisypix[cnt][3];
+    int ilay  = noisypix[cnt][4];
+    maxs[ilay][isidx] = -1.;
+    mins[ilay][isidx] = 1e35;
+    ge_nref_stave[ilay][isidx] = new TGraphErrors();
+    ge_ncom1_stave[ilay][isidx] = new TGraphErrors();
+    ge_n2_stave[ilay][isidx] = new TGraphErrors();
+    ge_ncom2_stave[ilay][isidx] = new TGraphErrors();
+    for(int ir=0; ir<nRuns-1; ir++){//first the older data and last the most recent
+      if(!ir) xshift=1.;
+      else xshift = 3.;
+      ge_nref_stave[ilay][isidx]->SetPoint(ir, ir*xshift, (double)noisypix[cnt][2]/2.+(double)noisypix[cnt][0]/2.);
+      ge_nref_stave[ilay][isidx]->SetPointError(ir, 0.5, (double)noisypix[cnt][0]/2.);
+      ge_ncom1_stave[ilay][isidx]->SetPoint(ir, ir*xshift, 0.);
+      ge_ncom1_stave[ilay][isidx]->SetPointError(ir, 0.5, (double)noisypix[cnt][2]/2.);
+      if((double)noisypix[cnt][2]/2.+(double)noisypix[cnt][0] > maxs[ilay][isidx]) maxs[ilay][isidx] = (double)noisypix[cnt][2]/2.+(double)noisypix[cnt][0];
 
-        //second couple of bar on the right
-        ge_n2_stave[ilay][isidx]->SetPoint(ir, ir*xshift+1, -(double)noisypix[cnt][2]/2.-(double)noisypix[cnt][1]/2.);
-        ge_n2_stave[ilay][isidx]->SetPointError(ir, 0.5, (double)noisypix[cnt][1]/2.);
-        ge_ncom2_stave[ilay][isidx]->SetPoint(ir, ir*xshift+1, 0.);
-        ge_ncom2_stave[ilay][isidx]->SetPointError(ir, 0.5, (double)noisypix[cnt][2]/2.);
-        if(-(double)noisypix[cnt][2]/2.-(double)noisypix[cnt][1] < mins[ilay][isidx]) mins[ilay][isidx] = -(double)noisypix[cnt][2]/2.-(double)noisypix[cnt][1];
-        cnt++;
-      }
-      SetStyle(ge_nref_stave[ilay][isidx], kBlue);
-      SetStyle(ge_ncom1_stave[ilay][isidx], kBlack);
-      SetStyle(ge_ncom2_stave[ilay][isidx], kBlack);
-      SetStyle(ge_n2_stave[ilay][isidx], kRed+2);
+      //second couple of bar on the right
+      ge_n2_stave[ilay][isidx]->SetPoint(ir, ir*xshift+1, -(double)noisypix[cnt][2]/2.-(double)noisypix[cnt][1]/2.);
+      ge_n2_stave[ilay][isidx]->SetPointError(ir, 0.5, (double)noisypix[cnt][1]/2.);
+      ge_ncom2_stave[ilay][isidx]->SetPoint(ir, ir*xshift+1, 0.);
+      ge_ncom2_stave[ilay][isidx]->SetPointError(ir, 0.5, (double)noisypix[cnt][2]/2.);
+      if(-(double)noisypix[cnt][2]/2.-(double)noisypix[cnt][1] < mins[ilay][isidx]) mins[ilay][isidx] = -(double)noisypix[cnt][2]/2.-(double)noisypix[cnt][1];
+      cnt++;
     }
+    SetStyle(ge_nref_stave[ilay][isidx], kBlue);
+    SetStyle(ge_ncom1_stave[ilay][isidx], kBlack);
+    SetStyle(ge_ncom2_stave[ilay][isidx], kBlack);
+    SetStyle(ge_n2_stave[ilay][isidx], kRed+2);
   }
 
   //Legend
@@ -312,6 +311,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
 
   //Draw plot for each layer
   for(int ilay=0; ilay<nLayers; ilay++){
+    cout<<ilay<<endl;
     TCanvas *canvas = new TCanvas(Form("mycanvas_%d",ilay), Form("mycanvas_%d",ilay), 1300, 800);
     canvas->SetMargin(0.08, 0.1271, 0.1759, 0.0996);
     canvas->cd();
@@ -320,14 +320,19 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
     double x2,y2;
 
     ge_ncom2[ilay]->GetPoint(ge_ncom2[ilay]->GetN()-1, x2,y2);
+    cout<<"aaa"<<endl;
     TH1F *hfake = new TH1F("hfake","hfake", (int)x2+6, -3, x2+3);
     //draw labels on x axis
     int counter = 0;
     for(Int_t k=4;k<=hfake->GetNbinsX()-3;k+=3){
+      cout<<"pippo"<<endl;
       hfake->GetXaxis()->SetBinLabel(k, Form("run%s",runlabel[counter].c_str()));
+      cout<<"runlab: "<<runlabel[counter]<<endl;
       counter++;
     }
+    cout<<"aaaa1"<<endl;
     hfake->Draw();
+    cout<<"bbbb"<<endl;
     //canvas->SetLogy();
     hfake->SetTitle(Form("Layer-%s - %s%06ld compared to all",nLayers>1 ? to_string(ilay).c_str():laynums[0].c_str(), filepath.find("run")==string::npos? "":"run",refrun));
     ge_nref[ilay]->Draw("P E2 same");
@@ -342,7 +347,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
     lineref->SetLineColor(kGray-1);
     lineref->SetLineStyle(2);
     lineref->Draw("same");
-
+    cout<<"cccc"<<endl;
     //draw legend
     leg->Draw("same");
 
@@ -356,9 +361,14 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
 
   //Draw plot for each stave
   //Draw
-  for(int ilay=0; ilay<nLayers; ilay++){
-    for(int is=0; is<nstaves; is++){
-      int isidx = (int)noisypix[is*(nRuns-1)][3];//stave number
+  cnt=0;
+  cout<<"noisypix size: "<<noisypix.size()<<endl;
+  while(cnt<(int)noisypix.size()){
+  //for(int ilay=0; ilay<nLayers; ilay++){
+    //for(int is=0; is<nstaves; is++){
+      int isidx = (int)noisypix[cnt][3];//stave number
+      int ilay = (int)noisypix[cnt][4];//layer number
+      cout<<"cnt: "<<cnt<<"  ilay: "<<ilay<<"  istave: "<<isidx<<endl;
       TCanvas *canvas = new TCanvas(Form("mycanvas_%d_%d",ilay,isidx), Form("mycanvas_%d_%d",ilay,isidx), 1300, 800);
       canvas->SetMargin(0.08, 0.1271, 0.1759, 0.0996);
       canvas->cd();
@@ -391,14 +401,16 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
 
       leg->Draw("same");
 
-      if(!ilay && !is) canvas->SaveAs(Form("../Plots/%sAllStaves_DeadPixComparison_%s%ld_compared_to_run_%s.pdf[",nLayers==1 ? Form("Layer%s_",laynums[0].c_str()) : "AllLayers_",filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      if(!cnt) canvas->SaveAs(Form("../Plots/%sAllStaves_DeadPixComparison_%s%ld_compared_to_run_%s.pdf[",nLayers==1 ? Form("Layer%s_",laynums[0].c_str()) : "AllLayers_",filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
       canvas->SaveAs(Form("../Plots/%sAllStaves_DeadPixComparison_%s%ld_compared_to_run_%s.pdf",nLayers==1 ? Form("Layer%s_",laynums[0].c_str()) : "AllLayers_",filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-      if(ilay==nLayers-1 && is==nStavesInLay[ilay]-1) canvas->SaveAs(Form("../Plots/%sAllStaves_DeadPixComparison_%s%ld_compared_to_run_%s.pdf]",nLayers==1 ? Form("Layer%s_",laynums[0].c_str()) : "AllLayers_",filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      if(cnt==((int)noisypix.size())-(nRuns-1)) canvas->SaveAs(Form("../Plots/%sAllStaves_DeadPixComparison_%s%ld_compared_to_run_%s.pdf]",nLayers==1 ? Form("Layer%s_",laynums[0].c_str()) : "AllLayers_",filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 
       delete canvas;
       delete hfake;
       delete lineref;
-    }
+
+      cnt+=(nRuns-1);
+    //}
   }
 
 }
