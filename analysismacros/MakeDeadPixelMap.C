@@ -126,69 +126,73 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns){
     stavenums.push_back(stvnum);
   }
 
-  //Compare all the runs (non-empty ones) with the reference run chosen by the user
-  vector<string> runlabel;
-  int istave = posrefrun.size()-1;
-  int ilayer = nLayers-1;
-  TH2F *hHotMap[nLayers][20];
-  for(int ilay=0; ilay<nLayers; ilay++)
-    for(int istave=0; istave<20; istave++)
-      hHotMap[ilay][istave] = new TH2F(Form("hHotMap_L%s_Stv%d",nLayers>1 ? to_string(ilay).c_str():laynums[0].c_str(), istave), "; ; ", 9216,0.5,9216.5,512,0.5,512.5);
-
-  for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){ //start from the bottom in order to start with the oldest run
-    hHotMap[ilayer][stoi(stavenums[ihist])] = (TH2F*)hmaps[ihist]->Projection(1,0);
-    hHotMap[ilayer][stoi(stavenums[ihist])]->SetName(Form("hHotMap_L%s_Stv%s",laynums[ihist].c_str(), stavenums[ihist].c_str()));
-    if(ihist>0){
-      if(laynums[ihist-1]!=laynums[ihist]){
-        ilayer--;
-      }
-    }
-  }//end loop on histograms
-
-
   //Draw hot pixel maps for each layer
   for(int ilay=0; ilay<nLayers; ilay++){
     TCanvas cnv(Form("cnv_%d",ilay), Form("cnv_%d",ilay),800,1200);
     cnv.SetTopMargin(0.4);
     cnv.Divide(1,nStavesInLay[ilay],0,0);
     for(int istave=0; istave<nStavesInLay[ilay]; istave++){
-      hHotMap[ilay][istave]->SetTitle(" ");
-      hHotMap[ilay][istave]->SetMarkerStyle(20);
-      hHotMap[ilay][istave]->SetMarkerSize(0.6);
-      hHotMap[ilay][istave]->SetMarkerColor(kRed);
-      hHotMap[ilay][istave]->SetLineColor(kRed);
+      TH2F *hHotMap = new TH2F(Form("hHotMap_L%s_Stv%d",nLayers>1 ? to_string(ilay).c_str():laynums[0].c_str(), istave), "; ; ", 9216,0.5,9216.5,512,0.5,512.5);
+      int cnt = 0;
 
+      for(int ihist=0; ihist<(int)hmaps.size(); ihist++){ //start from the bottom in order to start with the oldest run
+        if(nLayers>1){
+          if(stoi(laynums[ihist])==ilay && stoi(stavenums[ihist]) != istave) continue;
+          if(stoi(laynums[ihist])!=ilay) continue;
+        }
+        else if(stoi(stavenums[ihist]) != istave) {
+          continue;
+        }
+        if(!cnt) {hHotMap = (TH2F*)hmaps[ihist]->Projection(1,0);}
+        else {
+          TH2F *htemp = (TH2F*)hmaps[ihist]->Projection(1,0);
+          hHotMap->Add(htemp);
+          delete htemp;
+        }
+
+        if(ihist>0 && stavenums[ihist+1]!=stavenums[ihist]) break;
+        cnt++;
+      }
       cnv.cd(istave+1);
       cnv.GetPad(istave+1)->SetTickx();
       cnv.GetPad(istave+1)->SetTicky();
       cnv.GetPad(istave+1)->SetRightMargin(0.01);
       if(!istave) cnv.GetPad(istave+1)->SetTopMargin(0.1);
 
-      hHotMap[ilay][istave]->Draw("P X+");
-      hHotMap[ilay][istave]->GetXaxis()->SetRangeUser(0.,9216.);
-      hHotMap[ilay][istave]->GetYaxis()->SetRangeUser(0.,512.);
+      hHotMap->SetTitle(" ");
+      hHotMap->SetMarkerStyle(20);
+      hHotMap->SetMarkerSize(0.6);
+      hHotMap->SetMarkerColor(kRed);
+      hHotMap->SetLineColor(kRed);
 
-      hHotMap[ilay][istave]->GetXaxis()->SetTickLength(0.005);
-      hHotMap[ilay][istave]->GetYaxis()->SetTickLength(0.005);
-      hHotMap[ilay][istave]->GetYaxis()->SetLabelSize(0.13);
-      hHotMap[ilay][istave]->GetXaxis()->SetLabelSize(0.13);
+      hHotMap->GetXaxis()->SetRangeUser(0.,9216.);
+      hHotMap->GetYaxis()->SetRangeUser(0.,512.);
+
+      hHotMap->GetXaxis()->SetTickLength(0.005);
+      hHotMap->GetYaxis()->SetTickLength(0.005);
+      hHotMap->GetYaxis()->SetLabelSize(0.13);
+      hHotMap->GetXaxis()->SetLabelSize(0.13);
       if(istave>0){
-        hHotMap[ilay][istave]->GetXaxis()->SetLabelOffset(999);
-        hHotMap[ilay][istave]->GetXaxis()->SetTickLength(0.05);
-        hHotMap[ilay][istave]->GetXaxis()->SetNdivisions(530);
+        hHotMap->GetXaxis()->SetLabelOffset(999);
+        hHotMap->GetXaxis()->SetTickLength(0.05);
+        hHotMap->GetXaxis()->SetNdivisions(530);
       }
       else{
-        hHotMap[ilay][istave]->GetXaxis()->SetLabelOffset(0.003);
-        hHotMap[ilay][istave]->GetXaxis()->SetNdivisions(530);
-        hHotMap[ilay][istave]->GetXaxis()->SetTickLength(0.05);
+        hHotMap->GetXaxis()->SetLabelOffset(0.003);
+        hHotMap->GetXaxis()->SetNdivisions(530);
+        hHotMap->GetXaxis()->SetTickLength(0.05);
       }
+
+      hHotMap->DrawCopy("P X+");
 
       TLatex lat;
       lat.SetTextAngle(90);
       lat.SetNDC();
       lat.SetTextSize(0.15);
       lat.DrawLatex(0.04,0.3,Form("Stv%d",istave));
-    }
+
+      delete hHotMap;
+    }//end loop on staves
     cnv.cd();
     TLatex lat;
     lat.SetNDC();
@@ -196,7 +200,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns){
     lat.DrawLatex(0.01,0.98,Form("L%s",nLayers>1 ? to_string(ilay).c_str():laynums[0].c_str()));
 
     cnv.SaveAs(Form("../Plots/Layer%s_Deadpixmap_%s.pdf", nLayers>1 ? to_string(ilay).c_str():laynums[0].c_str(),filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-    cnv.SaveAs(Form("../Plots/Layer%s_Deadpixmap_%s.root", nLayers>1 ? to_string(ilay).c_str():laynums[0].c_str(),filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    //cnv.SaveAs(Form("../Plots/Layer%s_Deadpixmap_%s.root", nLayers>1 ? to_string(ilay).c_str():laynums[0].c_str(),filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
   }
 
 }
