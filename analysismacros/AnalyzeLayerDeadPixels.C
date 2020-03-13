@@ -189,10 +189,11 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool isIB){
 
   //find max for plots (same for all staves)
   double max = -1.;
-  for(int ihist=0; ihist<(int)hmaps.size(); ihist++){
-    if(hmaps[ihist]->GetMaximum()>max)
-      max=hmaps[ihist]->GetMaximum();
-  }
+  for(int ihist=0; ihist<(int)hmaps.size(); ihist++)
+    for(int ix=1; ix<=hmaps[ihist]->GetNbinsX();ix++)
+      for(int iy=1; iy<=hmaps[ihist]->GetNbinsY();iy++)
+        if(hmaps[ihist]->GetBinContent(ix,iy)>max)
+          max=hmaps[ihist]->GetBinContent(ix,iy);
 
   //Draw
   for(int ilay=0; ilay<nLayers; ilay++){
@@ -229,9 +230,10 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool isIB){
     canvas->cd();
     canvas->SetTickx();
     canvas->SetTicky();
+    canvas->SetLogz();
     canvas->SetRightMargin(0.15);
     hmaps[ihist]->Draw("colz");
-    hmaps[ihist]->SetMinimum(0);
+    hmaps[ihist]->SetMinimum(1);
     hmaps[ihist]->SetMaximum(max);
     hmaps[ihist]->GetZaxis()->SetTitle("# Dead Pixels");
     hmaps[ihist]->SetTitle(Form("Layer-%s, Run %06d (%d/%d)", laynums[ilayer*nRuns].c_str(), stoi(runnumbers[ihist]), irun,nRuns));
