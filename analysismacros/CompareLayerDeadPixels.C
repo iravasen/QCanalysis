@@ -172,12 +172,12 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
       max=hmaps[ihist]->GetMaximum();
   }
   double maxlimit = max+0.5*max;
-  int nbins = (int)(max+0.5*max-1)*2.5;
+  int nbins = (int)(max+0.5*max-0.9)*2.5;
 
   TH2D *hCorr[nLayers];
 
   for(int ilay=0; ilay<nLayers; ilay++)
-    hCorr[ilay] = new TH2D(Form("hCorr_L%s",laynums[ilay*nRuns].c_str()), Form("Layer-%s - DeadPix corr. %s - Ref. run: %ld; # Dead Pixel per Chip (run%ld); # Dead Pixel per Chip (runs)",laynums[ilay*nRuns].c_str(),filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str(),refrun,refrun), nbins, 1, maxlimit, nbins, 1, maxlimit);
+    hCorr[ilay] = new TH2D(Form("hCorr_L%s",laynums[ilay*nRuns].c_str()), Form("Layer-%s - DeadPix corr. %s - Ref. run: %ld; # Dead Pixel per Chip (run%ld); # Dead Pixel per Chip (runs)",laynums[ilay*nRuns].c_str(),filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str(),refrun,refrun), nbins, 0.9, maxlimit, nbins, 0.9, maxlimit);
 
   int ilayer=nLayers-1;
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){
