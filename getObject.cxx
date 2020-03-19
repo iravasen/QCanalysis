@@ -133,10 +133,12 @@ bool RunShifter(auto *ccdb, string myname){
   cout<<endl;
   cout<<"Choose what to download:"<<endl;
   cout<<"1. FakeHitRate runs"<<endl;
+  cout<<"2. ThresholdScan runs"<<endl;
+  cout<<"3. FakeHitRate and ThresholdScan runs"<<endl;
   cout<<endl;
   cout<<"Enter the option: ";
   cin>>opt;
-  if(opt<1 || opt>1){
+  if(opt<1 || opt>3){
     cout<<"Invalid option"<<endl;
     return 0;
   }
