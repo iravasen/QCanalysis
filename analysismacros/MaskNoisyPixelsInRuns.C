@@ -256,6 +256,7 @@ void DoAnalysis(string filepath_hit, const int nChips, string skipruns, bool isI
     TCanvas cnv(Form("cnv_%d",ilay), Form("cnv_%d",ilay));
     cnv.cd();
     cnv.SetLogy();
+    cnv.SetLogx();
     cnv.SetTickx();
     cnv.SetTicky();
     cnv.SetMargin(0.0988,0.1,0.1,0.0993);

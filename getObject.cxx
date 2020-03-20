@@ -23,7 +23,7 @@ bool RunShifter(auto *ccdb, string myname);
 bool RunExpert(auto *ccdb, string myname);
 void DownloadTimestamps(auto *ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string objname, long int ts_start, long int ts_end, int lnum);
 void DownloadRuns(auto *ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string tasknamealternative, string objname, string run1, string run2, int lnum);
-bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamealternative, string objname, vector<long int> timestamps, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers);
+bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamealternative, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers);
 bool Download(int choice, auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string tasknamealternative, string objname, string run1, string run2, long int ts_start, long int ts_end, int lnum);
 string GetOptName(int opt);
 string GetListName(int opt, int ilist);
@@ -312,47 +312,39 @@ bool RunExpert(auto *ccdb, string myname){
   cin>>layernum;
 
   //taskname
-  string taskname[3]    = {"qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask"};
-  string tasknamealt[3] = {"qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask"};//alternative tasks (backward compatibility)
-
-  //Choose the side: top or bottom
-  string side;
-  cout<<endl;
-  cout<<"Top or Bottom? [T/B]"<<endl;
-  cin>>side;
+  string taskname[4]    = {"qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask"};
+  string tasknamealt[4] = {"qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask"};//alternative tasks (backward compatibility)
 
   //set the task name
-  cout<<"OPT: "<<opt<<endl;
   switch(opt){
     case 1: {// fake-hit
-      if(side=="B" || side=="b"){
-        if(layernum<0) {
-          taskname[0] = "qc/ITS/ITSRawTaskIBB2";
-          taskname[1] = "qc/ITS/ITSRawTaskIBB3";
-          taskname[2] = "qc/ITS/ITSRawTaskIBB1";
+      if(layernum<0) {
+        taskname[0] = "qc/ITS/ITSRawTaskIBB2";//L0T, L0B
+        taskname[1] = "qc/ITS/ITSRawTaskIBB3";//L1T, L1B
+        taskname[2] = "qc/ITS/ITSRawTask"; //L2T
+        taskname[3] = "qc/ITS/ITSRawTaskIBB1"; //L2B
 
-          tasknamealt[0] = "qc/ITS/ITSRawTaskIBB2";
-          tasknamealt[1] = "qc/ITS/ITSRawTaskIBB2";
-          tasknamealt[2] = "qc/ITS/ITSRawTaskIBB1";
-        }
-        else if(layernum==1) {taskname[1] = "qc/ITS/ITSRawTaskIBB3"; tasknamealt[1] = "qc/ITS/ITSRawTaskIBB2";}
-        else if(layernum==2) {taskname[2] = "qc/ITS/ITSRawTaskIBB1"; tasknamealt[2] = "qc/ITS/ITSRawTaskIBB1";}
-        else {taskname[0] = "qc/ITS/ITSRawTaskIBB2"; tasknamealt[0] = "qc/ITS/ITSRawTaskIBB2";}
+        tasknamealt[0] = "qc/ITS/ITSRawTaskIBB2";
+        tasknamealt[1] = "qc/ITS/ITSRawTaskIBB2";
+        tasknamealt[2] = "qc/ITS/ITSRawTask";
+        tasknamealt[3] = "qc/ITS/ITSRawTaskIBB1";
       }
+      else if(layernum==1) {taskname[1] = "qc/ITS/ITSRawTaskIBB3"; tasknamealt[1] = "qc/ITS/ITSRawTaskIBB2";}
+      else if(layernum==2) {taskname[2] = "qc/ITS/ITSRawTask"; tasknamealt[2] = "qc/ITS/ITSRawTask"; taskname[3] = "qc/ITS/ITSRawTaskIBB1"; tasknamealt[3] = "qc/ITS/ITSRawTaskIBB1";}
+      else {taskname[0] = "qc/ITS/ITSRawTaskIBB2"; tasknamealt[0] = "qc/ITS/ITSRawTaskIBB2";}
+
       break;
     }
 
     case 2: { //thr scan
-      if(side=="B" || side=="b"){
-        cout<<"HERE HERE HERE"<<endl;
-        taskname[0] = "qc/ITS/THTest2";
-        taskname[1] = "qc/ITS/THTest3";
-        taskname[2] = "qc/ITS/THTest";
+      taskname[0] = "qc/ITS/THTest2";
+      taskname[1] = "qc/ITS/THTest3";
+      taskname[2] = "qc/ITS/THTest";
 
-        tasknamealt[0] = "qc/ITS/THTest2";
-        tasknamealt[1] = "qc/ITS/THTest3";
-        tasknamealt[2] = "qc/ITS/THTest";
-      }
+      tasknamealt[0] = "qc/ITS/THTest2";
+      tasknamealt[1] = "qc/ITS/THTest3";
+      tasknamealt[2] = "qc/ITS/THTest";
+
       break;
     }
 
@@ -484,7 +476,17 @@ bool RunExpert(auto *ccdb, string myname){
 
             case 1: {
               for(int istave=0; istave<nStavesInLay[layernum]; istave++){
-                Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), run1, run2, (long)ts_start, (long)ts_end, layernum);
+                if(layernum==2){
+                  if(istave>9){//L2B
+                    Download(choice, ccdb, ccdbApi, myname, taskname[layernum+1], tasknamealt[layernum+1], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), run1, run2, (long)ts_start, (long)ts_end, layernum);
+                  }
+                  else{
+                    Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), run1, run2, (long)ts_start, (long)ts_end, layernum);
+                  }
+                }
+                else{
+                  Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), run1, run2, (long)ts_start, (long)ts_end, layernum);
+                }
               }
               break;
             }
@@ -524,7 +526,17 @@ bool RunExpert(auto *ccdb, string myname){
             case 1: {
               for(int ilay=0; ilay<=2; ilay++){
                 for(int istave=0; istave<nStavesInLay[ilay]; istave++){
-                  Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), run1, run2, (long)ts_start, (long)ts_end, ilay);
+                  if(ilay==2){
+                    if(istave>9){//L2B
+                      Download(choice, ccdb, ccdbApi, myname, taskname[ilay+1], tasknamealt[ilay+1], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), run1, run2, (long)ts_start, (long)ts_end, ilay);
+                    }
+                    else{
+                      Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), run1, run2, (long)ts_start, (long)ts_end, ilay);
+                    }
+                  }
+                  else{
+                    Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), run1, run2, (long)ts_start, (long)ts_end, ilay);
+                  }
                 }
               }
               break;
@@ -672,7 +684,7 @@ void DownloadTimestamps(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, st
 
   bool isperstave = 0;
   if(objname.find("HITMAP")!=string::npos) isperstave = 1;
-  GetListOfHisto(ccdb, myname, taskname, " ", objname, timestamps_selperiod, lnum, 0, isperstave, vector<int>());
+  GetListOfHisto(ccdb, myname, taskname, " ", objname, timestamps_selperiod, vector<long int>(), lnum, 0, isperstave, vector<int>());
 
   timestamps_selperiod.clear();
 }
@@ -689,17 +701,23 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
   if(tasknamealternative!=taskname){
     objectlist2 = ccdbApi.list(tasknamealternative + "/" + objname,false,"text/plain");
   }
+  string objectlistL2B = " ";
+  if(objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos){
+    objectlistL2B = ccdbApi.list("qc/ITS/ITSRawTaskIBB1/" + objname, false, "text/plain");
+  }
   cout<<endl;
   cout<<endl;
   cout<<"Ready to get files from "<<taskname<<"/"<<objname<<endl;
   if(tasknamealternative!=taskname){
-    cout<<"... And from (alternative path for backward compatibility): "<< tasknamealternative<<"/"<<objname<<endl;
+    cout<<"... And eventually from (alternative path for backward compatibility): "<< tasknamealternative<<"/"<<objname<<endl;
   }
   stringstream ss(objectlist);
   stringstream ss2(objectlist2);
+  stringstream ss3(objectlistL2B);
   string word;
   vector<string> alltimestamps, timestamps, runs;
   vector<string> alltimestampsALT, timestampsALT, runsALT;//for alternative path
+  vector<string> alltimestampsL2B, timestampsL2B, runsL2B;//for L2B
 
   //filter string from alternative path (at the moment: only L1 from before run 300134)
   while(ss2>>word){
@@ -746,6 +764,24 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
     }
   }
 
+
+  //save all runs and timestamps for L2B
+  while(ss3>>word){
+    if(word=="Created:"){// take the one related to file creation
+      ss3>>word;
+      alltimestampsL2B.push_back(word);
+    }
+    if(word=="Run"){
+      ss3>>word;
+      ss3>>word;
+      runsL2B.push_back(word);
+      timestampsL2B.push_back(alltimestampsL2B[alltimestampsL2B.size()-1]);//this keep only the timestamps connected to a run number
+      if(stoi(word)==stoi(run1)) break;
+    }
+  }
+
+
+
   //filter all runs to get the ones within run1 and run2 (get most recent for each run!!)
   vector <long int> timestamps_selperiod;
   vector <int> runs_selperiod;
@@ -767,6 +803,27 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
     }
   }
 
+  //do the same for L2B (when it's its turn)
+  vector <long int> timestamps_selperiodL2B;
+  vector <int> runs_selperiodL2B;
+  counter=0;
+  for(int irun=0; irun<(int)runsL2B.size(); irun++){
+    if(stoi(runsL2B[irun])>=stoi(run1) && stoi(runsL2B[irun])<=stoi(run2)){
+      counter++;
+      if(counter==1){
+        runs_selperiodL2B.push_back(std::stoi(runsL2B[irun]));
+        timestamps_selperiodL2B.push_back(std::stol(timestampsL2B[irun]));
+      }
+      else{
+        if(runsL2B[irun]==runsL2B[irun-1]) continue;
+        else{
+          runs_selperiodL2B.push_back(std::stoi(runsL2B[irun]));
+          timestamps_selperiodL2B.push_back(std::stol(timestampsL2B[irun]));
+        }
+      }
+    }
+  }
+
   cout<<"\n"<<"Selected runs and corresponding timestamps: "<<endl;
   for(int i=0; i<(int)runs_selperiod.size();i++){
     cout<<"run"<<runs_selperiod[i]<<" - "<<timestamps_selperiod[i]<<endl;
@@ -774,7 +831,7 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
 
   bool isperstave = 0;
   if(objname.find("HITMAP")!=string::npos) isperstave = 1;
-  GetListOfHisto(ccdb, myname, taskname, tasknamealternative, objname, timestamps_selperiod, lnum, 1, isperstave, runs_selperiod);
+  GetListOfHisto(ccdb, myname, taskname, tasknamealternative, objname, timestamps_selperiod, timestamps_selperiodL2B, lnum, 1, isperstave, runs_selperiod);
 
   timestamps_selperiod.clear();
   runs_selperiod.clear();
@@ -800,7 +857,7 @@ string GetCorrectTS(string selrun, vector<string> runs, vector<string> timestamp
 //
 //Get list of histogram inside an object
 //
-bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamealternative, string objname, vector<long int> timestamps, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers){
+bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamealternative, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers){
 
   //Getting root files from the database and write them to file
   cout<<"\n"<<"... Getting files from the database"<<endl;
@@ -817,6 +874,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
     //MonitorObject *monitor = ccdb->retrieve(taskname, objname, timestamps[i]);
 
     auto monitor = ccdb->retrieveMO(taskname, objname, timestamps[i]);
+    auto monitor2 = ccdb->retrieveMO("qc/ITS/ITSRawTaskIBB1", objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
 
     if (monitor == nullptr) {
       cerr << myname << ": failed to get MonitorObject for timestamp: " << timestamps[i]<< endl;
@@ -826,8 +884,15 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
     TObject *obj = nullptr;
     obj = monitor->getObject();
     monitor->setIsOwner(false);
+    //for L2B only
+    TObject *obj2 = nullptr;
+    if(lnum==2){
+      obj2 = monitor2->getObject();
+      monitor2->setIsOwner(false);
+    }
     string c = obj->ClassName();
     TH2 *h2s = 0x0;
+    TH2 *h2sbis = 0x0; //for L2B only
     TH1 *h1s = 0x0;
     THnSparse *hSp = 0x0;
 
@@ -851,6 +916,10 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
         histname = Form("h2_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
 
       h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
+      if(lnum==2){
+        h2sbis = dynamic_cast<TH2*>(obj2->Clone(Form("%s_L2B",histname.c_str())));
+        h2s->Add(h2sbis);
+      }
       outputfile->cd();
       h2s->Write();
     }

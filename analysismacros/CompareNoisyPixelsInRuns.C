@@ -228,13 +228,16 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
   TGraphErrors *ge_ncom1_stave[nLayers][100];
   TGraphErrors *ge_ncom2_stave[nLayers][100];
   double xshift = 3.;
-  double max = -1;
-  double min = 1e35;
+  double max[nLayers];
+  double min[nLayers];
+
   for(int ilay=0; ilay<nLayers; ilay++){
     ge_nref[ilay] = new TGraphErrors();
     ge_n2[ilay] = new TGraphErrors();
     ge_ncom1[ilay] = new TGraphErrors();
     ge_ncom2[ilay] = new TGraphErrors();
+    max[ilay] = -1.;
+    min[ilay] = 1e35;
 
     for(int ir=0; ir<nRuns-1; ir++){//first the older data and last the most recent
       //first couple of bar on the left
@@ -245,14 +248,14 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
       ge_nref[ilay]->SetPointError(ir, 0.5, (double)first[ilay][ir]/2.);
       ge_ncom1[ilay]->SetPoint(ir, ir*xshift, 0.);
       ge_ncom1[ilay]->SetPointError(ir, 0.5, (double)both[ilay][ir]/2.);
-      if((double)both[ilay][ir]/2.+(double)first[ilay][ir] > max) max = (double)both[ilay][ir]/2.+(double)first[ilay][ir];
+      if((double)both[ilay][ir]/2.+(double)first[ilay][ir] > max[ilay]) max[ilay] = (double)both[ilay][ir]/2.+(double)first[ilay][ir];
 
       //second couple of bar on the right
       ge_n2[ilay]->SetPoint(ir, ir*xshift+1, -(double)both[ilay][ir]/2.-(double)second[ilay][ir]/2.);
       ge_n2[ilay]->SetPointError(ir, 0.5, (double)second[ilay][ir]/2.);
       ge_ncom2[ilay]->SetPoint(ir, ir*xshift+1, 0.);
       ge_ncom2[ilay]->SetPointError(ir, 0.5, (double)both[ilay][ir]/2.);
-      if(-(double)both[ilay][ir]/2.-(double)second[ilay][ir] < min) min = -(double)both[ilay][ir]/2.-(double)second[ilay][ir];
+      if(-(double)both[ilay][ir]/2.-(double)second[ilay][ir] < min[ilay]) min[ilay] = -(double)both[ilay][ir]/2.-(double)second[ilay][ir];
     }//end first loop on runs
 
     //Style
@@ -330,7 +333,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
     ge_ncom1[ilay]->Draw("E2 same");
     ge_ncom2[ilay]->Draw("E2 same");
     ge_n2[ilay]->Draw("E2 same");
-    hfake->GetYaxis()->SetRangeUser(min+0.1*min, max+0.1*max);
+    hfake->GetYaxis()->SetRangeUser(min[ilay]+0.1*min[ilay], max[ilay]+0.1*max[ilay]);
     //hfake->GetYaxis()->SetLabelColor(kWhite);
     hfake->GetYaxis()->SetTickLength(0.005);
     hfake->GetYaxis()->SetMaxDigits(4);
