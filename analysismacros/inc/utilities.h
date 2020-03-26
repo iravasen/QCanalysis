@@ -175,6 +175,7 @@ std::array<float,nMasked+1> GetFHRwithMasking(TH2 *hmap, const int nchips, doubl
     long int totalhits = hmapclone->Integral();
     float fhr = (float)totalhits / (512.*1024.*nchips*ntrig);
     if(!nchips) fhr=0.;
+    if(ntrig<0) fhr=0.;
     //cout<<fhr<<endl;
     fhrstave[iter] = fhr;
     int binmax = hmapclone->GetMaximumBin();

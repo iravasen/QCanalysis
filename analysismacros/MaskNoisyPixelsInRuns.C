@@ -177,12 +177,14 @@ void DoAnalysis(string filepath_hit, const int nChips, string skipruns, bool isI
   for(int ir=0; ir<nRuns; ir++){
     double fhr_run = h2_2[ir]->GetBinContent(1,1);
     int stavefound = 0;
+    int chipfound = 0;
     if(fhr_run<1e-15){
       for(int ibinx=1; ibinx<=h2_2[ir]->GetNbinsX(); ibinx++){
         for(int ibiny=h2_2[ir]->GetNbinsY(); ibiny>=1; ibiny--){
           fhr_run = h2_2[ir]->GetBinContent(ibinx,ibiny);
           if(fhr_run>1e-15) {
             stavefound = ibiny-1;
+            chipfound = ibinx-1;
             break;
           }
         }
@@ -197,9 +199,15 @@ void DoAnalysis(string filepath_hit, const int nChips, string skipruns, bool isI
       //cout<<"INVALID FHR... setting it to -1"<<endl;
     }
 
-    double hits_chip = hmaps[stavefound*nRuns+ir]->Integral(1,256,1,512);
-    ntrig.push_back(hits_chip/(512.*1024.*fhr_run));
-    cout<<"Run "<<runlabel[ir]<<" has "<<ntrig[ntrig.size()-1]<<" triggers"<<endl;
+    double hits_chip = hmaps[stavefound*nRuns+ir]->Integral(1+256*chipfound,256+256*chipfound,1,512);
+    if(hits_chip/(512.*1024.*fhr_run) < 1e-15){//to avoid bugs due to bad runs
+       ntrig.push_back(-1.);
+       cout<<"Run "<<runlabel[ir]<<" has "<<ntrig[ntrig.size()-1]<<" triggers (ignored in the calculation of the average fhr)"<<endl;
+    }
+    else{
+      ntrig.push_back(hits_chip/(512.*1024.*fhr_run));
+      cout<<"Run "<<runlabel[ir]<<" has "<<ntrig[ntrig.size()-1]<<" triggers"<<endl;
+    }
   }
 
   //Start masking hottest pixels for each stave in each run, Fill also the histo with the hot pixel maps for each stave
@@ -339,6 +347,7 @@ std::array<float,nMasked+1> GetFHRwithMasking(TH2 *hmap, const int nchips, doubl
     long int totalhits = hmap->Integral();
     float fhr = (float)totalhits / (512.*1024.*nchips*ntrig);
     if(!nchips) fhr=0.;
+    if(ntrig<0) fhr=0.;
     //cout<<fhr<<endl;
     fhrstave[iter] = fhr;
     int binmax = hmap->GetMaximumBin();
