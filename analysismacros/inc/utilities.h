@@ -18,6 +18,42 @@
 #include <TGraph.h>
 #include <TKey.h>
 #include <TLine.h>
+#include <THnSparse.h>
+
+//
+// Function to compare two hitmaps saved in THnSparse --> returns an arrays with timestamp of run2, noisyPixInRefRun, noisyPixInRun2, noisyPixInCommon
+//
+std::array<long int,5> CompareTwoRuns(THnSparse *href, THnSparse *h2){
+
+  std::array<long int,5> noisypix = {0, 0, 0, 0, 0};
+  //number of noisy pix in refrun_only and in common
+  for(int iybin=1; iybin<=512; iybin++){
+    href->GetAxis(1)->SetRange(iybin,iybin); //select a row
+    h2->GetAxis(1)->SetRange(iybin,iybin);//select a row
+    TH1D *hrefproj = (TH1D*)href->Projection(0);
+    TH1D *h2proj = (TH1D*)h2->Projection(0);
+    for(int ixbin=1; ixbin<=9216; ixbin++){
+
+      if(hrefproj->GetBinContent(ixbin)==1 && h2proj->GetBinContent(ixbin)==1){//dead in both runs
+        noisypix[2]++;
+      }
+      else if(hrefproj->GetBinContent(ixbin)==1 && h2proj->GetBinContent(ixbin)==0){//dead only in ref run
+        noisypix[0]++;
+      }
+      else if(hrefproj->GetBinContent(ixbin)==0 && h2proj->GetBinContent(ixbin)==1){//dead only in second run
+        noisypix[1]++;
+      }
+      else continue;
+    }
+    delete hrefproj;
+    delete h2proj;
+  }
+
+  href->GetAxis(1)->SetRange(1,512);
+  h2->GetAxis(1)->SetRange(1,512);
+
+  return noisypix;
+}
 
 //
 // Function to compare two hitmaps --> returns an arrays with timestamp of run2, noisyPixInRefRun, noisyPixInRun2, noisyPixInCommon

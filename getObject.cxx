@@ -925,7 +925,6 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
     //MonitorObject *monitor = ccdb->retrieve(taskname, objname, timestamps[i]);
 
     auto monitor = ccdb->retrieveMO(taskname, objname, timestamps[i]);
-    auto monitor2 = ccdb->retrieveMO("qc/ITS/ITSRawTaskIBB1", objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
 
     if (monitor == nullptr) {
       cerr << myname << ": failed to get MonitorObject for timestamp: " << timestamps[i]<< endl;
@@ -937,7 +936,8 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
     monitor->setIsOwner(false);
     //for L2B only
     TObject *obj2 = nullptr;
-    if(lnum==2){
+    if(objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos){
+      auto monitor2 = ccdb->retrieveMO("qc/ITS/ITSRawTaskIBB1", objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
       obj2 = monitor2->getObject();
       monitor2->setIsOwner(false);
     }
@@ -967,7 +967,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
         histname = Form("h2_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
 
       h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
-      if(lnum==2){
+      if(objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos){
         h2sbis = dynamic_cast<TH2*>(obj2->Clone(Form("%s_L2B",histname.c_str())));
         h2s->Add(h2sbis);
       }
@@ -987,7 +987,6 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
     delete h1s;
     delete h2s;
     delete hSp;
-    //delete monitor;
     delete obj;
   }
 

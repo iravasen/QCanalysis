@@ -43,7 +43,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
 
   string localdatetime = GetCurrentDateTime(1);
 
-  std::freopen(Form("../logs/log_%s.log",localdatetime.c_str()), "w", stdout);
+  std::freopen(Form("../logs/logFHR_%s.log",localdatetime.c_str()), "w", stdout);
 
   std::vector<TH2*> hmapsFHR;
   std::vector<TH2*> hmapsHIT;
@@ -473,16 +473,16 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   TGraphErrors *ge_ncom1[2][nLayers];
   TGraphErrors *ge_ncom2[2][nLayers];
   double xshift = 3.;
-  double max[nLayers];
-  double min[nLayers];
+  double max[2][nLayers];
+  double min[2][nLayers];
   for(int iref=0; iref<2; iref++){
     for(int ilay=0; ilay<nLayers; ilay++){
       ge_nref[iref][ilay] = new TGraphErrors();
       ge_n2[iref][ilay] = new TGraphErrors();
       ge_ncom1[iref][ilay] = new TGraphErrors();
       ge_ncom2[iref][ilay] = new TGraphErrors();
-      max[ilay] = -1.;
-      min[ilay] = 1e35;
+      max[iref][ilay] = -1.;
+      min[iref][ilay] = 1e35;
 
       for(int ir=0; ir<nRuns-1; ir++){//first the older data and last the most recent
         //first couple of bar on the left
@@ -493,14 +493,14 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
         ge_nref[iref][ilay]->SetPointError(ir, 0.5, (double)first[iref][ilay][ir]/2.);
         ge_ncom1[iref][ilay]->SetPoint(ir, ir*xshift, 0.);
         ge_ncom1[iref][ilay]->SetPointError(ir, 0.5, (double)both[iref][ilay][ir]/2.);
-        if((double)both[iref][ilay][ir]/2.+(double)first[iref][ilay][ir] > max[ilay]) max[ilay] = (double)both[iref][ilay][ir]/2.+(double)first[iref][ilay][ir];
+        if((double)both[iref][ilay][ir]/2.+(double)first[iref][ilay][ir] > max[iref][ilay]) max[iref][ilay] = (double)both[iref][ilay][ir]/2.+(double)first[iref][ilay][ir];
 
         //second couple of bar on the right
         ge_n2[iref][ilay]->SetPoint(ir, ir*xshift+1, -(double)both[iref][ilay][ir]/2.-(double)second[iref][ilay][ir]/2.);
         ge_n2[iref][ilay]->SetPointError(ir, 0.5, (double)second[iref][ilay][ir]/2.);
         ge_ncom2[iref][ilay]->SetPoint(ir, ir*xshift+1, 0.);
         ge_ncom2[iref][ilay]->SetPointError(ir, 0.5, (double)both[iref][ilay][ir]/2.);
-        if(-(double)both[iref][ilay][ir]/2.-(double)second[iref][ilay][ir] < min[ilay]) min[ilay] = -(double)both[iref][ilay][ir]/2.-(double)second[iref][ilay][ir];
+        if(-(double)both[iref][ilay][ir]/2.-(double)second[iref][ilay][ir] < min[iref][ilay]) min[iref][ilay] = -(double)both[iref][ilay][ir]/2.-(double)second[iref][ilay][ir];
       }//end first loop on runs
 
       //Style
@@ -548,7 +548,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       ge_ncom1[iref][ilay]->Draw("E2 same");
       ge_ncom2[iref][ilay]->Draw("E2 same");
       ge_n2[iref][ilay]->Draw("E2 same");
-      hfake->GetYaxis()->SetRangeUser(min[ilay]+0.1*min[ilay], max[ilay]+0.1*max[ilay]);
+      hfake->GetYaxis()->SetRangeUser(min[iref][ilay]+0.1*min[iref][ilay], max[iref][ilay]+0.1*max[iref][ilay]);
       //hfake->GetYaxis()->SetLabelColor(kWhite);
       hfake->GetYaxis()->SetTickLength(0.005);
       hfake->GetYaxis()->SetMaxDigits(4);

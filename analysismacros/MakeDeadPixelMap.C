@@ -130,8 +130,8 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns){
   for(int ilay=0; ilay<nLayers; ilay++){
     TCanvas cnv(Form("cnv_%d",ilay), Form("cnv_%d",ilay),800,1200);
     cnv.SetTopMargin(0.4);
-    cnv.Divide(1,nStavesInLay[ilay],0,0);
-    for(int istave=0; istave<nStavesInLay[ilay]; istave++){
+    cnv.Divide(1,nStavesInLay[nLayers>1 ? ilay:stoi(laynums[0])],0,0);
+    for(int istave=0; istave<nStavesInLay[nLayers>1 ? ilay:stoi(laynums[0])]; istave++){
       TH2F *hHotMap = new TH2F(Form("hHotMap_L%s_Stv%d",nLayers>1 ? to_string(ilay).c_str():laynums[0].c_str(), istave), "; ; ", 9216,0.5,9216.5,512,0.5,512.5);
       int cnt = 0;
 
