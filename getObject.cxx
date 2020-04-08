@@ -19,8 +19,8 @@ using namespace o2::quality_control::core;
 string GetCorrectTS(string selrun, vector<string> runs, vector<string> timestamps);
 array<string,2> GetLastRunWithTS(o2::ccdb::CcdbApi ccdbApi, string taskname, string objname);
 array<string,2> GetRunWithTS24hAgo(o2::ccdb::CcdbApi ccdbApi, string taskname, string objname, string timestamp);
-bool RunShifter(auto *ccdb, string myname);
-bool RunExpert(auto *ccdb, string myname);
+bool RunShifter(auto *ccdb, string myname, int opt);
+bool RunExpert(auto *ccdb, string myname, int opt);
 void DownloadTimestamps(auto *ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string objname, long int ts_start, long int ts_end, int lnum);
 void DownloadRuns(auto *ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string tasknamealternative, string objname, string run1, string run2, int lnum);
 bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamealternative, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers);
@@ -52,9 +52,9 @@ int main(int argc, char **argv)
   ccdb->connect("ccdb-test.cern.ch:8080", "", "", "");
 
   if(strcmp(argv[1],"expert")==0)
-    RunExpert(ccdb, myname);
+    RunExpert(ccdb, myname, atoi(argv[2]));
   else if (strcmp(argv[1],"shifter")==0)
-    RunShifter(ccdb, myname);
+    RunShifter(ccdb, myname, atoi(argv[2]));
 
 
   ccdb->disconnect();
@@ -102,8 +102,6 @@ array<string,2> GetRunWithTS24hAgo(o2::ccdb::CcdbApi ccdbApi, string taskname, s
   long int stamp_int_actual = stol(timestamp);
   long int stamp_int_24hago = stamp_int_actual - 86400000; //remove number of milliseconds in 1 day
 
-  cout<<"now: "<<stamp_int_actual<<"  24hago: "<<stamp_int_24hago<<endl;
-
   while(ss>>word){
     if(word=="Created:"){// take the one related to file creation
       ss>>word;
@@ -126,22 +124,7 @@ array<string,2> GetRunWithTS24hAgo(o2::ccdb::CcdbApi ccdbApi, string taskname, s
 //
 // Expert mode
 //
-bool RunShifter(auto *ccdb, string myname){
-  //Choose what to download
-  int opt;
-  cout<<endl;
-  cout<<endl;
-  cout<<"Choose what to download:"<<endl;
-  cout<<"1. FakeHitRate runs"<<endl;
-  cout<<"2. ThresholdScan runs"<<endl;
-  cout<<"3. FakeHitRate and ThresholdScan runs"<<endl;
-  cout<<endl;
-  cout<<"Enter the option: ";
-  cin>>opt;
-  if(opt<1 || opt>3){
-    cout<<"Invalid option"<<endl;
-    return 0;
-  }
+bool RunShifter(auto *ccdb, string myname, int opt){
 
   //Choose the layer number
   int layernum;
@@ -152,7 +135,7 @@ bool RunShifter(auto *ccdb, string myname){
 
   //add error and trigger-flags plot to data
   bool adderrordata = true;
-
+  if(opt==2) adderrordata = false;
 
   //taskname
   string taskname[4] = {"qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask"};
@@ -160,15 +143,11 @@ bool RunShifter(auto *ccdb, string myname){
   //set the task name
   switch(opt){
     case 1: {// fake-hit
-      if(layernum<0) {
-        taskname[0] = "qc/ITS/ITSRawTaskIBB2";//L0T, L0B
-        taskname[1] = "qc/ITS/ITSRawTaskIBB3";//L1T, L1B
-        taskname[2] = "qc/ITS/ITSRawTask"; //L2T
-        taskname[3] = "qc/ITS/ITSRawTaskIBB1"; //L2B
-      }
-      else if(layernum==1) {taskname[1] = "qc/ITS/ITSRawTaskIBB3";}
-      else if(layernum==2) {taskname[2] = "qc/ITS/ITSRawTask"; taskname[3] = "qc/ITS/ITSRawTaskIBB1";}
-      else {taskname[0] = "qc/ITS/ITSRawTaskIBB2";}
+
+      taskname[0] = "qc/ITS/ITSRawTaskIBB2";//L0T, L0B
+      taskname[1] = "qc/ITS/ITSRawTaskIBB3";//L1T, L1B
+      taskname[2] = "qc/ITS/ITSRawTask"; //L2T
+      taskname[3] = "qc/ITS/ITSRawTaskIBB1"; //L2B
 
       break;
     }
@@ -218,8 +197,11 @@ bool RunShifter(auto *ccdb, string myname){
     case 1: {
 
       //run interval definition
+      cout<<"Finding runs in: "<<taskname[0]<<"/Occupancy/Layer0/Layer0ChipStave"<<endl;
       runts2 = GetLastRunWithTS(ccdbApi, taskname[0], "Occupancy/Layer0/Layer0ChipStave"); //take a random object name since run-list is the same.
       runts1 = GetRunWithTS24hAgo(ccdbApi, taskname[0], "Occupancy/Layer0/Layer0ChipStave", runts2[0]);
+      cout<<"Run interval selected:       "<<runts1[1]<<"-"<<runts2[1]<<endl;
+      cout<<"Timestamp interval selected: "<<runts1[0]<<"-"<<runts2[0]<<endl;
 
       //output file
       outputfile = new TFile(Form("Data/Output_%s_%s_from_%s%s_to_%s%s%s.root",layername.c_str(), optname.c_str(), suffix.c_str(),runts1[1].c_str(), suffix.c_str(), runts2[1].c_str(), adderrordata? "_w_error_and_trig_data":""), "RECREATE");
@@ -324,9 +306,83 @@ bool RunShifter(auto *ccdb, string myname){
       }//end if layernum==-1
     }//end case 1
 
-    case 2: {
+    case 2: {//thresholds
+      //run interval definition
+      cout<<"Finding runs in: "<<taskname[0]<<"/Threshold/Layer0/Threshold_Vs_Chip_and_Stave"<<endl;
+      runts2 = GetLastRunWithTS(ccdbApi, taskname[0], "Threshold/Layer0/Threshold_Vs_Chip_and_Stave"); //take a random object name since run-list is the same.
+      runts1 = GetRunWithTS24hAgo(ccdbApi, taskname[0], "Threshold/Layer0/Threshold_Vs_Chip_and_Stave", runts2[0]);
+      cout<<"Run interval selected:       "<<runts1[1]<<"-"<<runts2[1]<<endl;
+      cout<<"Timestamp interval selected: "<<runts1[0]<<"-"<<runts2[0]<<endl;
 
-    }
+      outputfile = new TFile(Form("Data/Output_%s_%s_from_%s%s_to_%s%s%s.root",layername.c_str(), optname.c_str(), suffix.c_str(),runts1[1].c_str(), suffix.c_str(), runts2[1].c_str(), adderrordata? "_w_error_and_trig_data":""), "RECREATE");
+      outputfile->cd();
+
+      if(layernum>=0){
+        for(int il=0; il<nListElements; il++){//loop on lists
+          switch(il){
+            case 0: {
+              string objname = Form("Threshold/Layer%d/Threshold_Vs_Chip_and_Stave",layernum);
+              cout<<"\nAll data in "<<taskname[layernum]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
+              Download(1, ccdb, ccdbApi, myname, taskname[layernum], taskname[layernum], objname, runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]),layernum);
+              break;
+            }
+
+            case 1: {
+              string objname = Form("DeadPixel/Layer%d/DeadPixel_Vs_Chip_and_Stave",layernum);
+              cout<<"\nAll data in "<<taskname[layernum]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
+              Download(1, ccdb, ccdbApi, myname, taskname[layernum], taskname[layernum], objname, runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), layernum);
+              break;
+            }
+
+            case 2: {
+              for(int istave=0; istave<nStavesInLay[layernum]; istave++){
+                Download(1, ccdb, ccdbApi, myname, taskname[layernum], taskname[layernum], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",layernum,istave), runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), layernum);
+              }
+              break;
+            }
+
+            default: break;
+          }
+
+        }//end loop on lists
+      }//end if layernum>=0
+
+      else if(layernum==-1){
+        for(int il=0; il<nListElements; il++){//loop on lists
+          switch(il){
+            case 0: {
+              for(int ilay=0; ilay<=2; ilay++){
+                string objname = Form("Threshold/Layer%d/Threshold_Vs_Chip_and_Stave",ilay);
+                cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
+                Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], objname, runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), ilay);
+              }
+              break;
+            }
+
+            case 1: {
+              for(int ilay=0; ilay<=2; ilay++){
+                string objname = Form("DeadPixel/Layer%d/DeadPixel_Vs_Chip_and_Stave",ilay);
+                cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
+                Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], objname, runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), ilay);
+              }
+              break;
+            }
+
+            case 2: {
+              for(int ilay=0; ilay<=2; ilay++){
+                for(int istave=0; istave<nStavesInLay[ilay]; istave++){
+                  Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",ilay,istave), runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), ilay);
+                }
+              }
+              break;
+            }
+
+            default: break;
+          }
+        }//end loop on lists
+      }//end if layernum==-1
+      break;
+    }// end of case 2
 
   }//end switch
 
@@ -339,21 +395,7 @@ bool RunShifter(auto *ccdb, string myname){
 //
 // Expert mode
 //
-bool RunExpert(auto *ccdb, string myname){
-  //Choose what to download
-  int opt;
-  cout<<endl;
-  cout<<endl;
-  cout<<"Choose what to download:"<<endl;
-  cout<<"1. Fake-hit scan data"<<endl;
-  cout<<"2. Threshold scan data"<<endl;
-  cout<<endl;
-  cout<<"Enter the option: ";
-  cin>>opt;
-  if(opt<1 || opt>2){
-    cout<<"Invalid option. Doing nothing."<<endl;
-    return 0;
-  }
+bool RunExpert(auto *ccdb, string myname, int opt){
 
   //Choose the layer number
   int layernum;
@@ -683,8 +725,8 @@ bool RunExpert(auto *ccdb, string myname){
           }
         }//end loop on lists
       }//end if layernum==-1
+      break;
     }// end of case 2
-    break;
   }//end switch
 
   outputfile->Close();

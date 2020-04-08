@@ -289,10 +289,24 @@ todooption(){
        case "$optccdb" in
          1) echo -e "\n\e[32m=> Compiling the software for the database\e[39m"
             make
-            echo -e "\n\e[32m=> Downloading files to analyse\e[39m"
-            ./getObject expert
-            echo -e "\n"
-            analysismenu ;;
+            echo -e "\n\e[32m=> Choose what to download\n"
+            echo -e "1. Fake-hit rate runs"
+            echo -e "2. Threshold runs\e[39m"
+            echo -e "Enter option \c"
+            read downloadoption
+            case "$downloadoption" in
+              1) echo -e "\n\e[32m=> Downloading data for fake-hit rate runs to analyse\e[39m"
+                 ./getObject expert 1
+                 echo -e "\n"
+                 analysismenu ;;
+              2) echo -e "\n\e[32m=> Downloading data for threshold runs to analyse\e[39m"
+                 ./getObject expert 2
+                 echo -e "\n"
+                 analysismenu ;;
+              *) echo -e "\n\e[32m=> Option not valid. Rerun the script. \e[39m" ;;
+            esac
+            ;;
+
          2) analysismenu ;;
        esac
        ;;
@@ -331,19 +345,36 @@ doexpert(){
 doshifters(){
      echo -e "\n\e[32m=> Compiling the software for the database\e[39m"
      make
-     echo -e "\n\e[32m=> Downloading files to analyse\e[39m"
-     ./getObject shifter
-     echo -e "\n"
-     echo -e "\n\e[32m=> Starting analysis run by run and preparation of the 24h Report \e[39m"
-     cd analysismacros
-     root -l -b -q ReportFHR_shifters.C++
-     cd ..
+     echo -e "\n\e[32m=> Choose what to download\n"
+     echo -e "1. Fake-hit rate runs"
+     echo -e "2. Threshold runs\e[39m"
+     echo -e "Enter option \c"
+     read downloadoption
+     case "$downloadoption" in
+      1) echo -e "\n\e[32m=> Downloading files to analyse\e[39m"
+         ./getObject shifter 1
+         echo -e "\n"
+         echo -e "\n\e[32m=> Starting analysis run by run and preparation of the 24h Report for fake-hit rate runs \e[39m"
+         cd analysismacros
+         root -l -b -q ReportFHR_shifters.C++
+         cd ..
+         remove ;;
+      2) echo -e "\n\e[32m=> Downloading files to analyse\e[39m"
+         ./getObject shifter 2
+         echo -e "\n"
+         echo -e "\n\e[32m=> Starting analysis run by run and preparation of the 24h Report for Threshold runs \e[39m"
+         cd analysismacros
+         root -l -b -q ReportTHR_shifters.C++
+         cd ..
+         remove ;;
+      *) echo -e "\n\e[32m=> Option not valid. Rerun the script. \e[39m" ;;
+    esac
 }
 
 # MAIN TASK
 echo -e "\n\e[32m============================================\n"
 echo -e "========== Welcome to QCanalysis ===========\e[39m"
-echo -e "\e[31m== Any issue? Call Ivan Ravasenga: 165305 ==\e[39m"
+echo -e "\e[31m== Any issue? Write to Ivan Ravasenga: ivan.ravasenga@cern.ch ==\e[39m"
 echo -e "\n\e[32m============================================\e[39m"
 
 updategitrepo
