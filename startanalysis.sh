@@ -292,6 +292,7 @@ todooption(){
             echo -e "\n\e[32m=> Choose what to download\n"
             echo -e "1. Fake-hit rate runs"
             echo -e "2. Threshold runs\e[39m"
+            echo -e "3. TTtre (preliminary!)"
             echo -e "Enter option \c"
             read downloadoption
             case "$downloadoption" in
@@ -303,6 +304,9 @@ todooption(){
                  ./getObject expert 2
                  echo -e "\n"
                  analysismenu ;;
+              3) echo -e "\n\e[32m=> Downloading data (TTrees) with noisy pixels\e[39m"
+                 ./getObject expert 3
+                 echo -e "\n";;
               *) echo -e "\n\e[32m=> Option not valid. Rerun the script. \e[39m" ;;
             esac
             ;;

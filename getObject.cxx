@@ -10,6 +10,7 @@
 #include <TH2.h>
 #include <THnSparse.h>
 #include <TFile.h>
+#include <TTree.h>
 
 using namespace std;
 using namespace o2::quality_control::repository;
@@ -144,10 +145,10 @@ bool RunShifter(auto *ccdb, string myname, int opt){
   switch(opt){
     case 1: {// fake-hit
 
-      taskname[0] = "qc/ITS/ITSRawTaskIBB2";//L0T, L0B
-      taskname[1] = "qc/ITS/ITSRawTaskIBB3";//L1T, L1B
-      taskname[2] = "qc/ITS/ITSRawTask"; //L2T
-      taskname[3] = "qc/ITS/ITSRawTaskIBB1"; //L2B
+      taskname[0] = "qc/ITS/ITSRawTask0";//L0T, L0B
+      taskname[1] = "qc/ITS/ITSRawTask1";//L1T, L1B
+      taskname[2] = "qc/ITS/ITSRawTask2T"; //L2T
+      taskname[3] = "qc/ITS/ITSRawTask2B"; //L2B
 
       break;
     }
@@ -405,26 +406,25 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   cin>>layernum;
 
   //taskname
-  string taskname[4]    = {"qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask"};
-  string tasknamealt[4] = {"qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask", "qc/ITS/ITSRawTask"};//alternative tasks (backward compatibility)
+  string taskname[4]    = {"qc/ITS/ITSRawTask0", "qc/ITS/ITSRawTask0", "qc/ITS/ITSRawTask0", "qc/ITS/ITSRawTask0"};
+  string tasknamealt[4] = {"qc/ITS/ITSRawTask0", "qc/ITS/ITSRawTask0", "qc/ITS/ITSRawTask0", "qc/ITS/ITSRawTask0"};//alternative tasks (backward compatibility)
 
   //set the task name
   switch(opt){
     case 1: {// fake-hit
-      if(layernum<0) {
-        taskname[0] = "qc/ITS/ITSRawTaskIBB2";//L0T, L0B
-        taskname[1] = "qc/ITS/ITSRawTaskIBB3";//L1T, L1B
-        taskname[2] = "qc/ITS/ITSRawTask"; //L2T
-        taskname[3] = "qc/ITS/ITSRawTaskIBB1"; //L2B
+      taskname[0] = "qc/ITS/ITSRawTask0";//L0T, L0B
+      taskname[1] = "qc/ITS/ITSRawTask1";//L1T, L1B
+      taskname[2] = "qc/ITS/ITSRawTask2T"; //L2T
+      taskname[3] = "qc/ITS/ITSRawTask2B"; //L2B
 
-        tasknamealt[0] = "qc/ITS/ITSRawTaskIBB2";
-        tasknamealt[1] = "qc/ITS/ITSRawTaskIBB2";
-        tasknamealt[2] = "qc/ITS/ITSRawTask";
-        tasknamealt[3] = "qc/ITS/ITSRawTaskIBB1";
-      }
-      else if(layernum==1) {taskname[1] = "qc/ITS/ITSRawTaskIBB3"; tasknamealt[1] = "qc/ITS/ITSRawTaskIBB2";}
-      else if(layernum==2) {taskname[2] = "qc/ITS/ITSRawTask"; tasknamealt[2] = "qc/ITS/ITSRawTask"; taskname[3] = "qc/ITS/ITSRawTaskIBB1"; tasknamealt[3] = "qc/ITS/ITSRawTaskIBB1";}
-      else {taskname[0] = "qc/ITS/ITSRawTaskIBB2"; tasknamealt[0] = "qc/ITS/ITSRawTaskIBB2";}
+      tasknamealt[0] = "qc/ITS/ITSRawTask0";
+      tasknamealt[1] = "qc/ITS/ITSRawTask1";
+      tasknamealt[2] = "qc/ITS/ITSRawTask2T";
+      tasknamealt[3] = "qc/ITS/ITSRawTask2B";
+
+      //else if(layernum==1) {taskname[1] = "qc/ITS/ITSRawTaskIBB3"; tasknamealt[1] = "qc/ITS/ITSRawTaskIBB2";}
+      //else if(layernum==2) {taskname[2] = "qc/ITS/ITSRawTask"; tasknamealt[2] = "qc/ITS/ITSRawTask"; taskname[3] = "qc/ITS/ITSRawTaskIBB1"; tasknamealt[3] = "qc/ITS/ITSRawTaskIBB1";}
+      //else {taskname[0] = "qc/ITS/ITSRawTaskIBB2"; tasknamealt[0] = "qc/ITS/ITSRawTaskIBB2";}
 
       break;
     }
@@ -727,6 +727,11 @@ bool RunExpert(auto *ccdb, string myname, int opt){
       }//end if layernum==-1
       break;
     }// end of case 2
+
+    case 3: {//download a tree (only an example now!)
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/QCFHRTest", "qc/ITS/QCFHRTest", "Occupancy/PixelTree", run1, run2, (long)ts_start, (long)ts_end, 0);
+      break;
+    }//end of case 3
   }//end switch
 
   outputfile->Close();
@@ -796,7 +801,7 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
   }
   string objectlistL2B = " ";
   if(objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos){
-    objectlistL2B = ccdbApi.list("qc/ITS/ITSRawTaskIBB1/" + objname, false, "text/plain");
+    objectlistL2B = ccdbApi.list("qc/ITS/ITSRawTask2B/" + objname, false, "text/plain");
   }
   cout<<endl;
   cout<<endl;
@@ -979,7 +984,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
     //for L2B only
     TObject *obj2 = nullptr;
     if(objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos){
-      auto monitor2 = ccdb->retrieveMO("qc/ITS/ITSRawTaskIBB1", objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
+      auto monitor2 = ccdb->retrieveMO("qc/ITS/ITSRawTask2B", objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
       obj2 = monitor2->getObject();
       monitor2->setIsOwner(false);
     }
@@ -988,6 +993,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
     TH2 *h2sbis = 0x0; //for L2B only
     TH1 *h1s = 0x0;
     THnSparse *hSp = 0x0;
+    TTree *tree;
 
     //if(strstr(c,"TH1")!=nullptr){
     if(c.find("TH1")!=string::npos){
@@ -1024,6 +1030,15 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
       hSp = dynamic_cast<THnSparse*>(obj->Clone(histname.c_str()));
       outputfile->cd();
       hSp->Write();
+    }
+
+    if(c.find("TTree")!=string::npos){
+      string treename = " ";
+      obj->Print();
+      tree = dynamic_cast<TTree*>(obj->Clone());
+      //tree->Print();
+      outputfile->cd();
+      tree->Write();
     }
 
     delete h1s;
@@ -1065,6 +1080,7 @@ string GetOptName(int opt){
   switch(opt){
     case 1: return "FHRMAPS_HITMAPS";
     case 2: return "THRMAPS_DEADPIXMAPS";
+    case 3: return "NOISYPIX_TREE";
     default: return "0";
   }
 }
