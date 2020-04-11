@@ -202,29 +202,47 @@ string GetCurrentDateTime(bool useLocalTime) {
 //
 // Function to compare two hitmaps --> returns an arrays with timestamp of run2, noisyPixInRefRun, noisyPixInRun2, noisyPixInCommon
 //
-std::array<float,nMasked+1> GetFHRwithMasking(TH2 *hmap, const int nchips, double ntrig, TH2 *hhotmap){
+std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips, double ntrig, TH2 *hhotmap){
 
   array<float,nMasked+1> fhrstave;
-  TH2 *hmapclone = (TH2*)hmap->Clone(Form("hmapclone_%s",hmap->GetName()));
+
+  //clone
+  THnSparse *hmapclone = (THnSparse*)hmap->Clone(Form("%s_clone",hmap->GetName()));
+  cout<<hmap->GetName()<<" --> "<<hmapclone->GetNbins()<<" noisy pixels"<<endl;
 
   for(int iter=0; iter<nMasked+1; iter++){
-    long int totalhits = hmapclone->Integral();
-    float fhr = (float)totalhits / (512.*1024.*nchips*ntrig);
-    if(!nchips) fhr=0.;
-    if(ntrig<0) fhr=0.;
+
+    TH1F *hproj = (TH1F*)hmapclone->Projection(1);
+    long int totalhits = hproj->Integral();
+    float fhr = nchips==0 ? 0. : (float)totalhits / (512.*1024.*nchips*ntrig);
+
+
     //cout<<fhr<<endl;
+    if(ntrig<0) fhr=0.;
     fhrstave[iter] = fhr;
-    int binmax = hmapclone->GetMaximumBin();
-    int binmax_x, binmax_y, binmax_z;
-    hmapclone->GetBinXYZ(binmax, binmax_x, binmax_y, binmax_z);
-    hmapclone->SetBinContent(binmax_x, binmax_y, 0);
-    if(totalhits!=0) hhotmap->SetBinContent(binmax_x, binmax_y, 1);
-    //cout<<iter<<" FHR: "<<fhr<<endl;
-    //cout<<"Masking binx: "<<binmax_x<<"  biny: "<<binmax_y<<endl;
+
+    int coord[2];
+    double max = -1.;
+    int x=0,y=0;
+    long int binwithmax = 0;
+    for(int ibin=0; ibin<hmapclone->GetNbins(); ibin++){
+      double bincontent = hmapclone->GetBinContent(ibin, coord);
+      if(bincontent>max){
+        max=bincontent;
+        binwithmax = ibin;
+        x=coord[0];
+        y=coord[1];
+      }
+    }
+
+    if(nchips) hmapclone->SetBinContent(binwithmax,0.);
+    if(totalhits!=0) hhotmap->SetBinContent(x, y, 1);// to avoid a marker in 0,0 for empty histos
+    delete hproj;
   }
 
   delete hmapclone;
 
   return fhrstave;
+
 
 }

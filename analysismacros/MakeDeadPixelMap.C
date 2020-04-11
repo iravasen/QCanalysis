@@ -24,7 +24,6 @@
 using namespace std;
 
 //Functions
-std::array<long int,5> CompareTwoRuns(THnSparse *href, THnSparse *h2);
 void SetStyle(TGraphErrors *ge, Color_t col);
 void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns);
 
