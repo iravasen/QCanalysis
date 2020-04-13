@@ -16,11 +16,14 @@
 #include <TText.h>
 #include <TSystem.h>
 #include <TKey.h>
+#include <THnSparse.h>
+
+#include "inc/constants.h"
 
 using namespace std;
 
 //Functions
-std::array<long int,5> CompareTwoRuns(TH2 *href, TH2 *h2);
+std::array<long int,5> CompareTwoRuns(THnSparse *href, THnSparse *h2);
 void SetStyle(TGraphErrors *ge, Color_t col);
 void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, long int refrun);
 
@@ -72,7 +75,7 @@ void CompareNoisyPixelsInRuns(){
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
          && (!obj->InheritsFrom("TH2"))
 	       && (!obj->InheritsFrom("TH1"))
-       ) {
+         && (!obj->InheritsFrom("THnSparse"))) {
             cout<<"<W> Object "<<obj->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;
        }
     string objname = (string)obj->GetName();
@@ -104,12 +107,10 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
 
   gStyle->SetOptStat(0000);
 
-  std::vector<TH2*> hmaps;
+  std::vector<THnSparse*> hmaps;
   std::vector<string> timestamps, runnumbers, stavenums, laynums;
   vector<int> posrefrun;
   int nLayers=1, nRuns=1;
-  vector<int> nStavesInLay;
-  int cstv=0;
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
@@ -117,18 +118,19 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
   TIter next(list);
   TObject *obj;
   TKey *key;
-  TH2 *h2;
+  THnSparse *hsparse;
   while((key=((TKey*)next()))){
     obj = key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
          && (!obj->InheritsFrom("TH2"))
-	       && (!obj->InheritsFrom("TH1"))
+	       && (!obj->InheritsFrom("TH1")
+         && (!obj->InheritsFrom("THnSparse")))
        ) {
-            cout<<"<W> Object "<<obj->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;
+            cout<<"<W> Object "<<obj->GetName()<<" is not 1D, 2D or sparse histogram : will not be converted"<<endl;
        }
     string objname = (string)obj->GetName();
     if(objname.find("Stv")==string::npos) continue;
-    h2 = (TH2*)obj;
+    hsparse = (THnSparse*)obj;
     string timestamp = objname.find("run")==string::npos ? objname.substr(objname.find("_",2)+1, 13) : objname.substr(objname.find("_",6)+1, 13);
     string runnum =  objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
     string laynum = objname.substr(objname.find("L")+1,1);
@@ -140,18 +142,13 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
     if(skipruns.find(runnum)!=string::npos) continue; //eventually skip runs specified by the user
 
     cout<<"... Reading "<<obj->GetName()<<endl;
-    hmaps.push_back(h2);
+    hmaps.push_back(hsparse);
 
     if(stol(runnum)==refrun) //position of refence run
       posrefrun.push_back((int)hmaps.size()-1);
 
-    if((int)stavenums.size()>1 && stvnum!=stavenums[stavenums.size()-1])
-      cstv++;
-
     if((int)laynums.size()>1 && laynum!=laynums[laynums.size()-1]){
       nLayers++;
-      nStavesInLay.push_back(cstv);
-      cstv=0;
     }
 
     if((int)stavenums.size()>1 && stvnum==stavenums[stavenums.size()-1])
@@ -163,13 +160,12 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
     laynums.push_back(laynum);
     stavenums.push_back(stvnum);
   }
-  nStavesInLay.push_back(cstv+1);//in case of 1 layer or for last layer
 
   //Compare all the runs (non-empty ones) with the reference run chosen by the user
   vector<string> runlabel;
   int istave = 0;
-  for(int ilay=0; ilay<(int)nStavesInLay.size(); ilay++)
-    istave+=nStavesInLay[ilay];
+  for(int ilay=0; ilay<nLayers; ilay++)
+    istave+=nStavesInLay[nLayers>1 ? ilay:stoi(laynums[0])];
   istave--;
   int ilayer = nLayers-1;
   long int first[nLayers][nRuns], second[nLayers][nRuns], both[nLayers][nRuns];
@@ -404,23 +400,45 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
 //
 // Function to compare two hitmaps --> returns an arrays with timestamp of run2, noisyPixInRefRun, noisyPixInRun2, noisyPixInCommon
 //
-std::array<long int,5> CompareTwoRuns(TH2 *href, TH2 *h2){
+std::array<long int,5> CompareTwoRuns(THnSparse *href, THnSparse *h2){
 
   std::array<long int,5> noisypix = {0, 0, 0, 0, 0};
   //number of noisy pix in refrun_only and in common
-  for(int ixbin=1; ixbin<=href->GetXaxis()->GetNbins(); ixbin++){
-    for(int iybin=1; iybin<=href->GetYaxis()->GetNbins(); iybin++){
-      if(href->GetBinContent(ixbin, iybin)>16 && h2->GetBinContent(ixbin, iybin)>16){//noisy in both runs
+  for(int ibinref=0; ibinref<href->GetNbins(); ibinref++){
+    int coordref[2];
+    double bincref = href->GetBinContent(ibinref, coordref);
+    bool isfound = false;
+    for(int ibin2=0; ibin2<h2->GetNbins(); ibin2++){
+      int coord2[2];
+      double binc2 = h2->GetBinContent(ibin2,coord2);
+
+      if((coordref[0]==coord2[0] && coordref[1]==coord2[1]) && (bincref>2 && binc2>2)){//noisy in both runs
         noisypix[2]++;
+        isfound=true;
+        break;
       }
-      else if(href->GetBinContent(ixbin, iybin)>16 && h2->GetBinContent(ixbin, iybin)==0){//noisy only in ref run
-        noisypix[0]++;
-      }
-      else if(href->GetBinContent(ixbin, iybin)==0 && h2->GetBinContent(ixbin, iybin)>16){//noisy only in second run
-        noisypix[1]++;
-      }
-      else continue;
+
     }
+    if(!isfound && bincref>2)
+      noisypix[0]++; //noisy only in ref run
+  }
+
+  for(int ibin2=0; ibin2<h2->GetNbins(); ibin2++){
+    int coord2[2];
+    double binc2 = h2->GetBinContent(ibin2, coord2);
+    bool isfound = false;
+    for(int ibinref=0; ibinref<href->GetNbins(); ibinref++){
+      int coordref[2];
+      double bincref = href->GetBinContent(ibinref,coordref);
+
+      if((coordref[0]==coord2[0] && coordref[1]==coord2[1]) && (bincref>2 && binc2>2)){//noisy in both runs
+        isfound=true;
+        break;
+      }
+
+    }
+    if(!isfound && binc2>2)
+      noisypix[1]++; //noisy only in second run
   }
 
   /*cout<<"Stave/run: "<<h2->GetName()<<endl;

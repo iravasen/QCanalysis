@@ -46,7 +46,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   std::freopen(Form("../logs/logFHR_%s.log",localdatetime.c_str()), "w", stdout);
 
   std::vector<TH2*> hmapsFHR;
-  std::vector<TH2*> hmapsHIT;
+  std::vector<THnSparse*> hmapsHIT;
   std::vector<TH2*> hmapsERR;
   std::vector<TH2*> hmapsTRG;
 
@@ -62,19 +62,23 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   TKey *key;
   TObject *obj;
   TIter next(list);
-  TH2 *h2;
+  TH2 *h2 = NULL;
+  THnSparse *hsparse = NULL;
   bool isfirst = true;
   while((key = ((TKey*)next()))){
     obj = key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
          && (!obj->InheritsFrom("TH2"))
 	       && (!obj->InheritsFrom("TH1"))
+         && (!obj->InheritsFrom("THnSparse"))
        ) {
-            cout<<"<W> Object "<<obj->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;
+            cout<<"<W> Object "<<obj->GetName()<<" is not 1D, 2D or sparse histogram : will not be converted"<<endl;
        }
     string objname = (string)obj->GetName();
 
-    h2 = (TH2*)obj;
+    if(objname.find("Stv")==string::npos) h2 = (TH2*)obj;
+    else hsparse = (THnSparse*)obj;
+
     //if(!h2->GetEntries()) continue;
     cout<<"... Reading "<<obj->GetName()<<endl;
     string timestamp = objname.substr(objname.find("_",6)+1, 13);
@@ -87,7 +91,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
         stvnum = objname.substr(objname.find("Stv")+3,1);
       }
       stavenums.push_back(stvnum);
-      hmapsHIT.push_back(h2);
+      hmapsHIT.push_back(hsparse);
       if((int)stavenums.size()>1 && stvnum!=stavenums[stavenums.size()-2] && isfirst){
         isfirst=false;
         continue;
@@ -189,14 +193,14 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       leg->AddEntry(trend[ilay][istave], Form("Stv%d",istave), "p");
     hfake->GetYaxis()->SetRangeUser(1e-14, 1e-3);
     hfake->GetXaxis()->SetTitleOffset(2.8);
-    hfake->SetTitle(Form("Layer-%s, %s",laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    hfake->SetTitle(Form("Layer-%s, %s",laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
     hfake->Draw();
     for(int istave=0; istave<hmapsFHR[ilay*nRuns]->GetNbinsY(); istave++)
       trend[ilay][istave]->Draw("P same");
     leg->Draw("same");
 
-    if(!ilay) canvas->SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf[", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-    canvas->SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    if(!ilay) canvas->SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf[", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
+    canvas->SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
 
     delete canvas;
     delete leg;
@@ -238,7 +242,11 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       continue;
       //cout<<"INVALID FHR... setting it to -1"<<endl;
     }
-    double hits_chip = hmapsHIT[stavefound*nRuns+ir]->Integral(1+256*chipfound,256+256*chipfound,1,512);
+    hmapsHIT[stavefound*nRuns+ir] -> GetAxis(0) ->SetRange(1+1024*chipfound, 1024+1024*chipfound);
+    TH2F *hprojsparse = (TH2F*)hmapsHIT[stavefound*nRuns+ir]->Projection(1,0);
+    hmapsHIT[stavefound*nRuns+ir] -> GetAxis(0) ->SetRange(1, 9216);//reset the range
+
+    double hits_chip = hprojsparse->Integral(1,1024,1,512);
     if(hits_chip/(512.*1024.*fhr_run) < 1e-15){//to avoid bad runs
       ntrig.push_back(-1.);
       cout<<"Run "<<runlabel[ir]<<" has "<<ntrig[ntrig.size()-1]<<" triggers (ignored in the calculation of the average fhr)"<<endl;
@@ -247,6 +255,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       ntrig.push_back(hits_chip/(512.*1024.*fhr_run));
       cout<<"Run "<<runlabel[ir]<<" has "<<ntrig[ntrig.size()-1]<<" triggers"<<endl;
     }
+    delete hprojsparse;
   }
 
   //Start masking hottest pixels for each stave in each run, Fill also the histo with the hot pixel maps for each stave
@@ -275,10 +284,19 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     }
   }
 
+  //special binning
+  double binstart = 0.4;
+  double binsmasked[nMasked+2];
+  binsmasked[0] = 0.1;
+  binsmasked[1] = 0.5;
+  for(int i=2; i<=nMasked+1; i++){
+    binsmasked[i] = binsmasked[i-1]+1.;
+  }
+
   TH2F *hFhrStv[nLayers][100];
   for(int ilay=0; ilay<nLayers; ilay++)
     for(int is=0; is<nStavesInLay[nLayers>1 ? ilay:stoi(laynums[0])]; is++)
-      hFhrStv[ilay][is] = new TH2F(Form("h2FhrStv_%s_%d", laynums[ilay*nRuns].c_str(),is), Form("Layer-%s - Stave-%d; # Hot Pixel Masked;Run", laynums[ilay*nRuns].c_str(),is),nMasked+1, -0.5, nMasked+0.5, nRuns, 0.5, nRuns+0.5);
+      hFhrStv[ilay][is] = new TH2F(Form("h2FhrStv_%s_%d", laynums[ilay*nRuns].c_str(),is), Form("Layer-%s - Stave-%d; # Hot Pixel Masked;Run", laynums[ilay*nRuns].c_str(),is),nMasked+1, binsmasked, nRuns, 0.5, nRuns+0.5);
   //Fill histogram
   ilayer = nLayers-1;
   cout<<"nLayers: "<<nLayers<<endl;
@@ -307,10 +325,11 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     TCanvas cnv(Form("cnv_%d",ilay), Form("cnv_%d",ilay));
     cnv.cd();
     cnv.SetLogy();
+    cnv.SetLogx();
     cnv.SetTickx();
     cnv.SetTicky();
     cnv.SetMargin(0.0988,0.1,0.1,0.0993);
-    TH1F *hframe = cnv.DrawFrame(-0.5,1e-14,nMasked+0.5,1e-3,Form("Layer %s - Average FHR %s; # Hot Pixel Clusters masked ; FHR (/event/pixel)",laynums[ilay*nRuns].c_str(),filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    TH1F *hframe = cnv.DrawFrame(0.1,7e-15,3*(nMasked),1e-3,Form("Layer %s - Average FHR %s; # Hot Pixel Clusters masked ; FHR (/event/pixel)",laynums[ilay*nRuns].c_str(),filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
     //legend
     TLegend leg(0.904, 0.127,0.997,0.898);
     for(int is=0; is<nStavesInLay[nLayers>1 ? ilay:stoi(laynums[0])];is++){
@@ -323,7 +342,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       leg.AddEntry(proj, Form("Stv%d",is),"pl");
     }
     leg.Draw("same");
-    cnv.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    cnv.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
   }
 
   //Draw hot pixel maps for each layer
@@ -371,7 +390,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     lat.SetTextSize(0.03);
     lat.DrawLatex(0.01,0.98,Form("L%s",laynums[ilay*nRuns].c_str()));
 
-    cnv.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    cnv.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
   }
 
   //**************************************************************************************
@@ -447,7 +466,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       }
       //if(!hmaps[ihist]->GetEntries()) continue; // do not compare ref run with empty run (= empty maps)
 
-      noisypix.push_back(CompareTwoRuns(hmapsHIT[posrefrun[istave][iref]], hmapsHIT[ihist]));
+      noisypix.push_back(CompareNoisyTwoRuns(hmapsHIT[posrefrun[istave][iref]], hmapsHIT[ihist]));
       noisypix[noisypix.size()-1][3] = stol(stavenums[ihist]);
       noisypix[noisypix.size()-1][4] = stol(lnum);
       //cout<<noisypix[noisypix.size()-1][0]<<"  "<<noisypix[noisypix.size()-1][1]<<"  "<<noisypix[noisypix.size()-1][2]<<"  "<<noisypix[noisypix.size()-1][3]<<"  "<<noisypix[noisypix.size()-1][4]<<endl;
@@ -561,7 +580,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       leg->Draw("same");
 
       //Save
-      canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
       delete hfake;
     }//end loop on layers
   }//end loop on iref
@@ -607,7 +626,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   }
   for(int iref=0; iref<2; iref++)
     for(int ilay=0; ilay<nLayers; ilay++)
-      hCorr[iref][ilay] = new TH2D(Form("hCorr_L%s_refrun_%ld",laynums[ilay*nRuns].c_str(),refrun[iref]), Form("Layer-%s - FHR corr. %s - Ref. run: %ld; FHR (run%ld); FHR (runs)",laynums[ilay*nRuns].c_str(),filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str(),refrun[iref],refrun[iref]), 99, bins, 99, bins);
+      hCorr[iref][ilay] = new TH2D(Form("hCorr_L%s_refrun_%ld",laynums[ilay*nRuns].c_str(),refrun[iref]), Form("Layer-%s - FHR corr. %s - Ref. run: %ld; FHR (run%ld); FHR (runs)",laynums[ilay*nRuns].c_str(),filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str(),refrun[iref],refrun[iref]), 99, bins, 99, bins);
 
   for(int iref=0; iref<2; iref++){
     ilayer=nLayers-1;
@@ -650,7 +669,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       hCorr[iref][ilay]->Draw("COLZ");
       line2.Draw("same");
       hCorr[iref][ilay]->GetXaxis()->SetTitleOffset(1.2);
-      canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
     }
   }
 
@@ -719,7 +738,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     hSummaryErr[ilay]->GetZaxis()->SetTitleSize(0.05);
     hSummaryErr[ilay]->GetZaxis()->SetTitleOffset(0.9);
 
-    canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
   }
 
   //Draw trends for errors
@@ -743,7 +762,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     canvas.SetMargin(0.0988,0.1,0.194,0.0993);
 
     hfakeErr->GetXaxis()->SetTitleOffset(2.8);
-    hfakeErr->SetTitle(Form("Layer-%d, Error trends %s",nLayers>1 ? ilay:stoi(laynums[0]), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    hfakeErr->SetTitle(Form("Layer-%d, Error trends %s",nLayers>1 ? ilay:stoi(laynums[0]), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
     hfakeErr->GetYaxis()->SetRangeUser(1, 10*maxErr[ilay]);
     hfakeErr->GetXaxis()->SetTitleOffset(2.8);
     hfakeErr->Draw();
@@ -752,7 +771,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     }
     legErr->Draw("same");
 
-    canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
   }
 
 
@@ -821,7 +840,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     hSummaryTrg[ilay]->GetZaxis()->SetTitleSize(0.05);
     hSummaryTrg[ilay]->GetZaxis()->SetTitleOffset(0.9);
 
-    canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
   }
 
   //Draw trends
@@ -844,7 +863,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     canvas.SetMargin(0.0988,0.1,0.194,0.0993);
 
     hfakeTrg->GetXaxis()->SetTitleOffset(2.8);
-    hfakeTrg->SetTitle(Form("Layer-%d, Trigger & Flag trends %s",nLayers>1 ? ilay:stoi(laynums[0]), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    hfakeTrg->SetTitle(Form("Layer-%d, Trigger & Flag trends %s",nLayers>1 ? ilay:stoi(laynums[0]), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
     hfakeTrg->GetYaxis()->SetRangeUser(1, 10*maxTrg[ilay]);
     hfakeTrg->GetXaxis()->SetTitleOffset(2.8);
     hfakeTrg->Draw();
@@ -852,8 +871,8 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       trendTrg[ilay][iid-1]->Draw("P same");
     }
     legtrg->Draw("same");
-    canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-    if(ilay==nLayers-1) canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf]", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
+    if(ilay==nLayers-1) canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf]", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
   }
 
 
@@ -865,7 +884,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     cout<<"... Copying the Report on eos"<<endl;
     cout<<endl;
     cout<<"Insert the password of user itsshift (see Shifter_Instructions.txt on the desktop of the right computer!):"<<endl;
-    gSystem->Exec(Form("scp ../Plots/ShiftReport24h_FHR_%s_%s.pdf itsshift@lxplus.cern.ch:/eos/user/i/itsshift/Reports24h", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    gSystem->Exec(Form("scp ../Plots/ShiftReport24h_FHR_%s_%s.pdf itsshift@lxplus.cern.ch:/eos/user/i/itsshift/Reports24h", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
   }
 
 

@@ -58,25 +58,46 @@ std::array<long int,5> CompareTwoRuns(THnSparse *href, THnSparse *h2){
 //
 // Function to compare two hitmaps --> returns an arrays with timestamp of run2, noisyPixInRefRun, noisyPixInRun2, noisyPixInCommon
 //
-std::array<long int,5> CompareTwoRuns(TH2 *href, TH2 *h2){
+std::array<long int,5> CompareNoisyTwoRuns(THnSparse *href, THnSparse *h2){
 
   std::array<long int,5> noisypix = {0, 0, 0, 0, 0};
   //number of noisy pix in refrun_only and in common
-  for(int ixbin=1; ixbin<=href->GetXaxis()->GetNbins(); ixbin++){
-    for(int iybin=1; iybin<=href->GetYaxis()->GetNbins(); iybin++){
-      if(href->GetBinContent(ixbin, iybin)>16 && h2->GetBinContent(ixbin, iybin)>16){//noisy in both runs
+  for(int ibinref=0; ibinref<href->GetNbins(); ibinref++){
+    int coordref[2];
+    double bincref = href->GetBinContent(ibinref, coordref);
+    bool isfound = false;
+    for(int ibin2=0; ibin2<h2->GetNbins(); ibin2++){
+      int coord2[2];
+      double binc2 = h2->GetBinContent(ibin2,coord2);
+
+      if((coordref[0]==coord2[0] && coordref[1]==coord2[1]) && (bincref>2 && binc2>2)){//noisy in both runs
         noisypix[2]++;
+        isfound=true;
+        break;
       }
-      else if(href->GetBinContent(ixbin, iybin)>16 && h2->GetBinContent(ixbin, iybin)==0){//noisy only in ref run
-        noisypix[0]++;
-      }
-      else if(href->GetBinContent(ixbin, iybin)==0 && h2->GetBinContent(ixbin, iybin)>16){//noisy only in second run
-        noisypix[1]++;
-      }
-      else continue;
+
     }
+    if(!isfound && bincref>2)
+      noisypix[0]++; //noisy only in ref run
   }
 
+  for(int ibin2=0; ibin2<h2->GetNbins(); ibin2++){
+    int coord2[2];
+    double binc2 = h2->GetBinContent(ibin2, coord2);
+    bool isfound = false;
+    for(int ibinref=0; ibinref<href->GetNbins(); ibinref++){
+      int coordref[2];
+      double bincref = href->GetBinContent(ibinref,coordref);
+
+      if((coordref[0]==coord2[0] && coordref[1]==coord2[1]) && (bincref>2 && binc2>2)){//noisy in both runs
+        isfound=true;
+        break;
+      }
+
+    }
+    if(!isfound && binc2>2)
+      noisypix[1]++; //noisy only in second run
+  }
   /*cout<<"Stave/run: "<<h2->GetName()<<endl;
   cout<<"Ref run:  "<<noisypix[0]<<endl;
   cout<<"Sec run:  "<<noisypix[1]<<endl;
@@ -88,16 +109,21 @@ std::array<long int,5> CompareTwoRuns(TH2 *href, TH2 *h2){
 //
 //Function to return the number of active (i.e. enabled) chips in a stave
 //
-int GetNchipsActive(TH2 *hmap, int maxchip){
+int GetNchipsActive(THnSparse *hmap, int maxchip){
   int ix1=1;
-  int ix2=256;
+  int ix2=1024;
   int activechips = maxchip;
-  while(ix2<=hmap->GetNbinsX()){
-    if((hmap->Integral(ix1,ix2,1,128)<1e-20))
+
+  while(ix2<=hmap->GetAxis(0)->GetNbins()){
+    hmap->GetAxis(0)->SetRange(ix1,ix2);
+    TH2F *hproj = (TH2F*)hmap->Projection(1,0);
+    if((hproj->Integral(1,1024,1,512)<1e-15))
       activechips--;
     ix1=ix2+1;
-    ix2+=256;
+    ix2+=1024;
+    delete hproj;
   }
+  hmap->GetAxis(0)->SetRange(1,9216);//reset range
   return activechips;
 }
 
