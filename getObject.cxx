@@ -154,9 +154,10 @@ bool RunShifter(auto *ccdb, string myname, int opt){
     }
 
     case 2: { //thr scan
-      taskname[0] = "qc/ITS/THTest2";
-      taskname[1] = "qc/ITS/THTest3";
-      taskname[2] = "qc/ITS/THTest";
+      taskname[0] = "qc/ITS/ITSTHRTask0";
+      taskname[1] = "qc/ITS/ITSTHRTask1";
+      taskname[2] = "qc/ITS/ITSTHRTask2T";
+      taskname[3] = "qc/ITS/ITSTHRTask2B";
       break;
     }
 
@@ -337,7 +338,15 @@ bool RunShifter(auto *ccdb, string myname, int opt){
 
             case 2: {
               for(int istave=0; istave<nStavesInLay[layernum]; istave++){
-                Download(1, ccdb, ccdbApi, myname, taskname[layernum], taskname[layernum], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",layernum,istave), runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), layernum);
+                if(layernum==2){
+                  if(istave>9)
+                    Download(1, ccdb, ccdbApi, myname, taskname[layernum+1], taskname[layernum+1], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",layernum,istave), runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), layernum);
+                  else
+                    Download(1, ccdb, ccdbApi, myname, taskname[layernum], taskname[layernum], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",layernum,istave), runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), layernum);
+                }
+                else{
+                  Download(1, ccdb, ccdbApi, myname, taskname[layernum], taskname[layernum], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",layernum,istave), runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), layernum);
+                }
               }
               break;
             }
@@ -372,7 +381,15 @@ bool RunShifter(auto *ccdb, string myname, int opt){
             case 2: {
               for(int ilay=0; ilay<=2; ilay++){
                 for(int istave=0; istave<nStavesInLay[ilay]; istave++){
-                  Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",ilay,istave), runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), ilay);
+                  if(ilay==2){
+                    if(istave>9)
+                      Download(1, ccdb, ccdbApi, myname, taskname[ilay+1], taskname[ilay+1], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",ilay,istave), runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), ilay);
+                    else
+                      Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",ilay,istave), runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), ilay);
+                  }
+                  else{
+                    Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",ilay,istave), runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), ilay);
+                  }
                 }
               }
               break;
@@ -430,13 +447,15 @@ bool RunExpert(auto *ccdb, string myname, int opt){
     }
 
     case 2: { //thr scan
-      taskname[0] = "qc/ITS/THTest2";
-      taskname[1] = "qc/ITS/THTest3";
-      taskname[2] = "qc/ITS/THTest";
+      taskname[0] = "qc/ITS/ITSTHRTask0";
+      taskname[1] = "qc/ITS/ITSTHRTask1";
+      taskname[2] = "qc/ITS/ITSTHRTask2T";
+      taskname[3] = "qc/ITS/ITSTHRTask2B";
 
-      tasknamealt[0] = "qc/ITS/THTest2";
-      tasknamealt[1] = "qc/ITS/THTest3";
-      tasknamealt[2] = "qc/ITS/THTest";
+      tasknamealt[0] = "qc/ITS/ITSTHRTask0";
+      tasknamealt[1] = "qc/ITS/ITSTHRTask1";
+      tasknamealt[2] = "qc/ITS/ITSTHRTask2T";
+      tasknamealt[3] = "qc/ITS/ITSTHRTask2B";
 
       break;
     }
@@ -680,7 +699,16 @@ bool RunExpert(auto *ccdb, string myname, int opt){
 
             case 2: {
               for(int istave=0; istave<nStavesInLay[layernum]; istave++){
-                Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",layernum,istave), run1, run2, (long)ts_start, (long)ts_end, layernum);
+                if(layernum==2){
+                  if(istave>9)
+                    Download(choice, ccdb, ccdbApi, myname, taskname[layernum+1], tasknamealt[layernum+1], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",layernum,istave), run1, run2, (long)ts_start, (long)ts_end, layernum);
+                  else
+                    Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",layernum,istave), run1, run2, (long)ts_start, (long)ts_end, layernum);
+                }
+                else{
+                  Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",layernum,istave), run1, run2, (long)ts_start, (long)ts_end, layernum);
+                }
+
               }
               break;
             }
@@ -715,7 +743,15 @@ bool RunExpert(auto *ccdb, string myname, int opt){
             case 2: {
               for(int ilay=0; ilay<=2; ilay++){
                 for(int istave=0; istave<nStavesInLay[ilay]; istave++){
-                  Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",ilay,istave), run1, run2, (long)ts_start, (long)ts_end, ilay);
+                  if(ilay==2){
+                    if(istave>9)
+                      Download(choice, ccdb, ccdbApi, myname, taskname[ilay+1], tasknamealt[ilay+1], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",ilay,istave), run1, run2, (long)ts_start, (long)ts_end, ilay);
+                    else
+                      Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",ilay,istave), run1, run2, (long)ts_start, (long)ts_end, ilay);
+                  }
+                  else{
+                    Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], Form("DeadPixel/Layer%d/Stave%d/DeadPixelHITMAP",ilay,istave), run1, run2, (long)ts_start, (long)ts_end, ilay);
+                  }
                 }
               }
               break;
@@ -800,8 +836,9 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
     objectlist2 = ccdbApi.list(tasknamealternative + "/" + objname,false,"text/plain");
   }
   string objectlistL2B = " ";
-  if(objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos){
-    objectlistL2B = ccdbApi.list("qc/ITS/ITSRawTask2B/" + objname, false, "text/plain");
+  if(objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos
+     || objname.find("Layer2/Threshold_Vs_Chip_and_Stave")!=string::npos || objname.find("Layer2/DeadPixel_Vs_Chip_and_Stave")!=string::npos){
+    objectlistL2B = ccdbApi.list(Form("qc/ITS/ITS%sTask2B/%s",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw",objname.c_str()), false, "text/plain");
   }
   cout<<endl;
   cout<<endl;
@@ -983,8 +1020,9 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
     monitor->setIsOwner(false);
     //for L2B only
     TObject *obj2 = nullptr;
-    if(objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos){
-      auto monitor2 = ccdb->retrieveMO("qc/ITS/ITSRawTask2B", objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
+    if(objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos
+       || objname.find("Layer2/Threshold_Vs_Chip_and_Stave")!=string::npos || objname.find("Layer2/DeadPixel_Vs_Chip_and_Stave")!=string::npos){
+      auto monitor2 = ccdb->retrieveMO(Form("qc/ITS/ITS%sTask2B",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw"), objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
       obj2 = monitor2->getObject();
       monitor2->setIsOwner(false);
     }
@@ -1015,7 +1053,8 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
         histname = Form("h2_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
 
       h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
-      if(objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos){
+      if(objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos
+        || objname.find("Layer2/Threshold_Vs_Chip_and_Stave")!=string::npos || objname.find("Layer2/DeadPixel_Vs_Chip_and_Stave")!=string::npos){
         h2sbis = dynamic_cast<TH2*>(obj2->Clone(Form("%s_L2B",histname.c_str())));
         h2s->Add(h2sbis);
       }
