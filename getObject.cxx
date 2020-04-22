@@ -1072,9 +1072,9 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
     }
 
     if(c.find("TTree")!=string::npos){
-      string treename = " ";
-      obj->Print();
-      tree = dynamic_cast<TTree*>(obj->Clone());
+      string treename = Form("ttree_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);;
+      //obj->Print();
+      tree = dynamic_cast<TTree*>(obj->Clone(treename.c_str()));
       //tree->Print();
       outputfile->cd();
       tree->Write();
