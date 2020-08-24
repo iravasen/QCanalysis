@@ -135,7 +135,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns){
     hSummary[layidx]->Add(herr[iplot]);
   }
 
-  //Make plots with Error IDs vs Run for each layer
+  //Make plots with Trg IDs vs Run for each layer
   TGraph *trend[nLayers][hSummary[0]->GetNbinsY()];
 
   int ir = 0;
@@ -194,7 +194,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns){
   TLegend *leg = new TLegend(0.904, 0.197,0.997,0.898);
   leg->SetHeader("IDs");
   for(int iid=1; iid<=hSummary[0]->GetNbinsY();iid++)
-    leg->AddEntry(trend[0][iid-1], Form("%s",hSummary[0]->GetYaxis()->GetBinLabel(iid)), "p");
+    leg->AddEntry(trend[0][iid-1], Form("%d", iid/*hSummary[0]->GetYaxis()->GetBinLabel(iid)*/), "p");
 
   for(int ilay=0; ilay<nLayers; ilay++){
     TCanvas canvas;

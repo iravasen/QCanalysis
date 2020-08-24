@@ -8,7 +8,7 @@ ObjSuf        = o
 SrcSuf        = cxx
 ExeSuf        =
 DllSuf        = so
-OutPutOpt     = -o 
+OutPutOpt     = -o
 
 ROOTCFLAGS   := $(shell root-config --cflags)
 ROOTLIBS     := $(shell root-config --libs)
@@ -47,10 +47,12 @@ QCINC      = -I$(HOME)/.sw/slc7_x86-64/QualityControl/latest/include
 COMO2INC   = -I$(HOME)/.sw/slc7_x86-64/Common-O2/latest/include
 O2INC      = -I$(HOME)/.sw/slc7_x86-64/O2/latest/include
 BOOSTINC   = -I$(HOME)/.sw/slc7_x86-64/boost/latest/include
+FAIRLOGINC = -I$(HOME)/.sw/slc7_x86-64/FairLogger/latest/include
+FMTINC     = -I$(HOME)/.sw/slc7_x86-64/fmt/latest/include/
 
 ROOTINC    = -I$(ROOTSYS)/include
 #INCLUDES   = $(QCINC) $(COMO2INC) $(O2INC) $(FAIRMQINC) $(FAIRLOGINC) $(MSGSLINC) $(BOOSTINC) $(ARROWINC) $(INFOLOGINC) $(ROOTINC)
-INCLUDES   =  $(BOOSTINC) $(QCINC) $(COMO2INC) $(O2INC) $(ROOTINC)
+INCLUDES   =  $(BOOSTINC) $(QCINC) $(COMO2INC) $(O2INC) $(ROOTINC) $(FAIRLOGINC) $(FMTINC)
 CXXFLAGS   += $(ROOTCFLAGS) $(INCLUDES)
 QCLIBS     = -L$(HOME)/.sw/slc7_x86-64/QualityControl/latest/lib -lQualityControl
 O2LIBS     = -L$(HOME)/.sw/slc7_x86-64/O2/latest/lib -lO2CCDB
