@@ -20,6 +20,8 @@
 #include <TLine.h>
 #include <THnSparse.h>
 
+using namespace std;
+
 //
 // Function to compare two hitmaps saved in THnSparse --> returns an arrays with timestamp of run2, noisyPixInRefRun, noisyPixInRun2, noisyPixInCommon
 //
