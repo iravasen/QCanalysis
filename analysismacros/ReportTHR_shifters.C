@@ -168,13 +168,6 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       }
   }
 
-  int npoints = trend[0][0]->GetN();
-  TH1F *hfake = new TH1F("hfake", "; Run; Avg. Threshold (DAC)", npoints, -0.5, (double)npoints-0.5);
-
-  for(int ir=0; ir<(int)runnumbers.size()/nLayers; ir++)
-      hfake->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[(int)runnumbers.size()/nLayers-1-ir])));
-
-
   //Draw
   for(int ilay=0; ilay<nLayers; ilay++){
     TCanvas canvas;
@@ -185,10 +178,24 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     TLegend leg(0.904, 0.197,0.997,0.898);
     for(int istave=0; istave<hmapsTHR[ilay*nRuns]->GetNbinsY(); istave++)
       leg.AddEntry(trend[ilay][istave], Form("Stv%d",istave), "p");
+
+    int npoints = trend[ilay][0]->GetN();
+    TH1F *hfake = new TH1F("hfake", "; Run; Avg. Threshold (DAC)", npoints, -0.5, (double)npoints-0.5);
+    int start = 0;
+    for(int inum=0; inum<(int)laynums.size(); inum++){
+      if(laynums[inum].find(to_string(ilay))!=string::npos){
+        start = inum;
+        break;
+      }
+    }
+    for(int ir=0; ir<npoints/*(int)runnumbers.size()/nLayers*/; ir++){
+        hfake->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[start+npoints-1-ir])));
+    }
     hfake->GetYaxis()->SetRangeUser(8.5, 12.5);
     hfake->GetXaxis()->SetTitleOffset(2.8);
     hfake->SetTitle(Form("Layer-%s, %s",laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     hfake->Draw();
+
     for(int istave=0; istave<hmapsTHR[ilay*nRuns]->GetNbinsY(); istave++)
       trend[ilay][istave]->Draw("P same");
     leg.Draw("same");
@@ -254,12 +261,6 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       }
   }
 
-  npoints = trendDead[0][0]->GetN();
-  TH1F *hfakeDead = new TH1F("hfakeDead", "; Run; # Dead Pixels", npoints, -0.5, (double)npoints-0.5);
-
-  for(int ir=0; ir<(int)runnumbers.size()/nLayers; ir++)
-      hfakeDead->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[(int)runnumbers.size()/nLayers-1-ir])));
-
   //Draw
   for(int ilay=0; ilay<nLayers; ilay++){
     TCanvas canvas;
@@ -271,6 +272,18 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     TLegend leg(0.904, 0.197,0.997,0.898);
     for(int istave=0; istave<hmapsDEAD[ilay*nRuns]->GetNbinsY(); istave++)
       leg.AddEntry(trendDead[ilay][istave], Form("Stv%d",istave), "p");
+
+    int start = 0;
+    for(int inum=0; inum<(int)laynums.size(); inum++){
+      if(laynums[inum].find(to_string(ilay))!=string::npos){
+        start = inum;
+        break;
+      }
+    }
+    int npoints = trendDead[ilay][0]->GetN();
+    TH1F *hfakeDead = new TH1F("hfakeDead", "; Run; # Dead Pixels", npoints, -0.5, (double)npoints-0.5);
+    for(int ir=0; ir<npoints; ir++)
+        hfakeDead->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[start+npoints-1-ir])));
     hfakeDead->GetYaxis()->SetRangeUser(8e-1, maxtotdead+0.5*maxtotdead);
     hfakeDead->GetXaxis()->SetTitleOffset(2.8);
     hfakeDead->SetTitle(Form("Layer-%s (%d Staves with dead pix), %s",laynums[ilay*nRuns].c_str(), (int)ceil(staveswithdead[ilay]/nRuns), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
@@ -291,6 +304,17 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   cout<<"**************************************************************************************"<<endl;
   cout<<endl;
 
+  //count occurrences of runs listed in the runlabel vector
+  vector<int> occurrences;
+  for(int ilab=0; ilab<(int)runlabel.size(); ilab++){
+    int count = 0;
+    for(int iall=0; iall<(int)runnumbers.size(); iall++){
+      if(runlabel[ilab]==runnumbers[iall])
+        count++;
+    }
+    occurrences.push_back(count);
+  }
+
   //Reference runs
   //Choose two random reference runs
   const int pos1 = (int)nRuns*0.25;//pos of ref run 1
@@ -298,8 +322,18 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   long int refrun[2];
   vector<array<int,2>> posrefrun;
   array<int,2> tmparray;
-  refrun[0] = stol(runlabel[pos1]);
-  refrun[1] = stol(runlabel[pos2]);
+  for(int ilab=0; ilab<(int)runlabel.size(); ilab++){
+    if(occurrences[ilab]==nLayers){
+      refrun[0] = stol(runlabel[ilab]);
+      break;
+    }
+  }
+  for(int ilab=(int)runlabel.size()-1; ilab>=0; ilab--){
+    if(occurrences[ilab]==nLayers){
+      refrun[1] = stol(runlabel[ilab]);
+      break;
+    }
+  }
   int icnt = 0;
   for(int ihist=0; ihist<(int)hmapsTHR.size(); ihist++){
     string hname = hmapsTHR[ihist]->GetName();
@@ -454,32 +488,41 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   //reset posrefrun run to find new positions
   posrefrun.clear();
   icnt = 0;
+  int posrefrun2[nLayers>1 ? 48:nStavesInLay[stoi(laynums[0])]][2];
+  for(int ir=0; ir<2; ir++){
+    int stop = (nLayers>1) ? 48:nStavesInLay[stoi(laynums[0])];
+    for(int is=0; is< stop; is++)
+      posrefrun2[is][ir] = -1;
+  }
   for(int ihist=0; ihist<(int)hmapsDEADPIX.size(); ihist++){
     string hname = hmapsDEADPIX[ihist]->GetName();
     string runn =  hname.substr(hname.find("run")+3, 6);
-    if(stol(runn)==refrun[icnt]){ //position of refence run
-      tmparray[icnt] = ihist;
-      icnt++;
-      if(icnt==2) {
-        posrefrun.push_back(tmparray);
-        icnt=0;
-      }
+    int snum = stoi(hname.substr(hname.find("Stv")+3,1));
+    int lnum = stoi(hname.substr(hname.find("L")+1,1));
+    int staveindex = snum;
+    if(nLayers>1){
+      staveindex = lnum==0 ? snum: lnum==1? snum+nStavesInLay[0]:snum+nStavesInLay[0]+nStavesInLay[1];
+    }
+    if(stol(runn)==refrun[0]){ //position of refence run
+      posrefrun2[staveindex][0] = ihist;
+    }
+    if(stol(runn)==refrun[1]){ //position of refence run
+      posrefrun2[staveindex][1] = ihist;
     }
   }
 
   //Compare all the runs (non-empty ones) with the reference runs chosen by the user
-  int istave = posrefrun.size()-1;
-  long int first[2][nLayers][nRuns], second[2][nLayers][nRuns], both[2][nLayers][nRuns];
+  long int first[2][nLayers][100], second[2][nLayers][100], both[2][nLayers][100]; // 100 is just to put a large number of runs that will be never reached
   vector<array<long int,5>> noisypix;
   for(int iref=0; iref<2; iref++){
     for(int ilay=0; ilay<nLayers; ilay++)
-      for(int i=0; i<nRuns; i++){
+      for(int i=0; i<100; i++){
         first[iref][ilay][i]=0; second[iref][ilay][i]=0; both[iref][ilay][i]=0;
       }
   }
 
   for(int iref=0; iref<2; iref++){
-    istave = posrefrun.size()-1;
+    int istave = nLayers>1 ? 47 : nStavesInLay[stoi(laynums[0])];
     irun=0;
     for(int ihist=(int)hmapsDEADPIX.size()-1; ihist>=0; ihist--){ //start from the bottom in order to start with the oldest run
 
@@ -498,8 +541,16 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
         continue;
       }
       //if(!hmaps[ihist]->GetEntries()) continue; // do not compare ref run with empty run (= empty maps)
-
-      noisypix.push_back(CompareTwoRuns(hmapsDEADPIX[posrefrun[istave][iref]], hmapsDEADPIX[ihist]));
+      if(posrefrun2[istave][iref]==-1){
+        if(ihist>0){
+          if(stavenums[ihist-1]!=stavenums[ihist]){
+            istave--;
+            irun=0;
+          }
+        }
+        continue; //skip comparison if no run is found
+      }
+      noisypix.push_back(CompareTwoRuns(hmapsDEADPIX[posrefrun2[istave][iref]], hmapsDEADPIX[ihist]));
       noisypix[noisypix.size()-1][3] = stol(stavenums[ihist]);
       noisypix[noisypix.size()-1][4] = stol(lnum);
       first[iref][ilayer][irun]+=noisypix[noisypix.size()-1][0];
@@ -535,8 +586,15 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       ge_ncom2[iref][ilay] = new TGraphErrors();
       maxbar[iref][ilay] = -1.;
       minbar[iref][ilay] = 1e35;
-
-      for(int ir=0; ir<nRuns-1; ir++){//first the older data and last the most recent
+      int stoprun = 0;
+      for(int iref2=0; iref2<2; iref2++){
+        for(int ilay2=0; ilay2<2; ilay2++){
+          for(int irun2=0; irun2<100; irun2++){
+            if(first[iref2][ilay2][irun2]>0) stoprun++;//count positive entries
+          }
+        }
+      }
+      for(int ir=0; ir<stoprun; ir++){//first the oldest data and last the most recent
         //first couple of bar on the left
         //int ipoint = (int)noisypix.size()-icomp-1;
         if(!ir) xshift=1.;
@@ -584,16 +642,24 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       ge_ncom2[iref][ilay]->GetPoint(ge_ncom2[iref][ilay]->GetN()-1, x2,y2);
       TH1F *hfake = new TH1F("hfakedeadpix","hfakedeadpix", (int)x2+6, -3, x2+3);
       //draw labels on x axis
-      int counter = runlabel.size()-1;
-      for(Int_t k=4;k<=hfake->GetNbinsX()-3;k+=3){
-        if(stol(runlabel[counter])==refrun[iref]){
+      int npoints = ge_ncom2[iref][ilay]->GetN();
+      int counter = 0;
+      int start = 0;
+      for(int inum=0; inum<(int)laynums.size(); inum++){
+        if(laynums[inum].find(to_string(ilay))!=string::npos){
+          start = inum;
+          break;
+        }
+      }
+      /*for(Int_t k=4;k<=hfake->GetNbinsX()-3;k+=3){
+        if(stol(runnumbers[start+(npoints+2)-1-counter])==refrun[iref]){
           k-=3;
-          counter--;
+          counter++;
           continue;
         }
-        hfake->GetXaxis()->SetBinLabel(k, Form("run%s",runlabel[counter].c_str()));
-        counter--;
-      }
+        hfake->GetXaxis()->SetBinLabel(k, Form("run%s",runnumbers[start+(npoints+2)-1-counter].c_str()));
+        counter++;
+      }*/
 
       hfake->Draw();
       //canvas->SetLogy();
@@ -618,6 +684,8 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       delete hfake;
     }//end loop on layers
   }//end loop on reference runs
+
+  cout<<"fine"<<endl;
 
   //***********************************************************************************
   //*****************************Dead pixel maps **************************************

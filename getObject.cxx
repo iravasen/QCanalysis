@@ -144,12 +144,10 @@ bool RunShifter(auto *ccdb, string myname, int opt){
   //set the task name
   switch(opt){
     case 1: {// fake-hit
-
       taskname[0] = "qc/ITS/ITSFHR";//L0T, L0B
       taskname[1] = "qc/ITS/ITSFHR";//L1T, L1B
       taskname[2] = "qc/ITS/ITSFHR"; //L2T
       taskname[3] = "qc/ITS/ITSFHR"; //L2B
-
       break;
     }
 
@@ -288,24 +286,21 @@ bool RunShifter(auto *ccdb, string myname, int opt){
 
             case 2: {//error files
               string objname = "General/ErrorVsFeeid";
-              for(int ilay=0; ilay<=2; ilay++){
-                cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
-                Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], objname, runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), ilay);
-              }
+              cout<<"\nAll data in "<<taskname[0]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
+              Download(1, ccdb, ccdbApi, myname, taskname[0], taskname[0], objname, runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), 0);
               break;
             }
 
-            case 3: {//error files
+            case 3: {//trigger files
               string objname = "General/TriggerVsFeeid";
-              for(int ilay=0; ilay<=2; ilay++){
-                cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
-                Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], objname, runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), ilay);
-              }
+              cout<<"\nAll data in "<<taskname[0]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
+              Download(1, ccdb, ccdbApi, myname, taskname[0], taskname[0], objname, runts1[1], runts2[1], stol(runts1[0]), stol(runts2[0]), 0);
               break;
             }
           }
         }//end loop on lists
       }//end if layernum==-1
+      break;
     }//end case 1
 
     case 2: {//thresholds
@@ -1046,9 +1041,9 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
     if(c.find("TH2")!=string::npos){
       string histname = "";
       if(objname.find("Error")!=string::npos)
-        histname = Form("h2_L%d_err%s_%ld", lnum, isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+        histname = Form("h2_err%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
       else if(objname.find("Trigger")!=string::npos)
-        histname = Form("h2_L%d_trg%s_%ld", lnum, isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+        histname = Form("h2_trg%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
       else
         histname = Form("h2_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
 

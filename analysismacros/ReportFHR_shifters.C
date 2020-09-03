@@ -274,7 +274,6 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     string runnum =  hname.substr(hname.find("run")+3, 6);
     if(nchipsactive<nChips)
       cout<<"Layer "<<layn<<" Stave "<<stavenums[ihist]<<" Run: "<<runnum<<" --> Chips active:"<<nchipsactive<<endl;
-
     fhrall.push_back(GetFHRwithMasking(hmapsHIT[ihist],nchipsactive,ntrig[irun],hHotMap[nLayers==1 ? 0 : stoi(layn)][stoi(stavenums[ihist])]));
     irun--;
     if(ihist>0){
@@ -683,66 +682,55 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   cout<<endl;
 
   //sum all the histos in a single histogram (for summary plot) for each layer
-  TH2D *hSummaryErr[nLayers];
-  for(int ilay=0; ilay<nLayers; ilay++)
-    hSummaryErr[ilay] = (TH2D*)hmapsERR[stoi(laynums[ilay*nRuns])]->Clone(Form("hSummaryErr_L%d",nLayers>1 ? ilay:stoi(laynums[0])));
+  TH2D *hSummaryErr = (TH2D*)hmapsERR[0]->Clone("hSummaryErr");
   for(int iplot=1; iplot<(int)hmapsERR.size(); iplot++){
-    int layidx = stoi(laynums[iplot]);
-    if(iplot == layidx*nRuns) continue;
-    hSummaryErr[layidx]->Add(hmapsERR[iplot]);
+    hSummaryErr->Add(hmapsERR[iplot]);
   }
 
   //Make plots with Error IDs vs Run for each layer
-  TGraph *trendErr[nLayers][hSummaryErr[0]->GetNbinsY()];
+  TGraph *trendErr[hSummaryErr->GetNbinsY()];
 
   int ir = 0;
-  double maxErr[nLayers];
-  for(int ilay=0; ilay<nLayers; ilay++)
-    maxErr[ilay] = -1.;
+  double maxErr = -1.;
   for(int iplot=0; iplot<(int)hmapsERR.size(); iplot++){
     TH1D *hproj = (TH1D*)hmapsERR[iplot]->ProjectionY(Form("hmapsERR_%d",iplot));
     for(int ibin=1; ibin<=hproj->GetNbinsX(); ibin++){
       if(ir==0){
-        trendErr[stoi(laynums[iplot])][ibin-1] = new TGraph();
-        trendErr[stoi(laynums[iplot])][ibin-1]->SetName(Form("gr_L%s_errID%d",laynums[iplot].c_str(),ibin));
-        SetStyle(trendErr[stoi(laynums[iplot])][ibin-1], col[ibin<=10?ibin-1:ibin<=20?ibin-11:ibin-21], ibin<=10?24:ibin<=20?25:26);
+        trendErr[ibin-1] = new TGraph();
+        trendErr[ibin-1]->SetName(Form("gr_errID%d",ibin));
+        SetStyle(trendErr[ibin-1], col[ibin<=10?ibin-1:ibin<=20?ibin-11:ibin-21], ibin<=10?24:ibin<=20?25:26);
       }
-      trendErr[stoi(laynums[iplot])][ibin-1]->SetPoint(ir,ir, hproj->GetBinContent(ibin));
-      if(hproj->GetBinContent(ibin)>maxErr[stoi(laynums[iplot])])
-        maxErr[stoi(laynums[iplot])]=hproj->GetBinContent(ibin);
+      trendErr[ibin-1]->SetPoint(ir,ir, hproj->GetBinContent(ibin));
+      if(hproj->GetBinContent(ibin)>maxErr)
+        maxErr=hproj->GetBinContent(ibin);
     }
     delete hproj;
     ir++;
-    if(ir==nRuns) ir=0;
   }
 
   //Draw summary plot for errors
-  for(int ilay=0; ilay<nLayers; ilay++){
-    TCanvas canvas;
-    canvas.cd();
-    canvas.SetTickx();
-    canvas.SetTicky();
-    canvas.SetLogz();
-    canvas.SetMargin(0.0988,0.2,0.194,0.0993);
-    canvas.SetRightMargin(0.15);
-    hSummaryErr[ilay]->SetTitle(Form("Errors L%d, %s", nLayers>1 ? ilay:stoi(laynums[0]),filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
-    hSummaryErr[ilay]->Draw("colz");
-    //hSummary[ilay]->GetXaxis()->SetNdivisions(530);
-    //hSummary[ilay]->GetYaxis()->SetNdivisions(516);
-    hSummaryErr[ilay]->GetXaxis()->SetLabelSize(0.045);
-    hSummaryErr[ilay]->GetYaxis()->SetLabelSize(0.045);
-    hSummaryErr[ilay]->GetZaxis()->SetLabelSize(0.045);
-    hSummaryErr[ilay]->GetXaxis()->SetTitleSize(0.05);
-    hSummaryErr[ilay]->GetYaxis()->SetTitleSize(0.05);
-    hSummaryErr[ilay]->GetYaxis()->SetTitleOffset(0.7);
-    hSummaryErr[ilay]->GetZaxis()->SetTitleSize(0.05);
-    hSummaryErr[ilay]->GetZaxis()->SetTitleOffset(0.9);
+  TCanvas canvasErr;
+  canvasErr.cd();
+  canvasErr.SetTickx();
+  canvasErr.SetTicky();
+  canvasErr.SetLogz();
+  canvasErr.SetMargin(0.0988,0.2,0.194,0.0993);
+  canvasErr.SetRightMargin(0.15);
+  hSummaryErr->SetTitle(Form("Errors IB, %s",filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
+  hSummaryErr->Draw("colz");
+  hSummaryErr->GetXaxis()->SetLabelSize(0.045);
+  hSummaryErr->GetYaxis()->SetLabelSize(0.045);
+  hSummaryErr->GetZaxis()->SetLabelSize(0.045);
+  hSummaryErr->GetXaxis()->SetTitleSize(0.05);
+  hSummaryErr->GetYaxis()->SetTitleSize(0.05);
+  hSummaryErr->GetYaxis()->SetTitleOffset(0.7);
+  hSummaryErr->GetZaxis()->SetTitleSize(0.05);
+  hSummaryErr->GetZaxis()->SetTitleOffset(0.9);
 
-    canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
-  }
+  canvasErr.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
 
   //Draw trends for errors
-  int npointsErr = trendErr[0][0]->GetN();
+  int npointsErr = trendErr[0]->GetN();
   TH1F *hfakeErr = new TH1F("hfakeErr", "; Run; # Errors", npointsErr, -0.5, (double)npointsErr-0.5);
   for(int ir=0; ir<(int)runnumbers.size()/nLayers; ir++)
       hfakeErr->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[(int)runnumbers.size()/nLayers-1-ir])));
@@ -750,30 +738,27 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   TLegend *legErr = new TLegend(0.904, 0.197,0.997,0.898);
   legErr->SetHeader("Error IDs");
   legErr->SetNColumns(2);
-  for(int iid=1; iid<=hSummaryErr[0]->GetNbinsY();iid++)
-    legErr->AddEntry(trendErr[0][iid-1], Form("%d",iid), "p");
+  for(int iid=1; iid<=hSummaryErr->GetNbinsY();iid++)
+    legErr->AddEntry(trendErr[iid-1], Form("%d",iid), "p");
 
-  for(int ilay=0; ilay<nLayers; ilay++){
-    TCanvas canvas;
-    canvas.cd();
-    canvas.SetTickx();
-    canvas.SetTicky();
-    canvas.SetLogy();
-    canvas.SetMargin(0.0988,0.1,0.194,0.0993);
+  TCanvas canvasErr2;
+  canvasErr2.cd();
+  canvasErr2.SetTickx();
+  canvasErr2.SetTicky();
+  canvasErr2.SetLogy();
+  canvasErr2.SetMargin(0.0988,0.1,0.194,0.0993);
 
-    hfakeErr->GetXaxis()->SetTitleOffset(2.8);
-    hfakeErr->SetTitle(Form("Layer-%d, Error trends %s",nLayers>1 ? ilay:stoi(laynums[0]), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
-    hfakeErr->GetYaxis()->SetRangeUser(1, 10*maxErr[ilay]);
-    hfakeErr->GetXaxis()->SetTitleOffset(2.8);
-    hfakeErr->Draw();
-    for(int iid=1; iid<=hSummaryErr[ilay]->GetNbinsY();iid++){
-      trendErr[ilay][iid-1]->Draw("P same");
-    }
-    legErr->Draw("same");
-
-    canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
+  hfakeErr->GetXaxis()->SetTitleOffset(2.8);
+  hfakeErr->SetTitle(Form("IB, Error trends %s", filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
+  hfakeErr->GetYaxis()->SetRangeUser(1, 10*maxErr);
+  hfakeErr->GetXaxis()->SetTitleOffset(2.8);
+  hfakeErr->Draw();
+  for(int iid=1; iid<=hSummaryErr->GetNbinsY();iid++){
+    trendErr[iid-1]->Draw("P same");
   }
+  legErr->Draw("same");
 
+  canvasErr2.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
 
   //*******************************************************************************************
   //********************************* Trigger and Flags plots *********************************
@@ -785,97 +770,84 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   cout<<endl;
 
   //sum all the histos in a single histogram (for summary plot) for each layer --> Trigger summary
-  TH2D *hSummaryTrg[nLayers];
-  for(int ilay=0; ilay<nLayers; ilay++)
-    hSummaryTrg[ilay] = (TH2D*)hmapsTRG[stoi(laynums[ilay*nRuns])]->Clone(Form("hSummaryTrg_L%d",nLayers>1 ? ilay:stoi(laynums[0])));
+  TH2D *hSummaryTrg = (TH2D*)hmapsTRG[0]->Clone("hSummaryTrg");
   for(int iplot=1; iplot<(int)hmapsTRG.size(); iplot++){
-    int layidx = stoi(laynums[iplot]);
-    if(iplot == layidx*nRuns) continue;
-    hSummaryTrg[layidx]->Add(hmapsTRG[iplot]);
+    hSummaryTrg->Add(hmapsTRG[iplot]);
   }
 
   //Make plots with Error IDs vs Run for each layer
-  TGraph *trendTrg[nLayers][hSummaryTrg[0]->GetNbinsY()];
+  TGraph *trendTrg[hSummaryTrg->GetNbinsY()];
 
   ir = 0;
-  double maxTrg[nLayers];
-  for(int ilay=0; ilay<nLayers; ilay++)
-    maxTrg[ilay] = -1.;
+  double maxTrg = -1.;
   for(int iplot=0; iplot<(int)hmapsTRG.size(); iplot++){
     TH1D *hproj = (TH1D*)hmapsTRG[iplot]->ProjectionY(Form("herrTrg_%d",iplot));
-    for(int ibin=1; ibin<=hSummaryTrg[0]->GetNbinsY(); ibin++){
+    for(int ibin=1; ibin<=hSummaryTrg->GetNbinsY(); ibin++){
       if(ir==0){
-        trendTrg[stoi(laynums[iplot])][ibin-1] = new TGraph();
-        trendTrg[stoi(laynums[iplot])][ibin-1]->SetName(Form("gr_L%s_trgID%d",laynums[iplot].c_str(),ibin));
-        SetStyle(trendTrg[stoi(laynums[iplot])][ibin-1], col[ibin<=10?ibin-1:ibin-11], ibin<=10?24:25);
+        trendTrg[ibin-1] = new TGraph();
+        trendTrg[ibin-1]->SetName(Form("gr_trgID%d",ibin));
+        SetStyle(trendTrg[ibin-1], col[ibin<=10?ibin-1:ibin-11], ibin<=10?24:25);
       }
-      trendTrg[stoi(laynums[iplot])][ibin-1]->SetPoint(ir,ir, hproj->GetBinContent(ibin));
-      if(hproj->GetBinContent(ibin)>maxTrg[stoi(laynums[iplot])])
-        maxTrg[stoi(laynums[iplot])]=hproj->GetBinContent(ibin);
+      trendTrg[ibin-1]->SetPoint(ir,ir, hproj->GetBinContent(ibin));
+      if(hproj->GetBinContent(ibin)>maxTrg)
+        maxTrg=hproj->GetBinContent(ibin);
     }
     delete hproj;
     ir++;
-    if(ir==nRuns) ir=0;
   }
 
   //Draw summary plot
-  for(int ilay=0; ilay<nLayers; ilay++){
-    TCanvas canvas;
-    canvas.cd();
-    canvas.SetTickx();
-    canvas.SetTicky();
-    canvas.SetLogz();
-    canvas.SetMargin(0.18,0.2,0.194,0.0993);
-    canvas.SetRightMargin(0.15);
-    hSummaryTrg[ilay]->SetTitle(Form("Trigger & Flags L%d, %s", nLayers>1 ? ilay:stoi(laynums[0]),filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
-    hSummaryTrg[ilay]->Draw("colz");
-    //hSummary[ilay]->GetXaxis()->SetNdivisions(530);
-    //hSummary[ilay]->GetYaxis()->SetNdivisions(516);
-    hSummaryTrg[ilay]->GetXaxis()->SetLabelSize(0.045);
-    hSummaryTrg[ilay]->GetYaxis()->SetLabelSize(0.045);
-    hSummaryTrg[ilay]->GetZaxis()->SetLabelSize(0.045);
-    hSummaryTrg[ilay]->GetXaxis()->SetTitleSize(0.05);
-    hSummaryTrg[ilay]->GetYaxis()->SetTitleSize(0.05);
-    hSummaryTrg[ilay]->GetYaxis()->SetTitleOffset(0.7);
-    hSummaryTrg[ilay]->GetZaxis()->SetTitleSize(0.05);
-    hSummaryTrg[ilay]->GetZaxis()->SetTitleOffset(0.9);
+  TCanvas canvasTrg;
+  canvasTrg.cd();
+  canvasTrg.SetTickx();
+  canvasTrg.SetTicky();
+  canvasTrg.SetLogz();
+  canvasTrg.SetMargin(0.18,0.2,0.194,0.0993);
+  canvasTrg.SetRightMargin(0.15);
+  hSummaryTrg->SetTitle(Form("Trigger & Flags IB, %s", filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
+  hSummaryTrg->Draw("colz");
+  //hSummary[ilay]->GetXaxis()->SetNdivisions(530);
+  //hSummary[ilay]->GetYaxis()->SetNdivisions(516);
+  hSummaryTrg->GetXaxis()->SetLabelSize(0.045);
+  hSummaryTrg->GetYaxis()->SetLabelSize(0.045);
+  hSummaryTrg->GetZaxis()->SetLabelSize(0.045);
+  hSummaryTrg->GetXaxis()->SetTitleSize(0.05);
+  hSummaryTrg->GetYaxis()->SetTitleSize(0.05);
+  hSummaryTrg->GetYaxis()->SetTitleOffset(0.7);
+  hSummaryTrg->GetZaxis()->SetTitleSize(0.05);
+  hSummaryTrg->GetZaxis()->SetTitleOffset(0.9);
 
-    canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
-  }
+  canvasTrg.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
 
   //Draw trends
-  int npointstrg = trendTrg[0][0]->GetN();
+  int npointstrg = trendTrg[0]->GetN();
   TH1F *hfakeTrg = new TH1F("hfakeTrg", "; Run; # Errors", npointstrg, -0.5, (double)npointstrg-0.5);
   for(int ir=0; ir<(int)runnumbers.size()/nLayers; ir++)
       hfakeTrg->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[(int)runnumbers.size()/nLayers-1-ir])));
 
   TLegend *legtrg = new TLegend(0.904, 0.197,0.997,0.898);
   legtrg->SetHeader("IDs");
-  for(int iid=1; iid<=hSummaryTrg[0]->GetNbinsY();iid++)
-    legtrg->AddEntry(trendTrg[0][iid-1], Form("%s",hSummaryTrg[0]->GetYaxis()->GetBinLabel(iid)), "p");
+  for(int iid=1; iid<=hSummaryTrg->GetNbinsY();iid++)
+    legtrg->AddEntry(trendTrg[iid-1], Form("%s",hSummaryTrg->GetYaxis()->GetBinLabel(iid)), "p");
 
-  for(int ilay=0; ilay<nLayers; ilay++){
-    TCanvas canvas;
-    canvas.cd();
-    canvas.SetTickx();
-    canvas.SetTicky();
-    canvas.SetLogy();
-    canvas.SetMargin(0.0988,0.1,0.194,0.0993);
+    TCanvas canvasTrg2;
+    canvasTrg2.cd();
+    canvasTrg2.SetTickx();
+    canvasTrg2.SetTicky();
+    canvasTrg2.SetLogy();
+    canvasTrg2.SetMargin(0.0988,0.1,0.194,0.0993);
 
     hfakeTrg->GetXaxis()->SetTitleOffset(2.8);
-    hfakeTrg->SetTitle(Form("Layer-%d, Trigger & Flag trends %s",nLayers>1 ? ilay:stoi(laynums[0]), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
-    hfakeTrg->GetYaxis()->SetRangeUser(1, 10*maxTrg[ilay]);
+    hfakeTrg->SetTitle(Form("IB, Trigger & Flag trends %s", filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
+    hfakeTrg->GetYaxis()->SetRangeUser(1, 10*maxTrg);
     hfakeTrg->GetXaxis()->SetTitleOffset(2.8);
     hfakeTrg->Draw();
-    for(int iid=1; iid<=hSummaryTrg[ilay]->GetNbinsY();iid++){
-      trendTrg[ilay][iid-1]->Draw("P same");
+    for(int iid=1; iid<=hSummaryTrg->GetNbinsY();iid++){
+      trendTrg[iid-1]->Draw("P same");
     }
     legtrg->Draw("same");
-    canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
-    if(ilay==nLayers-1) canvas.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf]", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
-  }
-
-
+    canvasTrg2.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
+    canvasTrg2.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf]", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
 
   //scp to copy the shift report (only on flp6)
   string user = (string)gSystem->GetFromPipe("whoami");
