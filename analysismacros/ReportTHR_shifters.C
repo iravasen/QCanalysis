@@ -2,6 +2,7 @@
 #include "inc/constants.h"
 #include "inc/utilities.h"
 
+#include<algorithm>
 #include <cstdio>
 
 using namespace std;
@@ -96,7 +97,6 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
         isfirst=false;
         continue;
       }
-      runlabel.push_back(runnum);
     }
     else if(objtitle.find("Threshold")!=string::npos){// THR maps
       hmapsTHR.push_back(h2);
@@ -104,9 +104,19 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       runnumbers.push_back(runnum);
       laynums.push_back(laynum);
       nTimes++;
-      if(nTimes>1 && laynum==laynums[laynums.size()-2])
+      if(nTimes>1 && laynum==laynums[laynums.size()-2]){
         nRuns++;
+      }
       else nRuns=1;
+
+      if(nTimes<=1) runlabel.push_back(runnum);
+      if(nTimes>1 && laynum==laynums[laynums.size()-2] && isfirst){
+        runlabel.push_back(runnum);
+      }
+      if(nTimes>1 && laynum!=laynums[laynums.size()-2]){
+        isfirst = false;
+      }
+
     }
     else if(objtitle.find("DeadPixel")){
       hmapsDEAD.push_back(h2);
@@ -114,6 +124,10 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     //cout<<"run: "<<runnum<<"   timestamp: "<<timestamp<<"    laynum: "<<laynum<<endl;
   }
 
+  cout<<"Run labels"<<endl;
+  for(int ilab=0; ilab<(int)runlabel.size(); ilab++){
+    cout<<runlabel[ilab]<<endl;
+  }
   const int nLayers = (int)hmapsTHR.size()==nRuns ? 1 : stoi(laynums[laynums.size()-1])+1;
 
   //**************************************************************************************
@@ -513,41 +527,34 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
 
   //Compare all the runs (non-empty ones) with the reference runs chosen by the user
   long int first[2][nLayers][100], second[2][nLayers][100], both[2][nLayers][100]; // 100 is just to put a large number of runs that will be never reached
+  bool filled[2][nLayers][100];
   vector<array<long int,5>> noisypix;
   for(int iref=0; iref<2; iref++){
     for(int ilay=0; ilay<nLayers; ilay++)
       for(int i=0; i<100; i++){
         first[iref][ilay][i]=0; second[iref][ilay][i]=0; both[iref][ilay][i]=0;
+        filled[iref][ilay][i] = false;
       }
   }
 
   for(int iref=0; iref<2; iref++){
-    int istave = nLayers>1 ? 47 : nStavesInLay[stoi(laynums[0])];
-    irun=0;
     for(int ihist=(int)hmapsDEADPIX.size()-1; ihist>=0; ihist--){ //start from the bottom in order to start with the oldest run
 
       string hname = hmapsDEADPIX[ihist]->GetName();
       string runn =  hname.substr(hname.find("run")+3, 6);
       string lnum =  hname.substr(hname.find("L")+1,1);
+      int snum =  stoi(hname.substr(hname.find("Stv")+3,1));
+      auto itf = find(runlabel.begin(), runlabel.end(), runn);
+      int irun = distance(runlabel.begin(), itf);
       ilayer = stoi(lnum);
+      int istave = snum;
+      if(nLayers>1)
+        istave = (lnum=="0") ? snum : (lnum=="1")? snum+nStavesInLay[0]:snum+nStavesInLay[0]+nStavesInLay[1];
 
       if(runn.find(std::to_string(refrun[iref]))!=string::npos){
-        if(ihist>0){// in case ref run is the first into the list of runs
-          if(stavenums[ihist-1]!=stavenums[ihist]){
-            istave--;
-            irun=0;
-          }
-        }
         continue;
       }
-      //if(!hmaps[ihist]->GetEntries()) continue; // do not compare ref run with empty run (= empty maps)
       if(posrefrun2[istave][iref]==-1){
-        if(ihist>0){
-          if(stavenums[ihist-1]!=stavenums[ihist]){
-            istave--;
-            irun=0;
-          }
-        }
         continue; //skip comparison if no run is found
       }
       noisypix.push_back(CompareTwoRuns(hmapsDEADPIX[posrefrun2[istave][iref]], hmapsDEADPIX[ihist]));
@@ -556,15 +563,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       first[iref][ilayer][irun]+=noisypix[noisypix.size()-1][0];
       second[iref][ilayer][irun]+=noisypix[noisypix.size()-1][1];
       both[iref][ilayer][irun]+=noisypix[noisypix.size()-1][2];
-      irun++;
-
-      if(ihist>0){
-        if(stavenums[ihist-1]!=stavenums[ihist]){
-          istave--;
-          irun=0;
-        }
-      }
-
+      filled[iref][ilayer][irun] = true;
     }//end loop on histograms
   }//end loop on reference runs
 
@@ -586,31 +585,35 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       ge_ncom2[iref][ilay] = new TGraphErrors();
       maxbar[iref][ilay] = -1.;
       minbar[iref][ilay] = 1e35;
-      int stoprun = 0;
+      /*int stoprun = 0;
       for(int iref2=0; iref2<2; iref2++){
         for(int ilay2=0; ilay2<2; ilay2++){
           for(int irun2=0; irun2<100; irun2++){
             if(first[iref2][ilay2][irun2]>0) stoprun++;//count positive entries
           }
         }
-      }
-      for(int ir=0; ir<stoprun; ir++){//first the oldest data and last the most recent
+      }*/
+      int ipoint = 0;
+      for(int ir=0; ir<100; ir++){//first the oldest data and last the most recent
+        if(!filled[iref][ilay][ir]) continue; //skip if not filled
         //first couple of bar on the left
         //int ipoint = (int)noisypix.size()-icomp-1;
-        if(!ir) xshift=1.;
+        if(!ipoint) xshift=1.;
         else xshift = 3.;
-        ge_nref[iref][ilay]->SetPoint(ir, ir*xshift, (double)both[iref][ilay][ir]/2.+(double)first[iref][ilay][ir]/2.);
-        ge_nref[iref][ilay]->SetPointError(ir, 0.5, (double)first[iref][ilay][ir]/2.);
-        ge_ncom1[iref][ilay]->SetPoint(ir, ir*xshift, 0.);
-        ge_ncom1[iref][ilay]->SetPointError(ir, 0.5, (double)both[iref][ilay][ir]/2.);
+        ge_nref[iref][ilay]->SetPoint(ipoint, ipoint*xshift, (double)both[iref][ilay][ir]/2.+(double)first[iref][ilay][ir]/2.);
+        ge_nref[iref][ilay]->SetPointError(ipoint, 0.5, (double)first[iref][ilay][ir]/2.);
+        ge_ncom1[iref][ilay]->SetPoint(ipoint, ipoint*xshift, 0.);
+        ge_ncom1[iref][ilay]->SetPointError(ipoint, 0.5, (double)both[iref][ilay][ir]/2.);
         if((double)both[iref][ilay][ir]/2.+(double)first[iref][ilay][ir] > maxbar[iref][ilay]) maxbar[iref][ilay] = (double)both[iref][ilay][ir]/2.+(double)first[iref][ilay][ir];
 
         //second couple of bar on the right
-        ge_n2[iref][ilay]->SetPoint(ir, ir*xshift+1, -(double)both[iref][ilay][ir]/2.-(double)second[iref][ilay][ir]/2.);
-        ge_n2[iref][ilay]->SetPointError(ir, 0.5, (double)second[iref][ilay][ir]/2.);
-        ge_ncom2[iref][ilay]->SetPoint(ir, ir*xshift+1, 0.);
-        ge_ncom2[iref][ilay]->SetPointError(ir, 0.5, (double)both[iref][ilay][ir]/2.);
+        ge_n2[iref][ilay]->SetPoint(ipoint, ipoint*xshift+1, -(double)both[iref][ilay][ir]/2.-(double)second[iref][ilay][ir]/2.);
+        ge_n2[iref][ilay]->SetPointError(ipoint, 0.5, (double)second[iref][ilay][ir]/2.);
+        ge_ncom2[iref][ilay]->SetPoint(ipoint, ipoint*xshift+1, 0.);
+        ge_ncom2[iref][ilay]->SetPointError(ipoint, 0.5, (double)both[iref][ilay][ir]/2.);
         if(-(double)both[iref][ilay][ir]/2.-(double)second[iref][ilay][ir] < minbar[iref][ilay]) minbar[iref][ilay] = -(double)both[iref][ilay][ir]/2.-(double)second[iref][ilay][ir];
+
+        ipoint++;
       }//end first loop on runs
 
       //Style
@@ -643,23 +646,16 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       TH1F *hfake = new TH1F("hfakedeadpix","hfakedeadpix", (int)x2+6, -3, x2+3);
       //draw labels on x axis
       int npoints = ge_ncom2[iref][ilay]->GetN();
-      int counter = 0;
-      int start = 0;
-      for(int inum=0; inum<(int)laynums.size(); inum++){
-        if(laynums[inum].find(to_string(ilay))!=string::npos){
-          start = inum;
-          break;
-        }
-      }
-      /*for(Int_t k=4;k<=hfake->GetNbinsX()-3;k+=3){
-        if(stol(runnumbers[start+(npoints+2)-1-counter])==refrun[iref]){
+      int counter = runlabel.size()-1;
+      for(Int_t k=4;k<=hfake->GetNbinsX()-3;k+=3){
+        if(stol(runlabel[counter])==refrun[iref]){
           k-=3;
-          counter++;
+          counter--;
           continue;
         }
-        hfake->GetXaxis()->SetBinLabel(k, Form("run%s",runnumbers[start+(npoints+2)-1-counter].c_str()));
-        counter++;
-      }*/
+        hfake->GetXaxis()->SetBinLabel(k, Form("run%s",runlabel[counter].c_str()));
+        counter--;
+      }
 
       hfake->Draw();
       //canvas->SetLogy();
@@ -783,8 +779,8 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     cout<<endl;
     cout<<"... Copying the Report on eos"<<endl;
     cout<<endl;
-    cout<<"Insert the password of user itsshift (see Shifter_Instructions.txt on the desktop of the right computer!):"<<endl;
-    gSystem->Exec(Form("scp ../Plots/ShiftReport24h_FHR_%s_%s.pdf itsshift@lxplus.cern.ch:/eos/user/i/itsshift/Reports24h", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    cout<<"Insert the password of user itsshift (ask shift leader if you do not know!):"<<endl;
+    gSystem->Exec(Form("scp ../Plots/ShiftReport24h_THR_%s_%s.pdf itsshift@lxplus.cern.ch:/eos/user/i/itsshift/Reports24h/THR", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
   }
 
 

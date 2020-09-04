@@ -855,8 +855,8 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     cout<<endl;
     cout<<"... Copying the Report on eos"<<endl;
     cout<<endl;
-    cout<<"Insert the password of user itsshift (see Shifter_Instructions.txt on the desktop of the right computer!):"<<endl;
-    gSystem->Exec(Form("scp ../Plots/ShiftReport24h_FHR_%s_%s.pdf itsshift@lxplus.cern.ch:/eos/user/i/itsshift/Reports24h", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
+    cout<<"Insert the password of user itsshift (ask shift leader if you do not know!):"<<endl;
+    gSystem->Exec(Form("scp ../Plots/ShiftReport24h_FHR_%s_%s.pdf itsshift@lxplus.cern.ch:/eos/user/i/itsshift/Reports24h/FHR", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
   }
 
 
