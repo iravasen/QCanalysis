@@ -124,10 +124,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     //cout<<"run: "<<runnum<<"   timestamp: "<<timestamp<<"    laynum: "<<laynum<<endl;
   }
 
-  cout<<"Run labels"<<endl;
-  for(int ilab=0; ilab<(int)runlabel.size(); ilab++){
-    cout<<runlabel[ilab]<<endl;
-  }
+  cout<<"#Runs: "<<nRuns<<endl;
   const int nLayers = (int)hmapsTHR.size()==nRuns ? 1 : stoi(laynums[laynums.size()-1])+1;
 
   //**************************************************************************************
@@ -430,40 +427,35 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   for(int ihist=0; ihist<(int)hmapsDEAD.size(); ihist++)
     for(int ix=1; ix<=hmapsDEAD[ihist]->GetNbinsX();ix++)
       for(int iy=1; iy<=hmapsDEAD[ihist]->GetNbinsY();iy++)
-        if(hmapsDEAD[ihist]->GetBinContent(ix,iy)>maxdeadpixcorr)
+        if(hmapsDEAD[ihist]->GetBinContent(ix,iy)>maxdeadpixcorr){
           maxdeadpixcorr=hmapsDEAD[ihist]->GetBinContent(ix,iy);
-
+        }
+  if(maxdeadpixcorr>5000) maxdeadpixcorr=5000;
   double maxlimit = maxdeadpixcorr+0.5*maxdeadpixcorr;
   int nbins = (int)(maxdeadpixcorr+0.5*maxdeadpixcorr-0.9)*1.0;
 
-  TH2D *hCorrDEAD[2][nLayers];
+  TH2I *hCorrDEAD[2][nLayers];
 
   for(int iref=0; iref<2; iref++)
     for(int ilay=0; ilay<nLayers; ilay++)
-      hCorrDEAD[iref][ilay] = new TH2D(Form("hCorr_L%s_refrun_%ld",laynums[ilay*nRuns].c_str(),refrun[iref]), Form("Layer-%s - DeadPix corr. %s - Ref. run: %ld; # Dead Pixel per Chip (run%ld); # Dead Pixel per Chip (runs)",laynums[ilay*nRuns].c_str(),filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str(),refrun[iref],refrun[iref]), nbins, 0.9, maxlimit, nbins, 0.9, maxlimit);
+      hCorrDEAD[iref][ilay] = new TH2I(Form("hCorr_L%s_refrun_%ld",laynums[ilay*nRuns].c_str(),refrun[iref]), Form("Layer-%s - DeadPix corr. %s - Ref. run: %ld; # Dead Pixel per Chip (run%ld); # Dead Pixel per Chip (runs)",laynums[ilay*nRuns].c_str(),filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str(),refrun[iref],refrun[iref]), nbins, 0.9, maxlimit, nbins, 0.9, maxlimit);
 
   for(int iref=0; iref<2; iref++){
-    ilayer=nLayers-1;
     for(int ihist=(int)hmapsDEAD.size()-1; ihist>=0; ihist--){
+      string hname = hmapsDEAD[ihist]->GetName();
+      int ilayer = stoi(hname.substr(hname.find("L")+1,1));
       if(stol(runnumbers[ihist])==refrun[iref]){
-        if(ihist>0)
-          if(laynums[ihist-1]!=laynums[ihist]){// in case the ref run is the first in the list of all layers
-            ilayer--;
-          }
         continue; //skip ref run
       }
       for(int ibinx=1; ibinx<=hmapsDEAD[ihist]->GetNbinsX(); ibinx++){
         for(int ibiny=1; ibiny<=hmapsDEAD[ihist]->GetNbinsY(); ibiny++){
-          double data_refrun = hmapsDEAD[posrefrun[ilayer][iref]]->GetBinContent(ibinx,ibiny);
-          double data_run = hmapsDEAD[ihist]->GetBinContent(ibinx,ibiny);
-          hCorrDEAD[iref][ilayer]->Fill(data_refrun, data_run);
+          int data_refrun = (int)hmapsDEAD[posrefrun[ilayer][iref]]->GetBinContent(ibinx,ibiny);
+          int data_run = (int)hmapsDEAD[ihist]->GetBinContent(ibinx,ibiny);
+          if(data_run && data_refrun)
+            hCorrDEAD[iref][ilayer]->Fill(data_refrun, data_run);
           //cout<<fhr_refrun<<"   "<<fhr_run<<endl;
         }
       }
-      if(ihist>0)
-        if(laynums[ihist-1]!=laynums[ihist]){
-          ilayer--;
-        }
     }
   }
 
@@ -698,7 +690,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     cnv.SetTopMargin(0.4);
     cnv.Divide(1,nStavesInLay[nLayers>1 ? ilay:stoi(laynums[0])],0,0);
     for(int istv=0; istv<nStavesInLay[nLayers>1 ? ilay:stoi(laynums[0])]; istv++){
-      TH2F *hHotMap = new TH2F(Form("hHotMap_L%s_Stv%d",nLayers>1 ? to_string(ilay).c_str():laynums[0].c_str(), istv), "; ; ", 9216,0.5,9216.5,512,0.5,512.5);
+      TH2I *hHotMap = new TH2I(Form("hHotMap_L%s_Stv%d",nLayers>1 ? to_string(ilay).c_str():laynums[0].c_str(), istv), "; ; ", 9216,0.5,9216.5,512,0.5,512.5);
       int cnt = 0;
 
       for(int ihist=0; ihist<(int)hmapsDEADPIX.size(); ihist++){
@@ -711,9 +703,9 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
         else if(stoi(stavenums[ihist]) != istv) {
           continue;
         }
-        if(!cnt) {hHotMap = (TH2F*)hmapsDEADPIX[ihist]->Projection(1,0);}
+        if(!cnt) {hHotMap = (TH2I*)hmapsDEADPIX[ihist]->Projection(1,0);}
         else {
-          TH2F *htemp = (TH2F*)hmapsDEADPIX[ihist]->Projection(1,0);
+          TH2I *htemp = (TH2I*)hmapsDEADPIX[ihist]->Projection(1,0);
           hHotMap->Add(htemp);
           delete htemp;
         }
