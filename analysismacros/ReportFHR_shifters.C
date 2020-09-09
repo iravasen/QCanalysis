@@ -828,7 +828,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   TLegend *legtrg = new TLegend(0.904, 0.197,0.997,0.898);
   legtrg->SetHeader("IDs");
   for(int iid=1; iid<=hSummaryTrg->GetNbinsY();iid++)
-    legtrg->AddEntry(trendTrg[iid-1], Form("%d",iid), "p");
+    legtrg->AddEntry(trendTrg[iid-1], Form("%s",hSummaryTrg->GetYaxis()->GetBinLabel(iid)), "p");
 
     TCanvas canvasTrg2;
     canvasTrg2.cd();
