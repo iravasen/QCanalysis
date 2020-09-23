@@ -850,14 +850,14 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     canvasTrg2.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf]", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
 
   //scp to copy the shift report (only on flp6)
-  string user = (string)gSystem->GetFromPipe("whoami");
+  /*string user = (string)gSystem->GetFromPipe("whoami");
   if(user=="its"){
     cout<<endl;
     cout<<"... Copying the Report on eos"<<endl;
     cout<<endl;
     cout<<"Insert the password of user itsshift (ask shift leader if you do not know!):"<<endl;
     gSystem->Exec(Form("scp ../Plots/ShiftReport24h_FHR_%s_%s.pdf itsshift@lxplus.cern.ch:/eos/user/i/itsshift/Reports24h/FHR", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
-  }
+  }*/
 
 
 }
