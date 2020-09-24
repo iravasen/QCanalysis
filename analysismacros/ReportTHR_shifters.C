@@ -199,7 +199,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
         break;
       }
     }
-    for(int ir=0; ir<npoints/*(int)runnumbers.size()/nLayers*/; ir++){
+    for(int ir=0; ir<npoints; ir++){
         hfake->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[start+npoints-1-ir])));
     }
     hfake->GetYaxis()->SetRangeUser(8.5, 12.5);
@@ -577,14 +577,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       ge_ncom2[iref][ilay] = new TGraphErrors();
       maxbar[iref][ilay] = -1.;
       minbar[iref][ilay] = 1e35;
-      /*int stoprun = 0;
-      for(int iref2=0; iref2<2; iref2++){
-        for(int ilay2=0; ilay2<2; ilay2++){
-          for(int irun2=0; irun2<100; irun2++){
-            if(first[iref2][ilay2][irun2]>0) stoprun++;//count positive entries
-          }
-        }
-      }*/
+
       int ipoint = 0;
       for(int ir=0; ir<100; ir++){//first the oldest data and last the most recent
         if(!filled[iref][ilay][ir]) continue; //skip if not filled
@@ -673,8 +666,6 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     }//end loop on layers
   }//end loop on reference runs
 
-  cout<<"fine"<<endl;
-
   //***********************************************************************************
   //*****************************Dead pixel maps **************************************
   //***********************************************************************************
@@ -683,7 +674,6 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   cout<<"************************************ Dead pixel maps *********************************"<<endl;
   cout<<"**************************************************************************************"<<endl;
   cout<<endl;
-
   //Draw hot pixel maps for each layer
   for(int ilay=0; ilay<nLayers; ilay++){
     TCanvas cnv(Form("cnv_%d",ilay), Form("cnv_%d",ilay));
@@ -692,10 +682,11 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     for(int istv=0; istv<nStavesInLay[nLayers>1 ? ilay:stoi(laynums[0])]; istv++){
       TH2I *hHotMap = new TH2I(Form("hHotMap_L%s_Stv%d",nLayers>1 ? to_string(ilay).c_str():laynums[0].c_str(), istv), "; ; ", 9216,0.5,9216.5,512,0.5,512.5);
       int cnt = 0;
-
+      string badrunalert = "";
       for(int ihist=0; ihist<(int)hmapsDEADPIX.size(); ihist++){
         string hname = hmapsDEADPIX[ihist]->GetName();
         string lnum =  hname.substr(hname.find("L")+1,1);
+        bool istherebadrun = false;
         if(nLayers>1){
           if(stoi(lnum)==ilay && stoi(stavenums[ihist]) != istv) continue;
           if(stoi(lnum)!=ilay) continue;
@@ -703,15 +694,20 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
         else if(stoi(stavenums[ihist]) != istv) {
           continue;
         }
-        if(!cnt) {hHotMap = (TH2I*)hmapsDEADPIX[ihist]->Projection(1,0);}
-        else {
+        if(hmapsDEADPIX[ihist]->GetEntries()>1000000){
+          cout<<"run: "<<hname.substr(hname.find("run")+3, 6)<<" skipped for "<<"L"<<lnum<<"_"<<istv<<" because it has more than 1M entries"<<endl;
+          istherebadrun = true;
+          badrunalert = "There is a bad run! Check logs";
+        }
+        if(!cnt && !istherebadrun) {hHotMap = (TH2I*)hmapsDEADPIX[ihist]->Projection(1,0);}
+        else if(cnt>0 && !istherebadrun){
           TH2I *htemp = (TH2I*)hmapsDEADPIX[ihist]->Projection(1,0);
           hHotMap->Add(htemp);
           delete htemp;
         }
 
         if(ihist>0 && stavenums[ihist+1]!=stavenums[ihist]) break;
-        cnt++;
+        if(!istherebadrun) cnt++;
       }
       cnv.cd(istv+1);
       cnv.GetPad(istv+1)->SetTickx();
@@ -744,6 +740,11 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       }
 
       hHotMap->DrawCopy("P X+");
+
+      TLatex lat0;
+      lat0.SetNDC();
+      lat0.SetTextSize(0.2);
+      lat0.DrawLatex(0.5,0.5,badrunalert.c_str());
 
       TLatex lat;
       lat.SetTextAngle(90);

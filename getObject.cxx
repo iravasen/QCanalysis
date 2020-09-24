@@ -255,13 +255,16 @@ bool RunShifter(auto *ccdb, string myname, int opt){
       }//end if layernum>=0
 
       else if(layernum==-1){
+
+        vector<string> goodrunlist = GetGoodRunList(ccdbApi, runts1[1], runts2[1], "Fhr");
+
         for(int il=0; il<nListElements; il++){//loop on lists
           switch(il){
             case 0: {
               for(int ilay=0; ilay<=2; ilay++){
                 string objname = Form("Occupancy/Layer%d/Layer%dChipStave",ilay,ilay);
                 cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
-                Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], objname, runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]),ilay);
+                Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], objname, runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]),ilay);
               }
               break;
             }
@@ -271,14 +274,14 @@ bool RunShifter(auto *ccdb, string myname, int opt){
                 for(int istave=0; istave<nStavesInLay[ilay]; istave++){
                   if(ilay==2){
                     if(istave>9){
-                      Download(1, ccdb, ccdbApi, myname, taskname[ilay+1], taskname[ilay+1], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]),ilay);
+                      Download(1, ccdb, ccdbApi, myname, taskname[ilay+1], taskname[ilay+1], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]),ilay);
                     }
                     else{
-                      Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]),ilay);
+                      Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]),ilay);
                     }
                   }
                   else{
-                    Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]),ilay);
+                    Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]),ilay);
                   }
                 }
               }
@@ -288,14 +291,14 @@ bool RunShifter(auto *ccdb, string myname, int opt){
             case 2: {//error files
               string objname = "General/ErrorVsFeeid";
               cout<<"\nAll data in "<<taskname[0]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
-              Download(1, ccdb, ccdbApi, myname, taskname[0], taskname[0], objname, runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), 0);
+              Download(1, ccdb, ccdbApi, myname, taskname[0], taskname[0], objname, runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), 0);
               break;
             }
 
             case 3: {//trigger files
               string objname = "General/TriggerVsFeeid";
               cout<<"\nAll data in "<<taskname[0]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
-              Download(1, ccdb, ccdbApi, myname, taskname[0], taskname[0], objname, runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), 0);
+              Download(1, ccdb, ccdbApi, myname, taskname[0], taskname[0], objname, runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), 0);
               break;
             }
           }
@@ -781,7 +784,19 @@ vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run
 
   string objnames[4] = {"Threshold/Layer0/Threshold_Vs_Chip_and_Stave", "Threshold/Layer1/Threshold_Vs_Chip_and_Stave", "Threshold/Layer2/Threshold_Vs_Chip_and_Stave", "Threshold/Layer2/Threshold_Vs_Chip_and_Stave"};
   string tasknames[4] = {"qc/ITS/ITSTHRTask0", "qc/ITS/ITSTHRTask1", "qc/ITS/ITSTHRTask2T", "qc/ITS/ITSTHRTask2B"};
-  //TODO: implement also for FHR??
+
+  //in case of FHR
+  if(runtype=="Fhr"){
+    objnames[0] = "Occupancy/Layer0/Layer0ChipStave";
+    objnames[1] = "Occupancy/Layer1/Layer1ChipStave";
+    objnames[2] = "Occupancy/Layer2/Layer2ChipStave";
+    objnames[3] = "Occupancy/Layer3/Layer3ChipStave";
+
+    tasknames[0] = "qc/ITS/ITSFHR";
+    tasknames[1] = "qc/ITS/ITSFHR";
+    tasknames[2] = "qc/ITS/ITSFHR";
+    tasknames[3] = "qc/ITS/ITSFHR";
+  }
 
   vector<vector<string>> runlists;
   for(int i=0; i<4; i++){//get run list between run1 and run2 for all the paths defined above

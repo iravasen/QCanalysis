@@ -19,7 +19,7 @@ ROOTLIBDIR   := $(shell root-config --libdir)
 ifeq ($(ARCH),linux)
 # Linux with egcs, gcc 2.9x, gcc 3.x (>= RedHat 5.2)
 CXX           = g++
-CXXFLAGS      = -g -O -Wall -fPIC # -Weffc++
+CXXFLAGS      = -std=c++11 -g -O -Wall -fPIC # -Weffc++
 LD            = g++
 LDFLAGS       = -g -O
 SOFLAGS       = -shared
@@ -28,7 +28,7 @@ endif
 ifeq (,$(findstring $(ARCH),x8664))
 # Linux with egcs, gcc 2.9x, gcc 3.x (>= RedHat 5.2)
 CXX           = g++
-CXXFLAGS      = -g -O -Wall -fPIC # -Weffc++
+CXXFLAGS      = -std=c++11 -g -O -Wall -fPIC # -Weffc++
 LD            = g++
 LDFLAGS       = -g -O
 SOFLAGS       = -shared
