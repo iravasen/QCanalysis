@@ -202,7 +202,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     for(int ir=0; ir<npoints; ir++){
         hfake->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[start+npoints-1-ir])));
     }
-    hfake->GetYaxis()->SetRangeUser(8.5, 12.5);
+    hfake->GetYaxis()->SetRangeUser(8.5, 14.5);
     hfake->GetXaxis()->SetTitleOffset(2.8);
     hfake->SetTitle(Form("Layer-%s, %s",laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     hfake->Draw();
