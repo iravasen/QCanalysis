@@ -503,7 +503,11 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   for(int ihist=0; ihist<(int)hmapsDEADPIX.size(); ihist++){
     string hname = hmapsDEADPIX[ihist]->GetName();
     string runn =  hname.substr(hname.find("run")+3, 6);
-    int snum = stoi(hname.substr(hname.find("Stv")+3,1));
+    string stvnum = hname.substr(hname.find("Stv")+3,2);
+    if(stvnum.find("_")!=string::npos){
+      stvnum = hname.substr(hname.find("Stv")+3,1);
+    }
+    int snum = stoi(stvnum);
     int lnum = stoi(hname.substr(hname.find("L")+1,1));
     int staveindex = snum;
     if(nLayers>1){
@@ -535,13 +539,22 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       string hname = hmapsDEADPIX[ihist]->GetName();
       string runn =  hname.substr(hname.find("run")+3, 6);
       string lnum =  hname.substr(hname.find("L")+1,1);
-      int snum =  stoi(hname.substr(hname.find("Stv")+3,1));
+      string stvnum = hname.substr(hname.find("Stv")+3,2);
+      if(stvnum.find("_")!=string::npos){
+        stvnum = hname.substr(hname.find("Stv")+3,1);
+      }
+      int snum = stoi(stvnum);
       auto itf = find(runlabel.begin(), runlabel.end(), runn);
       int irun = distance(runlabel.begin(), itf);
-      ilayer = stoi(lnum);
+      int ilayer = nLayers>1 ? stoi(lnum) : 0;
       int istave = snum;
       if(nLayers>1)
         istave = (lnum=="0") ? snum : (lnum=="1")? snum+nStavesInLay[0]:snum+nStavesInLay[0]+nStavesInLay[1];
+
+      if(hmapsDEADPIX[ihist]->GetEntries()>1e4){
+        cout<<"L"<<lnum<<"_"<<snum<<" - run"<<runn<<" skipped because has more than 10000 entries (probably a bad run)."<<endl;
+        continue;
+      }
 
       if(runn.find(std::to_string(refrun[iref]))!=string::npos){
         continue;
@@ -626,11 +639,10 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
 
       //fake histo (just for the axes)
       double x2,y2;
-
+      int npoints = ge_ncom2[iref][ilay]->GetN();
       ge_ncom2[iref][ilay]->GetPoint(ge_ncom2[iref][ilay]->GetN()-1, x2,y2);
       TH1F *hfake = new TH1F("hfakedeadpix","hfakedeadpix", (int)x2+6, -3, x2+3);
       //draw labels on x axis
-      int npoints = ge_ncom2[iref][ilay]->GetN();
       int counter = runlabel.size()-1;
       for(Int_t k=4;k<=hfake->GetNbinsX()-3;k+=3){
         if(stol(runlabel[counter])==refrun[iref]){

@@ -18,6 +18,8 @@
 #include <TKey.h>
 #include <THnSparse.h>
 
+#include "inc/constants.h"
+
 using namespace std;
 
 //Functions
@@ -109,10 +111,8 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
 
   std::vector<THnSparse*> hmaps;
   std::vector<string> timestamps, runnumbers, stavenums, laynums;
-  vector<int> posrefrun;
   int nLayers=1, nRuns=1;
-  vector<int> nStavesInLay;
-  int cstv=0;
+  vector<string> runlabel;
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
@@ -146,54 +146,91 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
     cout<<"... Reading "<<obj->GetName()<<endl;
     hmaps.push_back(hsparse);
 
-    if(stol(runnum)==refrun) //position of refence run
-      posrefrun.push_back((int)hmaps.size()-1);
-
-    if((int)stavenums.size()>1 && stvnum!=stavenums[stavenums.size()-1])
-      cstv++;
-
     if((int)laynums.size()>1 && laynum!=laynums[laynums.size()-1]){
       nLayers++;
-      nStavesInLay.push_back(cstv);
-      cstv=0;
     }
 
-    if((int)stavenums.size()>1 && stvnum==stavenums[stavenums.size()-1])
+    if((int)stavenums.size()>1 && stvnum==stavenums[stavenums.size()-1]){
       nRuns++;
-    else nRuns=1;
+    }
+    else {
+      nRuns=1;
+    }
 
     timestamps.push_back(timestamp);
     runnumbers.push_back(runnum);
     laynums.push_back(laynum);
     stavenums.push_back(stvnum);
+
+
   }
-  nStavesInLay.push_back(cstv+1);//in case of 1 layer or for last layer
+
+  //set runlabels
+  for(int i=0; i<nRuns; i++){
+    runlabel.push_back(runnumbers[i]);
+  }
 
   //Compare all the runs (non-empty ones) with the reference run chosen by the user
-  vector<string> runlabel;
-  int istave = posrefrun.size()-1;
-  int ilayer = nLayers-1;
-  long int first[nLayers][nRuns], second[nLayers][nRuns], both[nLayers][nRuns];
-  int irun=0;
+  long int first[nLayers][100], second[nLayers][100], both[nLayers][100];
+  bool filled[nLayers][100];
   vector<array<long int,5>> noisypix;
   for(int ilay=0; ilay<nLayers; ilay++)
-    for(int i=0; i<nRuns; i++){
+    for(int i=0; i<100; i++){
       first[ilay][i]=0; second[ilay][i]=0; both[ilay][i]=0;
+      filled[ilay][i] = false;
     }
+  int posrefrun[nLayers>1 ? 48:nStavesInLay[stoi(laynums[0])]];
+  int stop = (nLayers>1) ? 48:nStavesInLay[stoi(laynums[0])];
+  for(int is=0; is < stop; is++)
+    posrefrun[is] = -1;
+  //find ref run positions
+  for(int ihist=0; ihist<(int)hmaps.size(); ihist++){
+    string hname = hmaps[ihist]->GetName();
+    string runn =  hname.substr(hname.find("run")+3, 6);
+    string stvnum = hname.substr(hname.find("Stv")+3,2);
+    if(stvnum.find("_")!=string::npos){
+      stvnum = hname.substr(hname.find("Stv")+3,1);
+    }
+    int snum = stoi(stvnum);
+    int lnum = stoi(hname.substr(hname.find("L")+1,1));
+    int staveindex = snum;
+    if(nLayers>1){
+      staveindex = lnum==0 ? snum: lnum==1? snum+nStavesInLay[0]:snum+nStavesInLay[0]+nStavesInLay[1];
+    }
+    if(stol(runn)==refrun){ //position of refence run
+      posrefrun[staveindex] = ihist;
+    }
+  }
+
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){ //start from the bottom in order to start with the oldest run
-    if(runnumbers[ihist].find(std::to_string(refrun))!=string::npos){
-      if(ihist>0){// in case ref run is the first into the list of runs
-        if(stavenums[ihist-1]!=stavenums[ihist]){
-          istave--;
-          irun=0;
-        }
-        if(laynums[ihist-1]!=laynums[ihist]){
-          ilayer--;
-        }
-      }
+
+    string hname = hmaps[ihist]->GetName();
+    string runn =  hname.substr(hname.find("run")+3, 6);
+    string lnum =  hname.substr(hname.find("L")+1,1);
+    string stvnum = hname.substr(hname.find("Stv")+3,2);
+    if(stvnum.find("_")!=string::npos){
+      stvnum = hname.substr(hname.find("Stv")+3,1);
+    }
+    int snum = stoi(stvnum);
+    auto itf = find(runlabel.begin(), runlabel.end(), runn);
+    int irun = distance(runlabel.begin(), itf);
+    cout<<irun<<endl;
+    int ilayer = nLayers>1 ? stoi(lnum) : 0;
+    int istave = snum;
+    if(nLayers>1)
+      istave = (lnum=="0") ? snum : (lnum=="1")? snum+nStavesInLay[0]:snum+nStavesInLay[0]+nStavesInLay[1];
+
+    if(hmaps[ihist]->GetEntries()>1e4){
+      cout<<"L"<<lnum<<"_"<<snum<<" - run"<<runn<<" skipped because has more than 10000 entries (probably a bad run)."<<endl;
       continue;
     }
-    //if(!hmaps[ihist]->GetEntries()) continue; // do not compare ref run with empty run (= empty maps)
+
+    if(runnumbers[ihist].find(std::to_string(refrun))!=string::npos){
+      continue;
+    }
+    if(posrefrun[istave]==-1){
+      continue; //skip comparison if no run is found
+    }
 
     noisypix.push_back(CompareTwoRuns(hmaps[posrefrun[istave]], hmaps[ihist]));
     noisypix[noisypix.size()-1][3] = stol(stavenums[ihist]);
@@ -201,21 +238,9 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
     first[ilayer][irun]+=noisypix[noisypix.size()-1][0];
     second[ilayer][irun]+=noisypix[noisypix.size()-1][1];
     both[ilayer][irun]+=noisypix[noisypix.size()-1][2];
-    irun++;
+    filled[ilayer][irun] = true;
 
-    //cout<<noisypix[noisypix.size()-1][0]<<"  "<<noisypix[noisypix.size()-1][1]<<"  "<<noisypix[noisypix.size()-1][2]<<"  "<<noisypix[noisypix.size()-1][3]<<"  "<<noisypix[noisypix.size()-1][4]<<endl;
-    if(ilayer==nLayers-1)
-      runlabel.push_back(runnumbers[ihist]);
-
-    if(ihist>0){
-      if(stavenums[ihist-1]!=stavenums[ihist]){
-        istave--;
-        irun=0;
-      }
-      if(laynums[ihist-1]!=laynums[ihist]){
-        ilayer--;
-      }
-    }
+    //cout<<"L"<<ilayer<<"_"<<istave<<" "<<noisypix[noisypix.size()-1][0]<<"  "<<noisypix[noisypix.size()-1][1]<<"  "<<noisypix[noisypix.size()-1][2]<<"  "<<noisypix[noisypix.size()-1][3]<<"  "<<noisypix[noisypix.size()-1][4]<<endl;
 
   }//end loop on histograms
 
@@ -240,23 +265,24 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
     max[ilay] = -1.;
     min[ilay] = 1e35;
 
-    for(int ir=0; ir<nRuns-1; ir++){//first the older data and last the most recent
-      //first couple of bar on the left
-      //int ipoint = (int)noisypix.size()-icomp-1;
-      if(!ir) xshift=1.;
+    int ipoint = 0;
+    for(int ir=0; ir<100; ir++){//first the older data and last the most recent
+      if(!filled[ilay][ir]) continue; //skip if not filled
+      if(!ipoint) xshift=1.;
       else xshift = 3.;
-      ge_nref[ilay]->SetPoint(ir, ir*xshift, (double)both[ilay][ir]/2.+(double)first[ilay][ir]/2.);
-      ge_nref[ilay]->SetPointError(ir, 0.5, (double)first[ilay][ir]/2.);
-      ge_ncom1[ilay]->SetPoint(ir, ir*xshift, 0.);
-      ge_ncom1[ilay]->SetPointError(ir, 0.5, (double)both[ilay][ir]/2.);
+      ge_nref[ilay]->SetPoint(ipoint, ipoint*xshift, (double)both[ilay][ir]/2.+(double)first[ilay][ir]/2.);
+      ge_nref[ilay]->SetPointError(ipoint, 0.5, (double)first[ilay][ir]/2.);
+      ge_ncom1[ilay]->SetPoint(ipoint, ipoint*xshift, 0.);
+      ge_ncom1[ilay]->SetPointError(ipoint, 0.5, (double)both[ilay][ir]/2.);
       if((double)both[ilay][ir]/2.+(double)first[ilay][ir] > max[ilay]) max[ilay] = (double)both[ilay][ir]/2.+(double)first[ilay][ir];
 
       //second couple of bar on the right
-      ge_n2[ilay]->SetPoint(ir, ir*xshift+1, -(double)both[ilay][ir]/2.-(double)second[ilay][ir]/2.);
-      ge_n2[ilay]->SetPointError(ir, 0.5, (double)second[ilay][ir]/2.);
-      ge_ncom2[ilay]->SetPoint(ir, ir*xshift+1, 0.);
-      ge_ncom2[ilay]->SetPointError(ir, 0.5, (double)both[ilay][ir]/2.);
+      ge_n2[ilay]->SetPoint(ipoint, ipoint*xshift+1, -(double)both[ilay][ir]/2.-(double)second[ilay][ir]/2.);
+      ge_n2[ilay]->SetPointError(ipoint, 0.5, (double)second[ilay][ir]/2.);
+      ge_ncom2[ilay]->SetPoint(ipoint, ipoint*xshift+1, 0.);
+      ge_ncom2[ilay]->SetPointError(ipoint, 0.5, (double)both[ilay][ir]/2.);
       if(-(double)both[ilay][ir]/2.-(double)second[ilay][ir] < min[ilay]) min[ilay] = -(double)both[ilay][ir]/2.-(double)second[ilay][ir];
+      ipoint++;
     }//end first loop on runs
 
     //Style
@@ -268,7 +294,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
 
   //FILL PLOTS FOR EACH STAVE
   //fill the plots for each stave
-  int cnt = 0;
+  /*int cnt = 0;
   int nstaves = posrefrun.size();
   double maxs[nLayers][100];
   double mins[nLayers][100];
@@ -302,7 +328,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
     SetStyle(ge_ncom1_stave[ilay][isidx], kBlack);
     SetStyle(ge_ncom2_stave[ilay][isidx], kBlack);
     SetStyle(ge_n2_stave[ilay][isidx], kRed+2);
-  }
+  }*/
 
   //Legend
   TLegend *leg = new TLegend(0.876,0.176, 0.994, 0.902);
@@ -321,14 +347,18 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
 
     //fake histo (just for the axes)
     double x2,y2;
-
     ge_ncom2[ilay]->GetPoint(ge_ncom2[ilay]->GetN()-1, x2,y2);
     TH1F *hfake = new TH1F("hfake","hfake", (int)x2+6, -3, x2+3);
     //draw labels on x axis
-    int counter = 0;
+    int counter = runlabel.size()-1;
     for(Int_t k=4;k<=hfake->GetNbinsX()-3;k+=3){
+      if(stol(runlabel[counter])==refrun){
+        k-=3;
+        counter--;
+        continue;
+      }
       hfake->GetXaxis()->SetBinLabel(k, Form("run%s",runlabel[counter].c_str()));
-      counter++;
+      counter--;
     }
 
     hfake->Draw();
@@ -360,7 +390,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
 
   //Draw plot for each stave
   //Draw
-  cnt=0;
+  /*cnt=0;
   cout<<"noisypix size: "<<noisypix.size()<<endl;
   while(cnt<(int)noisypix.size()){
   //for(int ilay=0; ilay<nLayers; ilay++){
@@ -410,7 +440,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
 
       cnt+=(nRuns-1);
     //}
-  }
+  }*/
 
 }
 
