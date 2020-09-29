@@ -265,7 +265,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   TH2F *hHotMap[nLayers][20];
   for(int ilay=0; ilay<nLayers; ilay++)
     for(int istave=0; istave<20; istave++)
-      hHotMap[ilay][istave] = new TH2F(Form("hHotMap_L%s_Stv%d",laynums[ilay*nRuns].c_str(), istave), "; ; ", 2304,-0.5,2303.5, 128,-0.5,127.5);
+      hHotMap[ilay][istave] = new TH2F(Form("hHotMap_L%s_Stv%d",laynums[ilay*nRuns].c_str(), istave), "; ; ", 2304,-0.5,9215.5, 128,-0.5,511.5);//4x4 pixel cells
   irun = nRuns-1;
   for(int ihist=(int)hmapsHIT.size()-1; ihist>=0; ihist--){ //start from the bottom in order to start with the oldest run
     int nchipsactive = GetNchipsActive(hmapsHIT[ihist],nChips);
