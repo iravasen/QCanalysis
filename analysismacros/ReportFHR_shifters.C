@@ -813,7 +813,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   hSummaryTrg->GetZaxis()->SetLabelSize(0.045);
   hSummaryTrg->GetXaxis()->SetTitleSize(0.05);
   hSummaryTrg->GetYaxis()->SetTitleSize(0.05);
-  hSummaryTrg->GetYaxis()->SetTitleOffset(0.7);
+  hSummaryTrg->GetYaxis()->SetTitleOffset(0.9);
   hSummaryTrg->GetZaxis()->SetTitleSize(0.05);
   hSummaryTrg->GetZaxis()->SetTitleOffset(0.9);
 
