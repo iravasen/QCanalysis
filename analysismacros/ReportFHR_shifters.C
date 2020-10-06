@@ -692,7 +692,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
 
   int ir = 0;
   double maxErr = -1.;
-  for(int iplot=0; iplot<(int)hmapsERR.size(); iplot++){
+  for(int iplot=(int)hmapsERR.size()-1; iplot>=0; iplot--){
     TH1D *hproj = (TH1D*)hmapsERR[iplot]->ProjectionY(Form("hmapsERR_%d",iplot));
     for(int ibin=1; ibin<=hproj->GetNbinsX(); ibin++){
       if(ir==0){
@@ -780,7 +780,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
 
   ir = 0;
   double maxTrg = -1.;
-  for(int iplot=0; iplot<(int)hmapsTRG.size(); iplot++){
+  for(int iplot=(int)hmapsTRG.size()-1; iplot>=0; iplot--){
     TH1D *hproj = (TH1D*)hmapsTRG[iplot]->ProjectionY(Form("herrTrg_%d",iplot));
     for(int ibin=1; ibin<=hSummaryTrg->GetNbinsY(); ibin++){
       if(ir==0){

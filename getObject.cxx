@@ -656,19 +656,15 @@ bool RunExpert(auto *ccdb, string myname, int opt){
 
             case 2: {//error files
               string objname = "General/ErrorVsFeeid";
-              for(int ilay=0; ilay<=2; ilay++){
-                cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-                Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay);
-              }
+              cout<<"\nAll data in "<<taskname[0]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+              Download(1, ccdb, ccdbApi, myname, taskname[0], taskname[0], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
               break;
             }
 
-            case 3: {//error files
+            case 3: {//trigger files
               string objname = "General/TriggerVsFeeid";
-              for(int ilay=0; ilay<=2; ilay++){
-                cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-                Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay);
-              }
+              cout<<"\nAll data in "<<taskname[0]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+              Download(1, ccdb, ccdbApi, myname, taskname[0], taskname[0], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
               break;
             }
 
