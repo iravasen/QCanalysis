@@ -8,6 +8,8 @@ do
 	echo -n "$password" | kinit itsshift
 	rsync -avruh Plots/ShiftReport24h_THR_* itsshift@lxplus.cern.ch:/eos/user/i/itsshift/Reports24h/THR
 	rsync -avruh Plots/ShiftReport24h_FHR_* itsshift@lxplus.cern.ch:/eos/user/i/itsshift/Reports24h/FHR
+	rsync -avruh Data/Output_all-IB-layers_FHRMAPS* itsshift@lxplus.cern.ch:/eos/user/i/itsshift/Reports24h/Output/FHR
+        rsync -avruh Data/Output_all-IB-layers_THRMAPS* itsshift@lxplus.cern.ch:/eos/user/i/itsshift/Reports24h/Output/THR
 	echo "Sleeping 1h"
 	sleep 1h
 done
