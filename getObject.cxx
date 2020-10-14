@@ -140,23 +140,23 @@ bool RunShifter(auto *ccdb, string myname, int opt){
   if(opt==2) adderrordata = false;
 
   //taskname
-  string taskname[4] = {"qc/ITS/ITSFHR", "qc/ITS/ITSFHR", "qc/ITS/ITSFHR", "qc/ITS/ITSFHR"};
+  string taskname[4] = {"qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR"};
 
   //set the task name
   switch(opt){
     case 1: {// fake-hit
-      taskname[0] = "qc/ITS/ITSFHR";//L0T, L0B
-      taskname[1] = "qc/ITS/ITSFHR";//L1T, L1B
-      taskname[2] = "qc/ITS/ITSFHR"; //L2T
-      taskname[3] = "qc/ITS/ITSFHR"; //L2B
+      taskname[0] = "qc/ITS/MO/ITSFHR";//L0T, L0B
+      taskname[1] = "qc/ITS/MO/ITSFHR";//L1T, L1B
+      taskname[2] = "qc/ITS/MO/ITSFHR"; //L2T
+      taskname[3] = "qc/ITS/MO/ITSFHR"; //L2B
       break;
     }
 
     case 2: { //thr scan
-      taskname[0] = "qc/ITS/ITSTHRTask0";
-      taskname[1] = "qc/ITS/ITSTHRTask1";
-      taskname[2] = "qc/ITS/ITSTHRTask2T";
-      taskname[3] = "qc/ITS/ITSTHRTask2B";
+      taskname[0] = "qc/ITS/MO/ITSTHRTask0";
+      taskname[1] = "qc/ITS/MO/ITSTHRTask1";
+      taskname[2] = "qc/ITS/MO/ITSTHRTask2T";
+      taskname[3] = "qc/ITS/MO/ITSTHRTask2B";
       break;
     }
 
