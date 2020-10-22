@@ -423,21 +423,21 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   cin>>layernum;
 
   //taskname
-  string taskname[4]    = {"qc/ITS/ITSFHR", "qc/ITS/ITSFHR", "qc/ITS/ITSFHR", "qc/ITS/ITSFHR"};
-  string tasknamealt[4] = {"qc/ITS/ITSFHR", "qc/ITS/ITSFHR", "qc/ITS/ITSFHR", "qc/ITS/ITSFHR"};//alternative tasks (backward compatibility)
+  string taskname[4]    = {"qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR"};
+  string tasknamealt[4] = {"qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR"};//alternative tasks (backward compatibility)
 
   //set the task name
   switch(opt){
     case 1: {// fake-hit
-      taskname[0] = "qc/ITS/ITSFHR";//L0T, L0B
-      taskname[1] = "qc/ITS/ITSFHR";//L1T, L1B
-      taskname[2] = "qc/ITS/ITSFHR"; //L2T
-      taskname[3] = "qc/ITS/ITSFHR"; //L2B
+      taskname[0] = "qc/ITS/MO/ITSFHR";//L0T, L0B
+      taskname[1] = "qc/ITS/MO/ITSFHR";//L1T, L1B
+      taskname[2] = "qc/ITS/MO/ITSFHR"; //L2T
+      taskname[3] = "qc/ITS/MO/ITSFHR"; //L2B
 
-      tasknamealt[0] = "qc/ITS/ITSFHR";
-      tasknamealt[1] = "qc/ITS/ITSFHR";
-      tasknamealt[2] = "qc/ITS/ITSFHR";
-      tasknamealt[3] = "qc/ITS/ITSFHR";
+      tasknamealt[0] = "qc/ITS/MO/ITSFHR";
+      tasknamealt[1] = "qc/ITS/MO/ITSFHR";
+      tasknamealt[2] = "qc/ITS/MO/ITSFHR";
+      tasknamealt[3] = "qc/ITS/MO/ITSFHR";
 
       //else if(layernum==1) {taskname[1] = "qc/ITS/ITSRawTaskIBB3"; tasknamealt[1] = "qc/ITS/ITSRawTaskIBB2";}
       //else if(layernum==2) {taskname[2] = "qc/ITS/ITSRawTask"; tasknamealt[2] = "qc/ITS/ITSRawTask"; taskname[3] = "qc/ITS/ITSRawTaskIBB1"; tasknamealt[3] = "qc/ITS/ITSRawTaskIBB1";}
@@ -447,15 +447,15 @@ bool RunExpert(auto *ccdb, string myname, int opt){
     }
 
     case 2: { //thr scan
-      taskname[0] = "qc/ITS/ITSTHRTask0";
-      taskname[1] = "qc/ITS/ITSTHRTask1";
-      taskname[2] = "qc/ITS/ITSTHRTask2T";
-      taskname[3] = "qc/ITS/ITSTHRTask2B";
+      taskname[0] = "qc/ITS/MO/ITSTHRTask0";
+      taskname[1] = "qc/ITS/MO/ITSTHRTask1";
+      taskname[2] = "qc/ITS/MO/ITSTHRTask2T";
+      taskname[3] = "qc/ITS/MO/ITSTHRTask2B";
 
-      tasknamealt[0] = "qc/ITS/ITSTHRTask0";
-      tasknamealt[1] = "qc/ITS/ITSTHRTask1";
-      tasknamealt[2] = "qc/ITS/ITSTHRTask2T";
-      tasknamealt[3] = "qc/ITS/ITSTHRTask2B";
+      tasknamealt[0] = "qc/ITS/MO/ITSTHRTask0";
+      tasknamealt[1] = "qc/ITS/MO/ITSTHRTask1";
+      tasknamealt[2] = "qc/ITS/MO/ITSTHRTask2T";
+      tasknamealt[3] = "qc/ITS/MO/ITSTHRTask2B";
 
       break;
     }
