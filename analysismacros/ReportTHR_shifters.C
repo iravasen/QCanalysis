@@ -44,7 +44,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
 
   string localdatetime = GetCurrentDateTime(1);
 
-  std::freopen(Form("../logs/logTHR_%s.log",localdatetime.c_str()), "w", stdout);
+  //std::freopen(Form("../logs/logTHR_%s.log",localdatetime.c_str()), "w", stdout);
 
   std::vector<TH2*> hmapsTHR;
   std::vector<TH2*> hmapsDEAD;
@@ -706,8 +706,8 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
         else if(stoi(stavenums[ihist]) != istv) {
           continue;
         }
-        if(hmapsDEADPIX[ihist]->GetEntries()>1000000){
-          cout<<"run: "<<hname.substr(hname.find("run")+3, 6)<<" skipped for "<<"L"<<lnum<<"_"<<istv<<" because it has more than 1M entries"<<endl;
+        if(hmapsDEADPIX[ihist]->GetEntries()>5000){
+          cout<<"run: "<<hname.substr(hname.find("run")+3, 6)<<" skipped for "<<"L"<<lnum<<"_"<<istv<<" because it has more than 5k entries"<<endl;
           istherebadrun = true;
           badrunalert = "There is a bad run! Check logs";
         }
