@@ -262,7 +262,7 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
     }
 
     if(nchips && totalhits!=0) hmapclone->SetBinContent(binwithmax,0.);
-    if(totalhits!=0) hhotmap->SetBinContent((x-1)/4, (y-1)/4, 1);// to avoid a marker in 0,0 for empty histos
+    if(totalhits!=0 && iter<nMasked/50) hhotmap->SetBinContent((x-1)/4, (y-1)/4, 1);// to avoid a marker in 0,0 for empty histos //iter<nMasked/50 to avoid crowded plot
     delete hproj;
   }
 
