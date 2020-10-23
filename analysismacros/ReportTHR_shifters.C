@@ -44,7 +44,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
 
   string localdatetime = GetCurrentDateTime(1);
 
-  //std::freopen(Form("../logs/logTHR_%s.log",localdatetime.c_str()), "w", stdout);
+  std::freopen(Form("../logs/logTHR_%s.log",localdatetime.c_str()), "w", stdout);
 
   std::vector<TH2*> hmapsTHR;
   std::vector<TH2*> hmapsDEAD;

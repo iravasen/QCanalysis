@@ -779,7 +779,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
 vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run2, string runtype){//run type can be "Thr" or "Fhr"
 
   string objnames[4] = {"Threshold/Layer0/Threshold_Vs_Chip_and_Stave", "Threshold/Layer1/Threshold_Vs_Chip_and_Stave", "Threshold/Layer2/Threshold_Vs_Chip_and_Stave", "Threshold/Layer2/Threshold_Vs_Chip_and_Stave"};
-  string tasknames[4] = {"qc/ITS/ITSTHRTask0", "qc/ITS/ITSTHRTask1", "qc/ITS/ITSTHRTask2T", "qc/ITS/ITSTHRTask2B"};
+  string tasknames[4] = {"qc/ITS/MO/ITSTHRTask0", "qc/ITS/MO/ITSTHRTask1", "qc/ITS/MO/ITSTHRTask2T", "qc/ITS/MO/ITSTHRTask2B"};
 
   //in case of FHR
   if(runtype=="Fhr"){
@@ -788,10 +788,10 @@ vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run
     objnames[2] = "Occupancy/Layer2/Layer2ChipStave";
     objnames[3] = "Occupancy/Layer3/Layer3ChipStave";
 
-    tasknames[0] = "qc/ITS/ITSFHR";
-    tasknames[1] = "qc/ITS/ITSFHR";
-    tasknames[2] = "qc/ITS/ITSFHR";
-    tasknames[3] = "qc/ITS/ITSFHR";
+    tasknames[0] = "qc/ITS/MO/ITSFHR";
+    tasknames[1] = "qc/ITS/MO/ITSFHR";
+    tasknames[2] = "qc/ITS/MO/ITSFHR";
+    tasknames[3] = "qc/ITS/MO/ITSFHR";
   }
 
   vector<vector<string>> runlists;
@@ -897,7 +897,7 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
   string objectlistL2B = " ";
   if(/*objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos
      ||*/ objname.find("Layer2/Threshold_Vs_Chip_and_Stave")!=string::npos || objname.find("Layer2/DeadPixel_Vs_Chip_and_Stave")!=string::npos){
-    objectlistL2B = ccdbApi.list(Form("qc/ITS/ITS%sTask2B/%s",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw",objname.c_str()), false, "text/plain");
+    objectlistL2B = ccdbApi.list(Form("qc/ITS/MO/ITS%sTask2B/%s",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw",objname.c_str()), false, "text/plain");
   }
   cout<<endl;
   cout<<endl;
@@ -1063,6 +1063,9 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
       stvnum = objname.substr(objname.find("Stave")+5,1);
   }
 
+  cout<<"timestamps  size: "<<timestamps.size()<<endl;
+  cout<<"timestamps2 size: "<<timestamps2.size()<<endl;
+
   for(int i=0; i<(int)timestamps.size();i++){
 
     //MonitorObject *monitor = ccdb->retrieve(taskname, objname, timestamps[i]);
@@ -1081,7 +1084,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
     TObject *obj2 = nullptr;
     if(/*objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos
        || */objname.find("Layer2/Threshold_Vs_Chip_and_Stave")!=string::npos || objname.find("Layer2/DeadPixel_Vs_Chip_and_Stave")!=string::npos){
-      auto monitor2 = ccdb->retrieveMO(Form("qc/ITS/ITS%sTask2B",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw"), objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
+      auto monitor2 = ccdb->retrieveMO(Form("qc/ITS/MO/ITS%sTask2B",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw"), objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
       obj2 = monitor2->getObject();
       monitor2->setIsOwner(false);
     }
