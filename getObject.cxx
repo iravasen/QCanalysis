@@ -1063,8 +1063,8 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
       stvnum = objname.substr(objname.find("Stave")+5,1);
   }
 
-  cout<<"timestamps  size: "<<timestamps.size()<<endl;
-  cout<<"timestamps2 size: "<<timestamps2.size()<<endl;
+ // cout<<"timestamps  size: "<<timestamps.size()<<endl;
+ // cout<<"timestamps2 size: "<<timestamps2.size()<<endl;
 
   for(int i=0; i<(int)timestamps.size();i++){
 
