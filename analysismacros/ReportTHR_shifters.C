@@ -550,9 +550,13 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       int istave = snum;
       if(nLayers>1)
         istave = (lnum=="0") ? snum : (lnum=="1")? snum+nStavesInLay[0]:snum+nStavesInLay[0]+nStavesInLay[1];
-
+      cout<<hmapsDEADPIX[ihist]->GetName()<<endl;
       if(hmapsDEADPIX[ihist]->GetEntries()>1e4){
         cout<<"L"<<lnum<<"_"<<snum<<" - run"<<runn<<" skipped because has more than 10000 entries (probably a bad run)."<<endl;
+        continue;
+      }
+      if(hmapsDEADPIX[posrefrun2[istave][iref]]->GetEntries()>1e4){
+        cout<<"L"<<lnum<<"_"<<snum<<" - run"<<runn<<" ref run skipped because has more than 10000 entries (probably a bad run)."<<endl;
         continue;
       }
 
