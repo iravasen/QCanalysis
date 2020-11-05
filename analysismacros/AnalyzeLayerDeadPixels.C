@@ -142,6 +142,19 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool isIB){
         ilayer--;
       }
   }
+
+  if(nRuns==1){//just for debug
+    for(int ihist=0; ihist<(int)hmaps.size(); ihist++){
+      for(int ibiny=1; ibiny<=hmaps[ihist]->GetNbinsY(); ibiny++){
+        cout<<"L"<<laynums[ihist]<<"_"<<ibiny-1<<" ";
+        for(int ibinx=1; ibinx<=hmaps[ihist]->GetNbinsX(); ibinx++){
+          cout<<hmaps[ihist]->GetBinContent(ibinx,ibiny)<<" ";
+        }
+        cout<<endl;
+      }
+    }
+  }
+
   ilayer=nLayers-1;
   TH1F *hproj = new TH1F();
   string histname = hmaps[0]->GetName();

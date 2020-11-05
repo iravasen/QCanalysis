@@ -238,7 +238,7 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
   THnSparse *hmapclone = (THnSparse*)hmap->Clone(Form("%s_clone",hmap->GetName()));
   cout<<hmap->GetName()<<" --> "<<hmapclone->GetNbins()<<" noisy pixels"<<endl;
 
-  int nRealMasked = hmapclone->GetNbins() < nMasked ? hmapclone->GetNbins() : nMasked;
+  int nRealMasked = nMasked;//hmapclone->GetNbins() < nMasked ? hmapclone->GetNbins() : nMasked;
 
   for(int iter=0; iter<nRealMasked+1; iter++){
 
@@ -256,7 +256,7 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
 
     for(int ibin=0; ibin<hmapclone->GetNbins(); ibin++){
       double bincontent = hmapclone->GetBinContent(ibin, coord);
-      if(bincontent<1e-4) continue;
+      //if(bincontent<1e-4) continue;
       if(bincontent>max){
         max=bincontent;
         binwithmax = ibin;
