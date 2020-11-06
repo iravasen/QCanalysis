@@ -555,6 +555,9 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
         cout<<"L"<<lnum<<"_"<<snum<<" - run"<<runn<<" skipped because has more than 10000 entries (probably a bad run)."<<endl;
         continue;
       }
+      if(posrefrun2[istave][iref]==-1){
+        continue; //skip comparison if no run is found
+      }
       if(hmapsDEADPIX[posrefrun2[istave][iref]]->GetEntries()>1e4){
         cout<<"L"<<lnum<<"_"<<snum<<" - run"<<runn<<" ref run skipped because has more than 10000 entries (probably a bad run)."<<endl;
         continue;
@@ -562,9 +565,6 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
 
       if(runn.find(std::to_string(refrun[iref]))!=string::npos){
         continue;
-      }
-      if(posrefrun2[istave][iref]==-1){
-        continue; //skip comparison if no run is found
       }
       noisypix.push_back(CompareTwoRuns(hmapsDEADPIX[posrefrun2[istave][iref]], hmapsDEADPIX[ihist]));
       noisypix[noisypix.size()-1][3] = stol(stavenums[ihist]);
