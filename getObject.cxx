@@ -808,7 +808,10 @@ vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run
       if(word=="Run"){
         ss>>word;
         ss>>word;
-        if(stoi(word)>=stoi(run1) && stoi(word)<=stoi(run2)) runlist.push_back(word);
+        if(stoi(word)>=stoi(run1) && stoi(word)<=stoi(run2)){
+		if(std::find(runlist.begin(), runlist.end(), word) == runlist.end())//if element doesn't exist already
+			runlist.push_back(word);
+	}
         if(stoi(word)==stoi(run1)) break;
       }
     }
