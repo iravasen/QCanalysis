@@ -43,7 +43,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
 
   string localdatetime = GetCurrentDateTime(1);
 
-  std::freopen(Form("../logs/logFHR_%s.log",localdatetime.c_str()), "w", stdout);
+  //std::freopen(Form("../logs/logFHR_%s.log",localdatetime.c_str()), "w", stdout);
 
   std::vector<TH2*> hmapsFHR;
   std::vector<THnSparse*> hmapsHIT;
@@ -472,6 +472,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       first[iref][ilayer][irun]+=noisypix[noisypix.size()-1][0];
       second[iref][ilayer][irun]+=noisypix[noisypix.size()-1][1];
       both[iref][ilayer][irun]+=noisypix[noisypix.size()-1][2];
+      //cout<<"ilayer: "<<ilayer<<"  irun: "<<irun<<"  #noisyincommon: "<<noisypix[noisypix.size()-1][2]<<endl;
       irun++;
 
       if(ihist>0){
@@ -561,7 +562,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
       }
       hfake->Draw();
       //canvas->SetLogy();
-      hfake->SetTitle(Form("Layer-%s - %s%06ld compared to all",laynums[ilay*nRuns].c_str(), filepath.find("run")==string::npos? "":"run",refrun[iref]));
+      hfake->SetTitle(Form("Layer-%s - %s%06ld compared to all (#hits/pixel>2)",laynums[ilay*nRuns].c_str(), filepath.find("run")==string::npos? "":"run",refrun[iref]));
       ge_nref[iref][ilay]->Draw("P E2 same");
       ge_ncom1[iref][ilay]->Draw("E2 same");
       ge_ncom2[iref][ilay]->Draw("E2 same");
