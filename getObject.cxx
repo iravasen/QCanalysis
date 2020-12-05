@@ -25,7 +25,7 @@ bool RunShifter(auto *ccdb, string myname, int opt);
 bool RunExpert(auto *ccdb, string myname, int opt);
 void DownloadTimestamps(auto *ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string objname, long int ts_start, long int ts_end, int lnum);
 void DownloadRuns(auto *ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string tasknamealternative, string objname, string run1, string run2, vector<string> goodrunlist, int lnum);
-bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamealternative, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers);
+bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamealternative, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers, vector<int>runnumbers2);
 bool Download(int choice, auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string tasknamealternative, string objname, string run1, string run2, vector<string> goodrunlist, long int ts_start, long int ts_end, int lnum);
 string GetOptName(int opt);
 string GetListName(int opt, int ilist);
@@ -786,7 +786,7 @@ vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run
     objnames[0] = "Occupancy/Layer0/Layer0ChipStave";
     objnames[1] = "Occupancy/Layer1/Layer1ChipStave";
     objnames[2] = "Occupancy/Layer2/Layer2ChipStave";
-    objnames[3] = "Occupancy/Layer3/Layer3ChipStave";
+    objnames[3] = "Occupancy/Layer2/Layer2ChipStave";
 
     tasknames[0] = "qc/ITS/MO/ITSFHR";
     tasknames[1] = "qc/ITS/MO/ITSFHR";
@@ -809,9 +809,9 @@ vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run
         ss>>word;
         ss>>word;
         if(stoi(word)>=stoi(run1) && stoi(word)<=stoi(run2)){
-		if(std::find(runlist.begin(), runlist.end(), word) == runlist.end())//if element doesn't exist already
-			runlist.push_back(word);
-	}
+	        if(std::find(runlist.begin(), runlist.end(), word) == runlist.end())//if element doesn't exist already
+		        runlist.push_back(word);
+	      }
         if(stoi(word)==stoi(run1)) break;
       }
     }
@@ -823,6 +823,8 @@ vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run
   for(int il=0; il<(int)runlists[0].size(); il++){
     string run = runlists[0][il];
     int cntrun = 1;
+    if((int)runlists[2].size()==0) cntrun++;// in case half L2 is missing
+    if((int)runlists[3].size()==0) cntrun++;// in case half L2 is missing
     //look for this run in the other lists
     for(int cntlist=1; cntlist<4; cntlist++){
       for(int il2=0; il2<(int)runlists[cntlist].size(); il2++){
@@ -831,8 +833,10 @@ vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run
         }
       }
     }
-    if(cntrun==4)
+    if(cntrun==4){
       runsfiltered.push_back(run);
+      cout<<"Run: "<<run<<endl;
+    }
   }
 
   return runsfiltered;
@@ -880,7 +884,7 @@ void DownloadTimestamps(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, st
 
   bool isperstave = 0;
   if(objname.find("HITMAP")!=string::npos) isperstave = 1;
-  GetListOfHisto(ccdb, myname, taskname, " ", objname, timestamps_selperiod, vector<long int>(), lnum, 0, isperstave, vector<int>());
+  GetListOfHisto(ccdb, myname, taskname, " ", objname, timestamps_selperiod, vector<long int>(), lnum, 0, isperstave, vector<int>(), vector<int>());
 
   timestamps_selperiod.clear();
 }
@@ -1028,7 +1032,7 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
 
   bool isperstave = 0;
   if(objname.find("HITMAP")!=string::npos) isperstave = 1;
-  GetListOfHisto(ccdb, myname, taskname, tasknamealternative, objname, timestamps_selperiod, timestamps_selperiodL2B, lnum, 1, isperstave, runs_selperiod);
+  GetListOfHisto(ccdb, myname, taskname, tasknamealternative, objname, timestamps_selperiod, timestamps_selperiodL2B, lnum, 1, isperstave, runs_selperiod, runs_selperiodL2B);
 
   timestamps_selperiod.clear();
   runs_selperiod.clear();
@@ -1054,7 +1058,7 @@ string GetCorrectTS(string selrun, vector<string> runs, vector<string> timestamp
 //
 //Get list of histogram inside an object
 //
-bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamealternative, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers){
+bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamealternative, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers, vector<int>runnumbers2){
 
   //Getting root files from the database and write them to file
   cout<<"\n"<<"... Getting files from the database"<<endl;
@@ -1069,6 +1073,38 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
  // cout<<"timestamps  size: "<<timestamps.size()<<endl;
  // cout<<"timestamps2 size: "<<timestamps2.size()<<endl;
 
+  //in case L2T is missing (excluded)
+  if((int)timestamps.size()==0 && (objname.find("Layer2/Threshold_Vs_Chip_and_Stave")!=string::npos || objname.find("Layer2/DeadPixel_Vs_Chip_and_Stave")!=string::npos)){
+    for(int i=0; i<(int)timestamps2.size();i++){
+
+      //MonitorObject *monitor = ccdb->retrieve(taskname, objname, timestamps[i]);
+
+      auto monitor = ccdb->retrieveMO(Form("qc/ITS/MO/ITS%sTask2B",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw"), objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
+
+      if (monitor == nullptr) {
+        cerr << myname << ": failed to get MonitorObject for timestamp: " << timestamps[i]<< endl;
+        return 0;
+      }
+
+      TObject *obj = nullptr;
+      obj = monitor->getObject();
+      monitor->setIsOwner(false);
+      string c = obj->ClassName();
+      TH2 *h2s = 0x0;
+
+      //if(strstr(c,"TH2")!=nullptr){
+      if(c.find("TH2")!=string::npos){
+        string histname = "";
+        histname = Form("h2_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers2[i]) : "", timestamps2[i]);
+
+        h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
+        outputfile->cd();
+        h2s->Write();
+      }
+    }
+  }
+
+  //General case
   for(int i=0; i<(int)timestamps.size();i++){
 
     //MonitorObject *monitor = ccdb->retrieve(taskname, objname, timestamps[i]);
