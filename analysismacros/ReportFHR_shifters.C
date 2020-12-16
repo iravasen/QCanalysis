@@ -684,12 +684,10 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
 
   //sum all the histos in a single histogram (for summary plot) for each layer
   TH2D *hSummaryErr = (TH2D*)hmapsERR[0]->Clone("hSummaryErr");
-  for(int iplot=1; iplot<(int)hmapsERR.size(); iplot++){
-    cout<<"... Adding "<<hmapsERR[iplot]->GetName()<<endl;
-    hmapsERR[iplot]->ls();
-    hSummaryErr->Add(hmapsERR[iplot]);
+  hSummaryErr->Reset();
+  for(int iplot=0; iplot<(int)hmapsERR.size(); iplot++){
+    if(hmapsERR[iplot]->GetEntries()) hSummaryErr->Add(hmapsERR[iplot]);
   }
-  cout<<"here 1"<<endl;
 
   //Make plots with Error IDs vs Run for each layer
   TGraph *trendErr[hSummaryErr->GetNbinsY()];
@@ -711,7 +709,6 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     delete hproj;
     ir++;
   }
-  cout<<"here 2"<<endl;
 
   //Draw summary plot for errors
   TCanvas canvasErr;
@@ -722,7 +719,8 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   canvasErr.SetMargin(0.0988,0.2,0.194,0.0993);
   canvasErr.SetRightMargin(0.15);
   hSummaryErr->SetTitle(Form("Errors IB, %s",filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
-  hSummaryErr->Draw("colz");
+  hSummaryErr->Draw("COLZ");
+  hSummaryErr->SetMinimum(1);
   hSummaryErr->GetXaxis()->SetLabelSize(0.045);
   hSummaryErr->GetYaxis()->SetLabelSize(0.045);
   hSummaryErr->GetZaxis()->SetLabelSize(0.045);
@@ -731,9 +729,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   hSummaryErr->GetYaxis()->SetTitleOffset(0.7);
   hSummaryErr->GetZaxis()->SetTitleSize(0.05);
   hSummaryErr->GetZaxis()->SetTitleOffset(0.9);
-
   canvasErr.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
-
   //Draw trends for errors
   int npointsErr = trendErr[0]->GetN();
   TH1F *hfakeErr = new TH1F("hfakeErr", "; Run; # Errors", npointsErr, -0.5, (double)npointsErr-0.5);
@@ -764,7 +760,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   legErr->Draw("same");
 
   canvasErr2.SaveAs(Form("../Plots/ShiftReport24h_FHR_%s_%s.pdf", localdatetime.c_str(), filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
-
+  cout<<"here 4"<<endl;
   //*******************************************************************************************
   //********************************* Trigger and Flags plots *********************************
   //*******************************************************************************************
