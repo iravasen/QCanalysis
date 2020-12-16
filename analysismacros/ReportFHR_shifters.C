@@ -43,7 +43,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
 
   string localdatetime = GetCurrentDateTime(1);
 
-  //std::freopen(Form("../logs/logFHR_%s.log",localdatetime.c_str()), "w", stdout);
+  std::freopen(Form("../logs/logFHR_%s.log",localdatetime.c_str()), "w", stdout);
 
   std::vector<TH2*> hmapsFHR;
   std::vector<THnSparse*> hmapsHIT;
@@ -685,8 +685,11 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
   //sum all the histos in a single histogram (for summary plot) for each layer
   TH2D *hSummaryErr = (TH2D*)hmapsERR[0]->Clone("hSummaryErr");
   for(int iplot=1; iplot<(int)hmapsERR.size(); iplot++){
+    cout<<"... Adding "<<hmapsERR[iplot]->GetName()<<endl;
+    hmapsERR[iplot]->ls();
     hSummaryErr->Add(hmapsERR[iplot]);
   }
+  cout<<"here 1"<<endl;
 
   //Make plots with Error IDs vs Run for each layer
   TGraph *trendErr[hSummaryErr->GetNbinsY()];
@@ -708,6 +711,7 @@ void DoAnalysis(string filepath, const int nChips, bool isIB){
     delete hproj;
     ir++;
   }
+  cout<<"here 2"<<endl;
 
   //Draw summary plot for errors
   TCanvas canvasErr;
