@@ -17,7 +17,7 @@
 using namespace std;
 
 void SetStyle(TGraph *h, Int_t col, Style_t mkr);
-void DoAnalysis(string filepath, const int nChips, string skipruns, bool isIB);
+void DoAnalysis(string filepath, const int nChips, string skipruns, int IBorOB);
 
 //
 // MAIN
@@ -31,21 +31,23 @@ void AnalyzeLayerOccupancy(){
   cin>>fpath;
   cout<<endl;
 
-  bool isIB;
+  int IBorOB; 
+  //IBorOB = 0 if I want to check all IB layers
+  //IBorOB = 1 if I want to check all OB layers
+  //IBorOB = 2 if I want to check all IB + OB layers or if I want to check a single layer
 
   if(fpath.find("IB")!=string::npos){
-    isIB = kTRUE;
+    IBorOB = 0;
   }
   else if (fpath.find("OB")!=string::npos){
-    isIB = kFALSE;
+    IBorOB = 1;
+  }
+  else if (fpath.find("all")!=string::npos){
+    IBorOB = 2;
   }
   else{
     string layernum = fpath.substr(fpath.find("Layer")+5, 1);
-    if(stoi(layernum)>=0 && stoi(layernum)<=2) nchips = 9; 
-    else if (stoi(layernum)==3 || stoi(layernum)==4) nchips = 8; //number of HICs 
-    else nchips = 14; //number of HICs
-    if(nchips==9) isIB=kTRUE;
-    else isIB=kFALSE;
+    IBorOB = 2;
   }
 
   string skipans, skipruns;
@@ -63,7 +65,7 @@ void AnalyzeLayerOccupancy(){
 
 
   //Call
-  DoAnalysis(fpath, nchips, skipruns, isIB);
+  DoAnalysis(fpath, nchips, skipruns, IBorOB);
 
 }
 
@@ -82,7 +84,7 @@ void SetStyle(TGraph *h, Int_t col, Style_t mkr){
 //
 // Analyse data
 //
-void DoAnalysis(string filepath, int nChips, string skipruns, bool isIB){
+void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
 
   gStyle->SetOptStat(0000);
 
@@ -131,8 +133,9 @@ void DoAnalysis(string filepath, int nChips, string skipruns, bool isIB){
   const int nLayersIB = (int)hmaps.size()==nRuns ? 1 : stoi(laynums[laynums.size()-1])+1;
   const int nLayersOB = (int)hmaps.size()==nRuns ? 1 : stoi(laynums[laynums.size()-1])+1-3;
   int nLayers;
-  if (isIB) nLayers = nLayersIB;
-  else nLayers=nLayersOB;
+  if (IBorOB==0) nLayers = nLayersIB;
+  else if (IBorOB==1) nLayers=nLayersOB;
+  else nLayers=nLayersIB;
 
   //const int nRuns = (int)runnumbers.size() / nLayers;
   //  cout<<"Lay: "<<nLayers<<"  Runs: "<<nRuns<<endl;
@@ -153,10 +156,10 @@ void DoAnalysis(string filepath, int nChips, string skipruns, bool isIB){
   int irun=0;
 
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){// start from the last in order to have the runs from the oldest to the newest
-    if (!isIB){ //nChips depend on the layer for the OB
-      if (stoi(laynums[ihist]) ==3 || stoi(laynums[ihist]) ==4)    nChips=8;
-      else if (stoi(laynums[ihist]) ==5 || stoi(laynums[ihist]) ==6)    nChips=14;
-    }
+
+    if (stoi(laynums[ihist]) < 3)    nChips=9; //IB layers
+    else if (stoi(laynums[ihist]) ==3 || stoi(laynums[ihist]) ==4)    nChips=8;  //L3 and L4
+    else if (stoi(laynums[ihist]) ==5 || stoi(laynums[ihist]) ==6)    nChips=14; //L5 and L6
 
     for(int ibiny=1; ibiny<=hmaps[ihist]->GetNbinsY(); ibiny++){//loop on y bins (stave)s
       TH1D *hproj = hmaps[ihist]->ProjectionX("proj",ibiny,ibiny); //single stave
@@ -167,7 +170,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, bool isIB){
           deadchips++;
       }
       if(deadchips>0){
-	if (isIB) {
+	if (stoi(laynums[ihist]) < 3) {
 	  cout<<"\nLayer "<<laynums[ihist]<<" Stave "<<ibiny-1<<" Run: "<<runnumbers[ihist]<<" Chips number: " << nChips<<" --> Chips active:"<<nChips-deadchips<<endl;
 	} else {
 	  cout<<"\nLayer "<<laynums[ihist]<<" Stave "<<ibiny-1<<" Run: "<<runnumbers[ihist]<<" Hic number: " << nChips << " --> HICs active:"<<nChips-deadchips<<endl;
@@ -181,14 +184,13 @@ void DoAnalysis(string filepath, int nChips, string skipruns, bool isIB){
       double x=0;
       double y=0;
 
-      if(isIB){
+      if (stoi(laynums[ihist]) < 3){
 	if((ibiny-1)<hmaps[ihist]->GetNbinsY()/2)
 	  SetStyle(trend[ilayer][ibiny-1], col[ibiny-1], 24);
 	else
 	  SetStyle(trend[ilayer][ibiny-1], col[ibiny-1-hmaps[ihist]->GetNbinsY()/2], 26);
       }
-      else{
-	if (stoi(laynums[ihist]) ==3 || stoi(laynums[ihist])==4){
+      else if (stoi(laynums[ihist]) ==3 || stoi(laynums[ihist])==4){
 	  if((ibiny-1)<hmaps[ihist]->GetNbinsY()/3){
 	    SetStyle(trend[ilayer][ibiny-1], col[ibiny-1], 24);
 	  }
@@ -198,18 +200,16 @@ void DoAnalysis(string filepath, int nChips, string skipruns, bool isIB){
 	  else{
 	    SetStyle(trend[ilayer][ibiny-1], col[ibiny-1-hmaps[ihist]->GetNbinsY()*2/3], 25);	    
 	  }
-	}
-	else if (stoi(laynums[ihist]) ==5 || stoi(laynums[ihist])==6){
-	  if((ibiny-1)<int(hmaps[ihist]->GetNbinsY()/4))
-	    SetStyle(trend[ilayer][ibiny-1], col[ibiny-1], 24);
-	  else if ((ibiny-1)<2*int(hmaps[ihist]->GetNbinsY()/4))
-	    SetStyle(trend[ilayer][ibiny-1], col[ibiny-1-int(hmaps[ihist]->GetNbinsY()/4)], 26);
-	  else if ((ibiny-1)<3*hmaps[ihist]->GetNbinsY()/4)
-	    SetStyle(trend[ilayer][ibiny-1], col[ibiny-1-2*int(hmaps[ihist]->GetNbinsY()/4)], 25);
-	  else
-	    SetStyle(trend[ilayer][ibiny-1], col[ibiny-1-int(hmaps[ihist]->GetNbinsY()*3/4)], 30);
-	}
-
+      }
+      else if (stoi(laynums[ihist]) ==5 || stoi(laynums[ihist])==6){
+	if((ibiny-1)<int(hmaps[ihist]->GetNbinsY()/4))
+	  SetStyle(trend[ilayer][ibiny-1], col[ibiny-1], 24);
+	else if ((ibiny-1)<2*int(hmaps[ihist]->GetNbinsY()/4))
+	  SetStyle(trend[ilayer][ibiny-1], col[ibiny-1-int(hmaps[ihist]->GetNbinsY()/4)], 26);
+	else if ((ibiny-1)<3*hmaps[ihist]->GetNbinsY()/4)
+	  SetStyle(trend[ilayer][ibiny-1], col[ibiny-1-2*int(hmaps[ihist]->GetNbinsY()/4)], 25);
+	else
+	  SetStyle(trend[ilayer][ibiny-1], col[ibiny-1-int(hmaps[ihist]->GetNbinsY()*3/4)], 30);
       }
     }
     irun++;
@@ -237,10 +237,10 @@ void DoAnalysis(string filepath, int nChips, string skipruns, bool isIB){
     canvas->SetMargin(0.0988,0.15,0.194,0.0993);
     TLegend *leg = new TLegend(0.857, 0.197,0.997,0.898);
 
-    //setting a two column legend for L5 and L6
-    if (!isIB && nLayers==4 && (ilay==1 || ilay==2 || ilay==3)) leg->SetNColumns(2);
+    if (nLayers==4 && (ilay==1 || ilay==2 || ilay==3)) leg->SetNColumns(2);    
+    else if (nLayers==7 && ilay>=3) leg->SetNColumns(2);    
     else  if (stoi(laynums[0]) ==4 || stoi(laynums[0]) ==5 || stoi(laynums[0]) ==6) leg->SetNColumns(2);
-    
+
     for(int istave=0; istave<hmaps[ilay*nRuns]->GetNbinsY(); istave++)
       leg->AddEntry(trend[ilay][istave], Form("Stv%d",istave), "p");
     hfake->GetYaxis()->SetRangeUser(1e-14, 1e-3);
