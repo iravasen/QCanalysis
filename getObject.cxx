@@ -24,13 +24,13 @@ vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run
 bool RunShifter(auto *ccdb, string myname, int opt);
 bool RunExpert(auto *ccdb, string myname, int opt);
 void DownloadTimestamps(auto *ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string objname, long int ts_start, long int ts_end, int lnum);
-void DownloadRuns(auto *ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string tasknamealternative, string objname, string run1, string run2, vector<string> goodrunlist, int lnum);
-bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamealternative, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers, vector<int>runnumbers2);
-bool Download(int choice, auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string tasknamealternative, string objname, string run1, string run2, vector<string> goodrunlist, long int ts_start, long int ts_end, int lnum);
+void DownloadRuns(auto *ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, int lnum);
+bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers, vector<int>runnumbers2);
+bool Download(int choice, auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, long int ts_start, long int ts_end, int lnum);
 string GetOptName(int opt);
 string GetListName(int opt, int ilist);
 
-const int nStavesInLay[3] = {12, 16, 20};
+const int nStavesInLay[7] = {12, 16, 20, 24, 30, 42, 48};
 TFile *outputfile;
 
 
@@ -214,7 +214,7 @@ bool RunShifter(auto *ccdb, string myname, int opt){
             case 0: {
               string objname = Form("Occupancy/Layer%d/Layer%dChipStave",layernum,layernum);
               cout<<"\nAll data in "<<taskname[layernum]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
-              Download(1, ccdb, ccdbApi, myname, taskname[layernum], taskname[layernum], objname, runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]),layernum);
+              Download(1, ccdb, ccdbApi, myname, taskname[layernum],  objname, runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]),layernum);
               break;
             }
 
@@ -222,14 +222,14 @@ bool RunShifter(auto *ccdb, string myname, int opt){
               for(int istave=0; istave<nStavesInLay[layernum]; istave++){
                 if(layernum==2){
                   if(istave>9){
-                    Download(1, ccdb, ccdbApi, myname, taskname[layernum+1], taskname[layernum+1], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]),layernum);
+                    Download(1, ccdb, ccdbApi, myname, taskname[layernum+1], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]),layernum);
                   }
                   else{
-                    Download(1, ccdb, ccdbApi, myname, taskname[layernum], taskname[layernum], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]),layernum);
+                    Download(1, ccdb, ccdbApi, myname, taskname[layernum], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]),layernum);
                   }
                 }
                 else {
-                  Download(1, ccdb, ccdbApi, myname, taskname[layernum], taskname[layernum], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]),layernum);
+                  Download(1, ccdb, ccdbApi, myname, taskname[layernum], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]),layernum);
                 }
 
               }
@@ -239,14 +239,14 @@ bool RunShifter(auto *ccdb, string myname, int opt){
             case 2: {//error files
               string objname = "General/ErrorVsFeeid";
               cout<<"\nAll data in "<<taskname[layernum]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
-              Download(1, ccdb, ccdbApi, myname, taskname[layernum], taskname[layernum], objname, runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), layernum);
+              Download(1, ccdb, ccdbApi, myname, taskname[layernum], objname, runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), layernum);
               break;
             }
 
             case 3: {//error files
               string objname = "General/TriggerVsFeeid";
               cout<<"\nAll data in "<<taskname[layernum]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
-              Download(1, ccdb, ccdbApi, myname, taskname[layernum], taskname[layernum], objname, runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), layernum);
+              Download(1, ccdb, ccdbApi, myname, taskname[layernum], objname, runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), layernum);
               break;
             }
           }
@@ -264,7 +264,7 @@ bool RunShifter(auto *ccdb, string myname, int opt){
               for(int ilay=0; ilay<=2; ilay++){
                 string objname = Form("Occupancy/Layer%d/Layer%dChipStave",ilay,ilay);
                 cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
-                Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], objname, runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]),ilay);
+                Download(1, ccdb, ccdbApi, myname, taskname[ilay], objname, runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]),ilay);
               }
               break;
             }
@@ -274,14 +274,14 @@ bool RunShifter(auto *ccdb, string myname, int opt){
                 for(int istave=0; istave<nStavesInLay[ilay]; istave++){
                   if(ilay==2){
                     if(istave>9){
-                      Download(1, ccdb, ccdbApi, myname, taskname[ilay+1], taskname[ilay+1], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]),ilay);
+                      Download(1, ccdb, ccdbApi, myname, taskname[ilay+1], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]),ilay);
                     }
                     else{
-                      Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]),ilay);
+                      Download(1, ccdb, ccdbApi, myname, taskname[ilay], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]),ilay);
                     }
                   }
                   else{
-                    Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]),ilay);
+                    Download(1, ccdb, ccdbApi, myname, taskname[ilay], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]),ilay);
                   }
                 }
               }
@@ -291,14 +291,14 @@ bool RunShifter(auto *ccdb, string myname, int opt){
             case 2: {//error files
               string objname = "General/ErrorVsFeeid";
               cout<<"\nAll data in "<<taskname[0]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
-              Download(1, ccdb, ccdbApi, myname, taskname[0], taskname[0], objname, runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), 0);
+              Download(1, ccdb, ccdbApi, myname, taskname[0], objname, runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), 0);
               break;
             }
 
             case 3: {//trigger files
               string objname = "General/TriggerVsFeeid";
               cout<<"\nAll data in "<<taskname[0]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
-              Download(1, ccdb, ccdbApi, myname, taskname[0], taskname[0], objname, runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), 0);
+              Download(1, ccdb, ccdbApi, myname, taskname[0], objname, runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), 0);
               break;
             }
           }
@@ -325,14 +325,14 @@ bool RunShifter(auto *ccdb, string myname, int opt){
             case 0: {
               string objname = Form("Threshold/Layer%d/Threshold_Vs_Chip_and_Stave",layernum);
               cout<<"\nAll data in "<<taskname[layernum]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
-              Download(1, ccdb, ccdbApi, myname, taskname[layernum], taskname[layernum], objname, runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]),layernum);
+              Download(1, ccdb, ccdbApi, myname, taskname[layernum], objname, runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]),layernum);
               break;
             }
 
             case 1: {
               string objname = Form("DeadPixel/Layer%d/DeadPixel_Vs_Chip_and_Stave",layernum);
               cout<<"\nAll data in "<<taskname[layernum]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
-              Download(1, ccdb, ccdbApi, myname, taskname[layernum], taskname[layernum], objname, runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), layernum);
+              Download(1, ccdb, ccdbApi, myname, taskname[layernum], objname, runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), layernum);
               break;
             }
 
@@ -340,12 +340,12 @@ bool RunShifter(auto *ccdb, string myname, int opt){
               for(int istave=0; istave<nStavesInLay[layernum]; istave++){
                 if(layernum==2){
                   if(istave>9)
-                    Download(1, ccdb, ccdbApi, myname, taskname[layernum+1], taskname[layernum+1], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",layernum,istave), runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), layernum);
+                    Download(1, ccdb, ccdbApi, myname, taskname[layernum+1], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",layernum,istave), runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), layernum);
                   else
-                    Download(1, ccdb, ccdbApi, myname, taskname[layernum], taskname[layernum], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",layernum,istave), runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), layernum);
+                    Download(1, ccdb, ccdbApi, myname, taskname[layernum], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",layernum,istave), runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), layernum);
                 }
                 else{
-                  Download(1, ccdb, ccdbApi, myname, taskname[layernum], taskname[layernum], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",layernum,istave), runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), layernum);
+                  Download(1, ccdb, ccdbApi, myname, taskname[layernum],  Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",layernum,istave), runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), layernum);
                 }
               }
               break;
@@ -364,7 +364,7 @@ bool RunShifter(auto *ccdb, string myname, int opt){
               for(int ilay=0; ilay<=2; ilay++){
                 string objname = Form("Threshold/Layer%d/Threshold_Vs_Chip_and_Stave",ilay);
                 cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
-                Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], objname, runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), ilay);
+                Download(1, ccdb, ccdbApi, myname, taskname[ilay], objname, runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), ilay);
               }
               break;
             }
@@ -373,7 +373,7 @@ bool RunShifter(auto *ccdb, string myname, int opt){
               for(int ilay=0; ilay<=2; ilay++){
                 string objname = Form("DeadPixel/Layer%d/DeadPixel_Vs_Chip_and_Stave",ilay);
                 cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<runts1[1]<<" and run"<<runts2[1]<<" are going to be downloaded."<<endl;
-                Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], objname, runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), ilay);
+                Download(1, ccdb, ccdbApi, myname, taskname[ilay], objname, runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), ilay);
               }
               break;
             }
@@ -383,12 +383,12 @@ bool RunShifter(auto *ccdb, string myname, int opt){
                 for(int istave=0; istave<nStavesInLay[ilay]; istave++){
                   if(ilay==2){
                     if(istave>9)
-                      Download(1, ccdb, ccdbApi, myname, taskname[ilay+1], taskname[ilay+1], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",ilay,istave), runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), ilay);
+                      Download(1, ccdb, ccdbApi, myname, taskname[ilay+1], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",ilay,istave), runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), ilay);
                     else
-                      Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",ilay,istave), runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), ilay);
+                      Download(1, ccdb, ccdbApi, myname, taskname[ilay], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",ilay,istave), runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), ilay);
                   }
                   else{
-                    Download(1, ccdb, ccdbApi, myname, taskname[ilay], taskname[ilay], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",ilay,istave), runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), ilay);
+                    Download(1, ccdb, ccdbApi, myname, taskname[ilay], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",ilay,istave), runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), ilay);
                   }
                 }
               }
@@ -415,34 +415,48 @@ bool RunShifter(auto *ccdb, string myname, int opt){
 //
 bool RunExpert(auto *ccdb, string myname, int opt){
 
+  //choose IB, OB or both  
+  int IBorOB;
+  cout << endl;
+  cout << endl;
+  cout << "Choose beteen IB (0), OB (1) or both (2, = all layers of IB and OB)" << endl;
+  cin>> IBorOB;
+  
   //Choose the layer number
   int layernum;
   cout<<endl;
-  cout<<endl;
-  cout<<"Enter the layer number [put -1 for all IB layers]"<<endl;
-  cin>>layernum;
-
+  
+  switch(IBorOB){
+  case 0: {
+    cout<<"Enter the layer number [put -1 for all IB layers]"<<endl;
+    cin >>layernum;
+    break;
+  }
+  case 1: {
+    cout<<"Enter the layer number [put -1 for all OB layers]"<<endl;
+    cin >>layernum;
+    break;
+  }
+  case 2: {
+    layernum=-1;
+    break;
+  }
+  default: break;
+  }
+  //  cin>>layernum;
+  
   //taskname
-  string taskname[4]    = {"qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR"};
-  string tasknamealt[4] = {"qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR"};//alternative tasks (backward compatibility)
+  string taskname[8]    = {"qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR",  "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask"};
 
   //set the task name
-  switch(opt){
+  switch(IBorOB){
+  case 0: {//Inner Barrel
+    switch(opt){
     case 1: {// fake-hit
       taskname[0] = "qc/ITS/MO/ITSFHR";//L0T, L0B
       taskname[1] = "qc/ITS/MO/ITSFHR";//L1T, L1B
       taskname[2] = "qc/ITS/MO/ITSFHR"; //L2T
       taskname[3] = "qc/ITS/MO/ITSFHR"; //L2B
-
-      tasknamealt[0] = "qc/ITS/MO/ITSFHR";
-      tasknamealt[1] = "qc/ITS/MO/ITSFHR";
-      tasknamealt[2] = "qc/ITS/MO/ITSFHR";
-      tasknamealt[3] = "qc/ITS/MO/ITSFHR";
-
-      //else if(layernum==1) {taskname[1] = "qc/ITS/ITSRawTaskIBB3"; tasknamealt[1] = "qc/ITS/ITSRawTaskIBB2";}
-      //else if(layernum==2) {taskname[2] = "qc/ITS/ITSRawTask"; tasknamealt[2] = "qc/ITS/ITSRawTask"; taskname[3] = "qc/ITS/ITSRawTaskIBB1"; tasknamealt[3] = "qc/ITS/ITSRawTaskIBB1";}
-      //else {taskname[0] = "qc/ITS/ITSRawTaskIBB2"; tasknamealt[0] = "qc/ITS/ITSRawTaskIBB2";}
-
       break;
     }
 
@@ -452,18 +466,68 @@ bool RunExpert(auto *ccdb, string myname, int opt){
       taskname[2] = "qc/ITS/MO/ITSTHRTask2T";
       taskname[3] = "qc/ITS/MO/ITSTHRTask2B";
 
-      tasknamealt[0] = "qc/ITS/MO/ITSTHRTask0";
-      tasknamealt[1] = "qc/ITS/MO/ITSTHRTask1";
-      tasknamealt[2] = "qc/ITS/MO/ITSTHRTask2T";
-      tasknamealt[3] = "qc/ITS/MO/ITSTHRTask2B";
+      break;
+    }
+    default: break;
+    }//end of switch 
+    break;
+  }
+  case 1: { //Outer Barrel
+    switch(opt){
+    case 1: {// fake-hit
+      taskname[4] = "qc/ITS/MO/FHRTask";//L3
+      taskname[5] = "qc/ITS/MO/FHRTask";//L4
+      taskname[6] = "qc/ITS/MO/FHRTask";//L5
+      taskname[7] = "qc/ITS/MO/FHRTask";//L6
 
       break;
     }
 
+    case 2: { //thr scan
+      //path name to be changed for OB
+      taskname[4] = "qc/ITS/MO/ITSTHRTask0";
+      taskname[5] = "qc/ITS/MO/ITSTHRTask1";
+      taskname[6] = "qc/ITS/MO/ITSTHRTask2T";
+      taskname[7] = "qc/ITS/MO/ITSTHRTask2B";
+
+      break;
+    }
     default: break;
-  }//end of switch
+    }//end of switch
+  }
+  case 2: { //Inner and Outer Barrel
+    switch(opt){
+    case 1: {// fake-hit
+      taskname[0] = "qc/ITS/MO/FHRTask";//L0   
+      taskname[1] = "qc/ITS/MO/FHRTask";//L1
+      taskname[2] = "qc/ITS/MO/FHRTask";//L2
+      taskname[3] = "qc/ITS/MO/FHRTask";//not used for FHR
+      taskname[4] = "qc/ITS/MO/FHRTask";//L3
+      taskname[5] = "qc/ITS/MO/FHRTask";//L4
+      taskname[6] = "qc/ITS/MO/FHRTask";//L5
+      taskname[7] = "qc/ITS/MO/FHRTask";//L6
 
+      break;
+    }
 
+    case 2: { //thr scan
+      // path name to be changed
+      taskname[0] = "qc/ITS/MO/ITSTHRTask0";
+      taskname[1] = "qc/ITS/MO/ITSTHRTask1";
+      taskname[2] = "qc/ITS/MO/ITSTHRTask2T";
+      taskname[3] = "qc/ITS/MO/ITSTHRTask2B";
+      taskname[4] = "qc/ITS/MO/ITSTHRTask0";
+      taskname[5] = "qc/ITS/MO/ITSTHRTask1";
+      taskname[6] = "qc/ITS/MO/ITSTHRTask2T";
+      taskname[7] = "qc/ITS/MO/ITSTHRTask2B";
+
+      break;
+    }
+    default: break;
+    }//end of switch
+  }
+  default: break;
+  }//end of switch 
 
   //Ask whether attach a error report to the results
   bool adderrordata = false;
@@ -560,9 +624,26 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   //Output file
   string layername;
   if(layernum==-1)
-    layername = "all-IB-layers";
+    if(IBorOB==0)    layername = "all-IB-layers";
+    else if (IBorOB==1) layername = "all-OB-layers";
+    else layername = "all-layers";
   else
     layername = Form("Layer%d",layernum);
+
+  int layernumEff=layernum;
+  if(IBorOB==1) layernumEff=layernum+1;
+
+  int ilayMin = 0;
+  int ilayMax = 2;
+  if (IBorOB==1) {
+    ilayMin = 3;
+    ilayMax =6;
+  }
+  else if (IBorOB==2) {
+    ilayMin = 0;
+    ilayMax =6;
+  }
+
   string suffix;
   switch(choice){
     case 1: suffix = "run"; break;
@@ -581,8 +662,8 @@ bool RunExpert(auto *ccdb, string myname, int opt){
           switch(il){
             case 0: {
               string objname = Form("Occupancy/Layer%d/Layer%dChipStave",layernum,layernum);
-              cout<<"\nAll data in "<<taskname[layernum]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-              Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end,layernum);
+              cout<<"\nAll data in "<<taskname[layernumEff]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+              Download(choice, ccdb, ccdbApi, myname, taskname[layernumEff], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end,layernum);
               break;
             }
 
@@ -590,14 +671,14 @@ bool RunExpert(auto *ccdb, string myname, int opt){
               for(int istave=0; istave<nStavesInLay[layernum]; istave++){
                 if(layernum==2){
                   if(istave>9){//L2B
-                    Download(choice, ccdb, ccdbApi, myname, taskname[layernum+1], tasknamealt[layernum+1], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
+                    Download(choice, ccdb, ccdbApi, myname, taskname[layernumEff+1], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
                   }
                   else{
-                    Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
+                    Download(choice, ccdb, ccdbApi, myname, taskname[layernumEff], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
                   }
                 }
                 else{
-                  Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
+                  Download(choice, ccdb, ccdbApi, myname, taskname[layernumEff], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",layernum,istave,layernum,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
                 }
               }
               break;
@@ -605,15 +686,15 @@ bool RunExpert(auto *ccdb, string myname, int opt){
 
             case 2: {//error files
               string objname = "General/ErrorVsFeeid";
-              cout<<"\nAll data in "<<taskname[layernum]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-              Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
+              cout<<"\nAll data in "<<taskname[layernumEff]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+              Download(choice, ccdb, ccdbApi, myname, taskname[layernumEff], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
               break;
             }
 
             case 3: {//error files
               string objname = "General/TriggerVsFeeid";
-              cout<<"\nAll data in "<<taskname[layernum]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-              Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
+              cout<<"\nAll data in "<<taskname[layernumEff]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+              Download(choice, ccdb, ccdbApi, myname, taskname[layernumEff], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
               break;
             }
 
@@ -627,27 +708,33 @@ bool RunExpert(auto *ccdb, string myname, int opt){
         for(int il=0; il<nListElements; il++){//loop on lists
           switch(il){
             case 0: {
-              for(int ilay=0; ilay<=2; ilay++){
+              for(int ilay=ilayMin; ilay<=ilayMax; ilay++){
+		int ilayEff=ilay;
+		if (IBorOB==1) ilayEff=ilay+1;
+		else if (IBorOB==2 && ilay>=3) ilayEff=ilay+1;
                 string objname = Form("Occupancy/Layer%d/Layer%dChipStave",ilay,ilay);
-                cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-                Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay);
+                cout<<"\nAll data in "<<taskname[ilayEff]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+                Download(choice, ccdb, ccdbApi, myname, taskname[ilayEff], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay);
               }
               break;
             }
 
             case 1: {
-              for(int ilay=0; ilay<=2; ilay++){
+              for(int ilay=ilayMin; ilay<=ilayMax; ilay++){
+		int ilayEff=ilay;
+		if (IBorOB==1) ilayEff=ilay+1;
+		else if (IBorOB==2 && ilay>=3) ilayEff=ilay+1;
                 for(int istave=0; istave<nStavesInLay[ilay]; istave++){
                   if(ilay==2){
                     if(istave>9){//L2B
-                      Download(choice, ccdb, ccdbApi, myname, taskname[ilay+1], tasknamealt[ilay+1], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay);
+                      Download(choice, ccdb, ccdbApi, myname, taskname[ilayEff+1], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay);
                     }
                     else{
-                      Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay);
+                      Download(choice, ccdb, ccdbApi, myname, taskname[ilayEff], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay);
                     }
                   }
                   else{
-                    Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay);
+                    Download(choice, ccdb, ccdbApi, myname, taskname[ilayEff],  Form("Occupancy/Layer%d/Stave%d/Layer%dStave%dHITMAP",ilay,istave,ilay,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay);
                   }
                 }
               }
@@ -657,14 +744,14 @@ bool RunExpert(auto *ccdb, string myname, int opt){
             case 2: {//error files
               string objname = "General/ErrorVsFeeid";
               cout<<"\nAll data in "<<taskname[0]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-              Download(1, ccdb, ccdbApi, myname, taskname[0], taskname[0], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+              Download(1, ccdb, ccdbApi, myname, taskname[0], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
               break;
             }
 
             case 3: {//trigger files
               string objname = "General/TriggerVsFeeid";
               cout<<"\nAll data in "<<taskname[0]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-              Download(1, ccdb, ccdbApi, myname, taskname[0], taskname[0], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+              Download(1, ccdb, ccdbApi, myname, taskname[0], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
               break;
             }
 
@@ -682,15 +769,15 @@ bool RunExpert(auto *ccdb, string myname, int opt){
           switch(il){
             case 0: {
               string objname = Form("Threshold/Layer%d/Threshold_Vs_Chip_and_Stave",layernum);
-              cout<<"\nAll data in "<<taskname[layernum]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-              Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end,layernum);
+              cout<<"\nAll data in "<<taskname[layernumEff]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+              Download(choice, ccdb, ccdbApi, myname, taskname[layernumEff],  objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end,layernum);
               break;
             }
 
             case 1: {
               string objname = Form("DeadPixel/Layer%d/DeadPixel_Vs_Chip_and_Stave",layernum);
-              cout<<"\nAll data in "<<taskname[layernum]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-              Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
+              cout<<"\nAll data in "<<taskname[layernumEff]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+              Download(choice, ccdb, ccdbApi, myname, taskname[layernumEff], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
               break;
             }
 
@@ -698,12 +785,12 @@ bool RunExpert(auto *ccdb, string myname, int opt){
               for(int istave=0; istave<nStavesInLay[layernum]; istave++){
                 if(layernum==2){
                   if(istave>9)
-                    Download(choice, ccdb, ccdbApi, myname, taskname[layernum+1], tasknamealt[layernum+1], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",layernum,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
+                    Download(choice, ccdb, ccdbApi, myname, taskname[layernumEff+1], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",layernum,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
                   else
-                    Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",layernum,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
+                    Download(choice, ccdb, ccdbApi, myname, taskname[layernumEff], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",layernum,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
                 }
                 else{
-                  Download(choice, ccdb, ccdbApi, myname, taskname[layernum], tasknamealt[layernum], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",layernum,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
+                  Download(choice, ccdb, ccdbApi, myname, taskname[layernumEff], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",layernum,istave), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
                 }
 
               }
@@ -720,34 +807,46 @@ bool RunExpert(auto *ccdb, string myname, int opt){
         for(int il=0; il<nListElements; il++){//loop on lists
           switch(il){
             case 0: {
-              for(int ilay=0; ilay<=2; ilay++){
+	      //for(int ilay=0; ilay<=2; ilay++){
+              for(int ilay=ilayMin; ilay<=ilayMax; ilay++){
+		int ilayEff=ilay;
+		if (IBorOB==1) ilayEff=ilay+1;
+		else if (IBorOB==2 && ilay>=3) ilayEff=ilay+1;
                 string objname = Form("Threshold/Layer%d/Threshold_Vs_Chip_and_Stave",ilay);
-                cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-                Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end,ilay);
+                cout<<"\nAll data in "<<taskname[ilayEff]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+                Download(choice, ccdb, ccdbApi, myname, taskname[ilayEff], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end,ilay);
               }
               break;
             }
 
             case 1: {
-              for(int ilay=0; ilay<=2; ilay++){
+	      // for(int ilay=0; ilay<=2; ilay++){
+              for(int ilay=ilayMin; ilay<=ilayMax; ilay++){
+		int ilayEff=ilay;
+		if (IBorOB==1) ilayEff=ilay+1;
+		else if (IBorOB==2 && ilay>=3) ilayEff=ilay+1;
                 string objname = Form("DeadPixel/Layer%d/DeadPixel_Vs_Chip_and_Stave",ilay);
-                cout<<"\nAll data in "<<taskname[ilay]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-                Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay);
+                cout<<"\nAll data in "<<taskname[ilayEff]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+                Download(choice, ccdb, ccdbApi, myname, taskname[ilayEff],  objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay);
               }
               break;
             }
 
             case 2: {
-              for(int ilay=0; ilay<=2; ilay++){
+	      //              for(int ilay=0; ilay<=2; ilay++){
+              for(int ilay=ilayMin; ilay<=ilayMax; ilay++){
+		int ilayEff=ilay;
+		if (IBorOB==1) ilayEff=ilay+1;
+		else if (IBorOB==2 && ilay>=3) ilayEff=ilay+1;
                 for(int istave=0; istave<nStavesInLay[ilay]; istave++){
                   if(ilay==2){
                     if(istave>9)
-                      Download(choice, ccdb, ccdbApi, myname, taskname[ilay+1], tasknamealt[ilay+1], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",ilay,istave), run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay);
+                      Download(choice, ccdb, ccdbApi, myname, taskname[ilayEff+1], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",ilay,istave), run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay);
                     else
-                      Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",ilay,istave), run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay);
+                      Download(choice, ccdb, ccdbApi, myname, taskname[ilayEff], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",ilay,istave), run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay);
                   }
                   else{
-                    Download(choice, ccdb, ccdbApi, myname, taskname[ilay], tasknamealt[ilay], Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",ilay,istave), run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay);
+                    Download(choice, ccdb, ccdbApi, myname, taskname[ilayEff],  Form("DeadPixel/Layer%d/Stave%d/HIC0/DeadPixelHITMAP",ilay,istave), run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay);
                   }
                 }
               }
@@ -762,7 +861,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
     }// end of case 2
 
     case 3: {//download a tree (only an example now!)
-      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/QCFHRTest", "qc/ITS/QCFHRTest", "Occupancy/PixelTree", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/QCFHRTest", "Occupancy/PixelTree", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
       break;
     }//end of case 3
   }//end switch
@@ -884,7 +983,7 @@ void DownloadTimestamps(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, st
 
   bool isperstave = 0;
   if(objname.find("HITMAP")!=string::npos) isperstave = 1;
-  GetListOfHisto(ccdb, myname, taskname, " ", objname, timestamps_selperiod, vector<long int>(), lnum, 0, isperstave, vector<int>(), vector<int>());
+  GetListOfHisto(ccdb, myname, taskname, objname, timestamps_selperiod, vector<long int>(), lnum, 0, isperstave, vector<int>(), vector<int>());
 
   timestamps_selperiod.clear();
 }
@@ -893,14 +992,16 @@ void DownloadTimestamps(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, st
 //
 // Download data based on run numbers - available in metadata from 03/07/2019 21.49 (run 582 --> fake hit scan)
 //
-void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string tasknamealternative, string objname, string run1, string run2, vector<string> goodrunlist, int lnum){
+void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, int lnum){
 
   //Extract all the time stamps and run numbers of the object
   string objectlist = ccdbApi.list(taskname + "/" + objname,false,"text/plain");
   string objectlist2 = " ";
+  /* alt*
   if(tasknamealternative!=taskname){
     objectlist2 = ccdbApi.list(tasknamealternative + "/" + objname,false,"text/plain");
   }
+  */
   string objectlistL2B = " ";
   if(/*objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos
      ||*/ objname.find("Layer2/Threshold_Vs_Chip_and_Stave")!=string::npos || objname.find("Layer2/DeadPixel_Vs_Chip_and_Stave")!=string::npos){
@@ -909,18 +1010,21 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
   cout<<endl;
   cout<<endl;
   cout<<"Ready to get files from "<<taskname<<"/"<<objname<<endl;
+  /* alt*
   if(tasknamealternative!=taskname){
     cout<<"... And eventually from (alternative path for backward compatibility): "<< tasknamealternative<<"/"<<objname<<endl;
   }
+  */
   stringstream ss(objectlist);
-  stringstream ss2(objectlist2);
+  //alt*  stringstream ss2(objectlist2);
   stringstream ss3(objectlistL2B);
   string word;
   vector<string> alltimestamps, timestamps, runs;
-  vector<string> alltimestampsALT, timestampsALT, runsALT;//for alternative path
+  //alt*  vector<string> alltimestampsALT, timestampsALT, runsALT;//for alternative path
   vector<string> alltimestampsL2B, timestampsL2B, runsL2B;//for L2B
 
   //filter string from alternative path (at the moment: only L1 from before run 300134)
+  /*
   while(ss2>>word){
     if(word=="Created:"){// take the one related to file creation
       ss2>>word;
@@ -934,6 +1038,7 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
       if(stoi(word)==stoi(run1)) break;
     }
   }
+  */
 
   //filter normal path but correct timestamps with the one from alternative path (if needed)
   while(ss>>word){
@@ -944,6 +1049,7 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
     if(word=="Run"){
       ss>>word;
       ss>>word;
+      /* alt*
       if(tasknamealternative!=taskname && stol(word)<300134){//for L1 backward compatibility
         for(int it=0; it<(int)runsALT.size(); it++){
           if(stol(runsALT[it])<300134){
@@ -961,6 +1067,9 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
         runs.push_back(word);
         timestamps.push_back(alltimestamps[alltimestamps.size()-1]);//this keep only the timestamps connected to a run number
       }
+      */
+      runs.push_back(word);
+      timestamps.push_back(alltimestamps[alltimestamps.size()-1]);//this keep only the timestamps connected to a run number
       if(stoi(word)==stoi(run1)) break;
     }
   }
@@ -1032,7 +1141,7 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
 
   bool isperstave = 0;
   if(objname.find("HITMAP")!=string::npos) isperstave = 1;
-  GetListOfHisto(ccdb, myname, taskname, tasknamealternative, objname, timestamps_selperiod, timestamps_selperiodL2B, lnum, 1, isperstave, runs_selperiod, runs_selperiodL2B);
+  GetListOfHisto(ccdb, myname, taskname, objname, timestamps_selperiod, timestamps_selperiodL2B, lnum, 1, isperstave, runs_selperiod, runs_selperiodL2B);
 
   timestamps_selperiod.clear();
   runs_selperiod.clear();
@@ -1058,7 +1167,7 @@ string GetCorrectTS(string selrun, vector<string> runs, vector<string> timestamp
 //
 //Get list of histogram inside an object
 //
-bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamealternative, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers, vector<int>runnumbers2){
+bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers, vector<int>runnumbers2){
 
   //Getting root files from the database and write them to file
   cout<<"\n"<<"... Getting files from the database"<<endl;
@@ -1193,11 +1302,11 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string tasknamea
 //
 // Download depending on the choice
 //
-bool Download(int choice, auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string tasknamealternative, string objname, string run1, string run2, vector<string> goodrunlist, long int ts_start, long int ts_end, int lnum){
+bool Download(int choice, auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, long int ts_start, long int ts_end, int lnum){
 
   switch(choice){
     case 1: {
-      DownloadRuns(ccdb, ccdbApi, myname, taskname, tasknamealternative, objname, run1, run2, goodrunlist, lnum);//download with runs
+      DownloadRuns(ccdb, ccdbApi, myname, taskname, objname, run1, run2, goodrunlist, lnum);//download with runs
       break;//download runs data
     }
 
