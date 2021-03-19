@@ -17,31 +17,36 @@
 
 using namespace std;
 
-void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, long int refrun);
+void DoAnalysis(string filepath, bool IBorOB, string skipruns, long int refrun);
 
 //
 // MAIN
 //
 void CompareLayerOccupancy(){
   string fpath;
-  int nchips=9;
   cout<<"\n\n=> Available file(s) for the analysis (the last should be the file you want!): \n"<<endl;
   gSystem->Exec("ls ../Data/*FHRMAPS_HITMAPS* -Art | tail -n 500");
   cout<<"\nCopy file name: ";
   cin>>fpath;
   cout<<endl;
 
-  bool isIB;
+  int IBorOB;
+  //IBorOB = 0 if I want to check all IB layers                                                                   
+  //IBorOB = 1 if I want to check all OB layers                                                                    
+  //IBorOB = 2 if I want to check all IB + OB layers or if I want to check a single layer                         
+
   if(fpath.find("IB")!=string::npos){
-    isIB = kTRUE;
+    IBorOB = 0;
+  }
+  else if (fpath.find("OB")!=string::npos){
+    IBorOB = 1;
+  }
+  else if (fpath.find("all")!=string::npos){
+    IBorOB = 2;
   }
   else{
     string layernum = fpath.substr(fpath.find("Layer")+5, 1);
-    if(stoi(layernum)>=0 && stoi(layernum)<=2) nchips = 9;
-    else if (stoi(layernum)==3 && stoi(layernum)==4) nchips = 54*2;
-    else nchips = 98*2;
-    if(nchips==9) isIB=kTRUE;
-    else isIB=kFALSE;
+    IBorOB = 2;
   }
 
   //Choose whether to skip runs
@@ -95,14 +100,14 @@ void CompareLayerOccupancy(){
 
 
   //Call
-  DoAnalysis(fpath, nchips, isIB, skipruns, refrun);
+  DoAnalysis(fpath, IBorOB, skipruns, refrun);
 
 }
 
 //
 // Analyse data
 //
-void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, long int refrun){
+void DoAnalysis(string filepath, bool IBorOB, string skipruns, long int refrun){
 
   gStyle->SetOptStat(0000);
 
@@ -155,7 +160,12 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
     else nRuns=1;
   }
 
-  const int nLayers = (int)hmaps.size()==nRuns ? 1 : stoi(laynums[laynums.size()-1])+1;
+  const int nLayersIB = (int)hmaps.size()==nRuns ? 1 : stoi(laynums[laynums.size()-1])+1;
+  const int nLayersOB = (int)hmaps.size()==nRuns ? 1 : stoi(laynums[laynums.size()-1])+1-3;
+  int nLayers;
+  if (IBorOB==0) nLayers = nLayersIB;
+  else if (IBorOB==1) nLayers=nLayersOB;
+  else nLayers=nLayersIB;
 
   TH2D *hCorr[nLayers];
   //bins
@@ -181,12 +191,13 @@ void DoAnalysis(string filepath, const int nChips, bool isIB, string skipruns, l
         }
       continue; //skip ref run
     }
+    //cout << "\n run number" << runnumbers[ihist] << endl;
     for(int ibinx=1; ibinx<=hmaps[ihist]->GetNbinsX(); ibinx++){
       for(int ibiny=1; ibiny<=hmaps[ihist]->GetNbinsY(); ibiny++){
         double fhr_refrun = hmaps[posrefrun[ilayer]]->GetBinContent(ibinx,ibiny);
         double fhr_run = hmaps[ihist]->GetBinContent(ibinx,ibiny);
         hCorr[ilayer]->Fill(fhr_refrun, fhr_run);
-        //cout<<fhr_refrun<<"   "<<fhr_run<<endl;
+	//cout<<"stave " << ibiny-1 << " chip " << ibinx-1 << "-> fhr ref run: " << fhr_refrun<<", fhr run: "<<fhr_run<<endl;
       }
     }
     if(ihist>0)
