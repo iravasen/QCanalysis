@@ -33,6 +33,10 @@ string GetListName(int opt, int ilist);
 const int nStavesInLay[7] = {12, 16, 20, 24, 30, 42, 48};
 TFile *outputfile;
 
+//to which CCDB we have to connect
+// For P2 operations put: alio2-cr1-flp187.cern.ch:8083
+string ccdbport = "ccdb-test.cern.ch:8080";
+
 
 int main(int argc, char **argv)
 {
@@ -51,7 +55,7 @@ int main(int argc, char **argv)
     return -1;
   }
 
-  ccdb->connect("ccdb-test.cern.ch:8080", "", "", "");
+  ccdb->connect(ccdbport.c_str(), "", "", "");
 
   if(strcmp(argv[1],"expert")==0)
     RunExpert(ccdb, myname, atoi(argv[2]));
@@ -167,7 +171,7 @@ bool RunShifter(auto *ccdb, string myname, int opt){
 
   //CCDB api initialization
   o2::ccdb::CcdbApi ccdbApi;
-  ccdbApi.init("ccdb-test.cern.ch:8080");
+  ccdbApi.init(ccdbport.c_str());
 
   //set variables (run interval of timestamp interval)
   array<string,2> runts1;
@@ -415,17 +419,17 @@ bool RunShifter(auto *ccdb, string myname, int opt){
 //
 bool RunExpert(auto *ccdb, string myname, int opt){
 
-  //choose IB, OB or both  
+  //choose IB, OB or both
   int IBorOB;
   cout << endl;
   cout << endl;
   cout << "Choose beteen IB (0), OB (1) or both (2, = all layers of IB and OB)" << endl;
   cin>> IBorOB;
-  
+
   //Choose the layer number
   int layernum;
   cout<<endl;
-  
+
   switch(IBorOB){
   case 0: {
     cout<<"Enter the layer number [put -1 for all IB layers]"<<endl;
@@ -444,7 +448,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   default: break;
   }
   //  cin>>layernum;
-  
+
   //taskname
   string taskname[8]    = {"qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR",  "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask"};
 
@@ -469,7 +473,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
       break;
     }
     default: break;
-    }//end of switch 
+    }//end of switch
     break;
   }
   case 1: { //Outer Barrel
@@ -498,7 +502,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   case 2: { //Inner and Outer Barrel
     switch(opt){
     case 1: {// fake-hit
-      taskname[0] = "qc/ITS/MO/FHRTask";//L0   
+      taskname[0] = "qc/ITS/MO/FHRTask";//L0
       taskname[1] = "qc/ITS/MO/FHRTask";//L1
       taskname[2] = "qc/ITS/MO/FHRTask";//L2
       taskname[3] = "qc/ITS/MO/FHRTask";//not used for FHR
@@ -527,7 +531,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
     }//end of switch
   }
   default: break;
-  }//end of switch 
+  }//end of switch
 
   //Ask whether attach a error report to the results
   bool adderrordata = false;
@@ -619,7 +623,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
 
   //CCDB api initialization
   o2::ccdb::CcdbApi ccdbApi;
-  ccdbApi.init("ccdb-test.cern.ch:8080");
+  ccdbApi.init(ccdbport.c_str());
 
   //Output file
   string layername;
