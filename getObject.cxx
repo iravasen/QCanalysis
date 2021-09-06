@@ -34,8 +34,8 @@ const int nStavesInLay[7] = {12, 16, 20, 24, 30, 42, 48};
 TFile *outputfile;
 
 //to which CCDB we have to connect
-// For P2 operations put: alio2-cr1-flp187.cern.ch:8083
-string ccdbport = "ccdb-test.cern.ch:8080";
+// For P2 operations put: qcdb.cern.ch:8083
+string ccdbport = "qcdb.cern.ch:8083";
 
 
 int main(int argc, char **argv)
@@ -83,7 +83,7 @@ array<string,2> GetLastRunWithTS(o2::ccdb::CcdbApi ccdbApi, string taskname, str
       ss>>word;
       runts[0] = word;
     }
-    if(word=="Run"){
+    if(word=="RunNumber"){
       ss>>word;
       ss>>word;
       runts[1] = word;
@@ -116,7 +116,7 @@ array<string,2> GetRunWithTS24hAgo(o2::ccdb::CcdbApi ccdbApi, string taskname, s
       }
       else islast=true;
     }
-    if(word=="Run"){
+    if(word=="RunNumber"){
       ss>>word;
       ss>>word;
       if(islast) break;
@@ -908,7 +908,7 @@ vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run
         ss>>word;
         //alltimestampsALT.push_back(word);
       }
-      if(word=="Run"){
+      if(word=="RunNumber"){
         ss>>word;
         ss>>word;
         if(stoi(word)>=stoi(run1) && stoi(word)<=stoi(run2)){
@@ -1034,7 +1034,7 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
       ss2>>word;
       alltimestampsALT.push_back(word);
     }
-    if(word=="Run"){
+    if(word=="RunNumber"){
       ss2>>word;
       ss2>>word;
       runsALT.push_back(word);
@@ -1050,7 +1050,7 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
       ss>>word;
       alltimestamps.push_back(word);
     }
-    if(word=="Run"){
+    if(word=="RunNumber"){
       ss>>word;
       ss>>word;
       /* alt*
@@ -1085,7 +1085,7 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
       ss3>>word;
       alltimestampsL2B.push_back(word);
     }
-    if(word=="Run"){
+    if(word=="RunNumber"){
       ss3>>word;
       ss3>>word;
       runsL2B.push_back(word);
