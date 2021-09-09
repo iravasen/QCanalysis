@@ -42,9 +42,9 @@ void MaskNoisyPixelsInRuns(){
   cout<<endl;
   int IBorOB;
 
-  //IBorOB = 0 if I want to check all IB layers                                              
-  //IBorOB = 1 if I want to check all OB layers                                             
-  //IBorOB = 2 if I want to check all IB + OB layers or if I want to check a single layer         
+  //IBorOB = 0 if I want to check all IB layers
+  //IBorOB = 1 if I want to check all OB layers
+  //IBorOB = 2 if I want to check all IB + OB layers or if I want to check a single layer
 
   if(fpath.find("IB")!=string::npos){
     IBorOB = 0;
@@ -198,9 +198,9 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
   //Calculate number of triggers for each run
   cout<<endl;
   cout<<"... Extract the number of triggers (events) from for each run"<<endl;
-  Int_t MaxRange  = 0; 
+  Int_t MaxRange  = 0;
   Int_t MaxRangeY = 0;
-  Int_t NChipsPerHIC   = 7;  
+  Int_t NChipsPerHIC   = 7;
   Int_t ChipRowsPerHIC = 2;
   Int_t HICsPerHS = 0; //Number of HICs in each half stave
   Int_t HalfStaveFound = 0;
@@ -248,7 +248,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
       }
       if (chipfound < HICsPerHS) HalfStaveFound=0;
       else {
-	HalfStaveFound =1; 
+	HalfStaveFound =1;
 	chipfoundeff = chipfound-HICsPerHS;
       }
     }
@@ -296,27 +296,27 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
   Bool_t IB = 1;
   Int_t ilayEff =0;
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){ //start from the bottom in order to start with the oldest run
-    if (stoi(laynums[ihist]) < 3)  { //IB layers                                                   
-      nChips=9; 
+    if (stoi(laynums[ihist]) < 3)  { //IB layers
+      nChips=9;
       MaxRange = 9216; // 1024 x nChips=9
       IB = 1;
       numStavePart = 1;
     }
-    else if (stoi(laynums[ihist]) ==3 || stoi(laynums[ihist]) ==4) { //L3 and L4 
+    else if (stoi(laynums[ihist]) ==3 || stoi(laynums[ihist]) ==4) { //L3 and L4
       nChips=2*28.;  //#chips in a half stave: 7 chips in one HIC row x 2 chip rows in one HIC x 4 HICs in a half stave
-      MaxRange = 28672; //1024 x 7 chips in one HIC row x 4 HICs in a half stave 
+      MaxRange = 28672; //1024 x 7 chips in one HIC row x 4 HICs in a half stave
       IB = 0;
       numStavePart =2; //HS Lower and HS Upper
     }
-    else if (stoi(laynums[ihist]) ==5 || stoi(laynums[ihist]) ==6)  { //L5 and L6 
+    else if (stoi(laynums[ihist]) ==5 || stoi(laynums[ihist]) ==6)  { //L5 and L6
       nChips=2*49.;  //#chips in a half stave: 7 chips in one HIC row x 2 chip rows in one HIC x 7 HICs in a half stave
-      MaxRange = 50176; //1024 x 7 chips in one HIC row x 7 HICs in a half stave 
+      MaxRange = 50176; //1024 x 7 chips in one HIC row x 7 HICs in a half stave
       IB = 0;
       numStavePart =2; //HS Lower and HS Upper
     }
 
     //cout<<"\n*************Layer "<<laynums[ihist]<<" Stave "<<stavenums[ihist]<<" Run: "<<runnumbers[ihist]<< endl;
-    for (Int_t StavePart=0; StavePart< numStavePart; StavePart++){ //loop over the two Half Staves for OB      
+    for (Int_t StavePart=0; StavePart< numStavePart; StavePart++){ //loop over the two Half Staves for OB
       int nchipsactive = GetNchipsActive(hmaps[ihist],nChips, MaxRange, StavePart, IB);
       if (numStavePart==1){
       if(nchipsactive<nChips) cout<<"\nLayer "<<laynums[ihist]<<" Stave "<<stavenums[ihist]<<" Run: "<<runnumbers[ihist]<<" --> Chips active:"<<nchipsactive<<endl;
@@ -374,7 +374,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
   irun=0;
   for(int i=0; i<(int)fhrall.size(); i++){
     for(int ifhr=0; ifhr<(int)fhrall[i].size(); ifhr++){
-      for (Int_t StavePart=0; StavePart< 2; StavePart++){ //loop over the two Half Staves for OB  
+      for (Int_t StavePart=0; StavePart< 2; StavePart++){ //loop over the two Half Staves for OB
 	if (StavePart==0) hFhrStv[ilayer][istave][StavePart]->SetBinContent(ifhr+1, irun+1, fhrall[i][ifhr]);
 	else hFhrStv[ilayer][istave][StavePart]->SetBinContent(ifhr+1, irun+1, fhrall1[i][ifhr]);
       }
@@ -421,7 +421,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
       SStavePart[1] = "";
     }
 
-    for (Int_t StavePart=0; StavePart< numStavePart; StavePart++){ //loop over the two Half Staves for OB      
+    for (Int_t StavePart=0; StavePart< numStavePart; StavePart++){ //loop over the two Half Staves for OB
       TCanvas cnv(Form("cnv_%d_HS%i",ilay, StavePart), Form("cnv_%d_HS%i",ilay, StavePart));
       cnv.cd();
       cnv.SetLogy();
@@ -550,7 +550,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
 	lat.SetTextAngle(90);
 	lat.SetNDC();
 	if (numStavePart==1) {
-	  lat.SetTextSize(0.15); 
+	  lat.SetTextSize(0.15);
 	  lat.DrawLatex(0.04,0.3,Form("Stv%d",istave));
 	}
 	else {
@@ -579,9 +579,9 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
 	latB.SetTextSize(0.03);
 	latB.DrawLatex(0.01,0.98,Form("L%s - BOTTOM",laynums[indexLaynums].c_str()));
       }
-   
-      TFile * fileOutputT; 
-      TFile * fileOutputB; 
+
+      TFile * fileOutputT;
+      TFile * fileOutputB;
       TString NameCnvT="";
       TString NameCnvB="";
       if (numStavePart==1) {
@@ -633,9 +633,9 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
 
   hmapclone->GetAxis(1)->SetRange(iyMin, iyMax);
   for(int iter=0; iter<nMasked+1; iter++){
-    TH1F *hproj = (TH1F*)hmapclone->Projection(1); 
+    TH1F *hproj = (TH1F*)hmapclone->Projection(1);
     long int totalhits = hproj->Integral();
-    float fhr = nchips==0 ? 0. : (float)totalhits / (512.*1024.*nchips*ntrig); 
+    float fhr = nchips==0 ? 0. : (float)totalhits / (512.*1024.*nchips*ntrig);
 
     if(ntrig<0) fhr=0.;
     fhrstave[iter] = fhr;
@@ -660,12 +660,12 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
     if(nchips) hmapclone->SetBinContent(binwithmax,0.);
     if (isHotPixelMapDrawn){
       if(totalhits!=0 && iter < 100) {
-	hhotmap->SetBinContent(x-1, y-1, 1);// to avoid a marker in 0,0 for empty histos
+	hhotmap->SetBinContent(x, y, 1);// to avoid a marker in 0,0 for empty histos
       }
     }
     delete hproj;
-  } 
-  
+  }
+
   delete hmapclone;
 
   return fhrstave;
@@ -706,7 +706,7 @@ int GetNchipsActive(THnSparse *hmap, int maxchip, int MaxRange, bool HS, bool IB
       ix2+=1024;
       delete hproj;
     }
-    iy1=iy2+1; 
+    iy1=iy2+1;
     iy2+=512;
   }
   hmap->GetAxis(0)->SetRange(1,MaxRange);//reset range
