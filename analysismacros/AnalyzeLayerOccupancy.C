@@ -31,7 +31,7 @@ void AnalyzeLayerOccupancy(){
   cin>>fpath;
   cout<<endl;
 
-  int IBorOB; 
+  int IBorOB;
   //IBorOB = 0 if I want to check all IB layers
   //IBorOB = 1 if I want to check all OB layers
   //IBorOB = 2 if I want to check all IB + OB layers or if I want to check a single layer
@@ -171,7 +171,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
 
     for(int ibiny=1; ibiny<=hmaps[ihist]->GetNbinsY(); ibiny++){//loop on y bins (stave)s
       //cout << "\n stave number: " << ibiny-1 << endl;
-	
+
       TH1D *hproj = hmaps[ihist]->ProjectionX("proj",ibiny,ibiny); //single stave
       int deadchips = 0;
 
@@ -181,11 +181,11 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
 	ChipMax =hmaps[ihist]->GetNbinsX() ;
 	if (stoi(laynums[ihist]) >= 3){
 	  if (StavePart ==0) { //HS Lower
-	    ChipMin =1; 
+	    ChipMin =1;
 	    ChipMax = hmaps[ihist]->GetNbinsX()/2;
 	  }
 	  else { //HS Upper
-	    ChipMin =hmaps[ihist]->GetNbinsX()/2 +1 ; 
+	    ChipMin =hmaps[ihist]->GetNbinsX()/2 +1 ;
 	    ChipMax =hmaps[ihist]->GetNbinsX() ;
 	  }
 	}
@@ -230,7 +230,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
 	    SetStyle(trend[ilayer][ibiny-1][StavePart], col[ibiny-1-hmaps[ihist]->GetNbinsY()/3], 26);
 	  }
 	  else{
-	    SetStyle(trend[ilayer][ibiny-1][StavePart], col[ibiny-1-hmaps[ihist]->GetNbinsY()*2/3], 25);	    
+	    SetStyle(trend[ilayer][ibiny-1][StavePart], col[ibiny-1-hmaps[ihist]->GetNbinsY()*2/3], 25);
 	  }
 	}
 	else if (stoi(laynums[ihist]) ==5 || stoi(laynums[ihist])==6){
@@ -283,8 +283,8 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
 
     TLegend *leg = new TLegend(0.857, 0.197,0.997,0.898);
 
-    if (nLayers==4 && (ilay==1 || ilay==2 || ilay==3)) leg->SetNColumns(2);    
-    else if (nLayers==7 && ilay>=3) leg->SetNColumns(2);    
+    if (nLayers==4 && (ilay==1 || ilay==2 || ilay==3)) leg->SetNColumns(2);
+    else if (nLayers==7 && ilay>=3) leg->SetNColumns(2);
     else  if (stoi(laynums[0]) ==4 || stoi(laynums[0]) ==5 || stoi(laynums[0]) ==6) leg->SetNColumns(2);
 
     for(int istave=0; istave<hmaps[ilay*nRuns]->GetNbinsY(); istave++)
@@ -314,7 +314,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
       hfake->SetTitle(Form("Layer-%s, HS Upper, %s",laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
       hfake->Draw();
       for(int istave=0; istave<hmaps[ilay*nRuns]->GetNbinsY(); istave++)
-	trend[ilay][istave][1]->Draw("P same");      
+	trend[ilay][istave][1]->Draw("P same");
       leg->Draw("same");
 
       Secondcanvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSUpper.pdf", laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
@@ -330,7 +330,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
   irun=1;
   ilayer=nLayers-1;
   gStyle->SetPalette(1);
-  for(int ilay=0; ilay<nLayers; ilay++)//remove images if they exist already
+  /*for(int ilay=0; ilay<nLayers; ilay++)//remove images if they exist already
     gSystem->Unlink(Form("../Plots/Layer%s_fakehitratemap_%s.gif", laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){// start from the last in order to have the runs from the oldest to the newest
     TCanvas *canvas = new TCanvas();
@@ -364,6 +364,6 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
     }
 
     delete canvas;
-  }
+  }*/
 
 }
