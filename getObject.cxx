@@ -450,17 +450,17 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   //  cin>>layernum;
 
   //taskname
-  string taskname[8]    = {"qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR",  "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask"};
+  string taskname[8]    = {"qc/ITS/MO/FHRTask", "qc/ITS/MO/FHRTask", "qc/ITS/MO/FHRTask", "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask"};
 
   //set the task name
   switch(IBorOB){
   case 0: {//Inner Barrel
     switch(opt){
     case 1: {// fake-hit
-      taskname[0] = "qc/ITS/MO/ITSFHR";//L0T, L0B
-      taskname[1] = "qc/ITS/MO/ITSFHR";//L1T, L1B
-      taskname[2] = "qc/ITS/MO/ITSFHR"; //L2T
-      taskname[3] = "qc/ITS/MO/ITSFHR"; //L2B
+      taskname[0] = "qc/ITS/MO/FHRTask";//L0T, L0B
+      taskname[1] = "qc/ITS/MO/FHRTask";//L1T, L1B
+      taskname[2] = "qc/ITS/MO/FHRTask"; //L2T
+      taskname[3] = "qc/ITS/MO/FHRTask"; //L2B
       break;
     }
 
