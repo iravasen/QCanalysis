@@ -71,11 +71,11 @@ def main():
                 npix = npix+1
                 chipid = 0
                 if int(layer)<3: #ib
-                    chipid = int((coord[0]-1)/1024)
+                    chipid = int((coord[0])/1024)
                     if chipid not in dict:
-                        dict.update({chipid:[[int(coord[0]-1-chipid*1024),int(coord[1]-1),fhr]]})
+                        dict.update({chipid:[[int(coord[0]-chipid*1024),int(coord[1]),fhr]]})
                     else:
-                        dict[chipid].append([int(coord[0]-1-chipid*1024),int(coord[1]-1),fhr])
+                        dict[chipid].append([int(coord[0]-chipid*1024),int(coord[1]),fhr])
                 else: #ob - to be added
                     rowidx = int(int(coord[1]-1) / 512)
                     colidx = int(int(coord[0]-1) / 1024)
@@ -85,7 +85,7 @@ def main():
                     else:
                         dict[chipid].append([int(coord[0]-1-colidx*1024),int(coord[1]-1)-rowidx*512,fhr])
             ##save yaml
-            if int(layer)<3:
+            if int(layer)>2:
                 continue
             stavenum = obj.GetName()[14:15] if obj.GetName()[15:16] == "_" else obj.GetName()[14:16]
             print(f"L{layer}_{int(stavenum):02d}: {npix} hot pixels above cut")
