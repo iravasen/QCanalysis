@@ -90,8 +90,12 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
 
   std::vector<TH2*> hmaps;
   std::vector<string> timestamps, runnumbers, laynums;
-  int nTimes=0, nRuns=1;
-  Int_t col[] = {TColor::GetColor("#ff3300"), TColor::GetColor("#ec6e0a"), TColor::GetColor("#daaa14"), TColor::GetColor("#c7e51e"), TColor::GetColor("#85dd69"), TColor::GetColor("#42d6b4"), TColor::GetColor("#00ceff"), TColor::GetColor("#009adf"), TColor::GetColor("#0067c0"), TColor::GetColor("#0033a1"), TColor::GetColor("#708090"), TColor::GetColor("#9400D3")};
+  string HS[2] = {"Upper", "Lower"};
+  int nTimes=0;
+  int nRunsB[7]={0};
+  int nRunsTot=0;
+  int nLayersInput =1;
+  Int_t col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
@@ -123,23 +127,27 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
     runnumbers.push_back(runnum);
 
     laynums.push_back(laynum);
-    //cout<<"run: "<<runnum<<"   timestamp: "<<timestamp<<"    laynum: "<<laynum<<endl;
+    //    cout<<"run: "<<runnum<<"   timestamp: "<<timestamp<<"    laynum: "<<laynum<<endl;
     nTimes++;
-    if(nTimes>1 && laynum==laynums[laynums.size()-2])
-      nRuns++;
-    else nRuns=1;
+    if(nTimes>1){
+      if (laynum==laynums[laynums.size()-2]) {
+	nRunsB[stoi(laynum)]++;
+      }
+      else nLayersInput++;
+    }
   }
 
-  const int nLayersIB = (int)hmaps.size()==nRuns ? 1 : stoi(laynums[laynums.size()-1])+1;
-  const int nLayersOB = (int)hmaps.size()==nRuns ? 1 : stoi(laynums[laynums.size()-1])+1-3;
+  const int nLayersIB = nLayersInput==1 ? 1 : stoi(laynums[laynums.size()-1])+1;
+  const int nLayersOB = nLayersInput==1 ? 1 : stoi(laynums[laynums.size()-1])+1-3;
   int nLayers;
   if (IBorOB==0) nLayers = nLayersIB;
   else if (IBorOB==1) nLayers=nLayersOB;
   else nLayers=nLayersIB;
 
-  //const int nRuns = (int)runnumbers.size() / nLayers;
-  //  cout<<"Lay: "<<nLayers<<"  Runs: "<<nRuns<<endl;
   TGraph *trend[nLayers][100][2];
+  for (Int_t ilay =0; ilay<7; ilay++){
+    trend[ilay][0][0] = new TGraph(); //to get npoints=0 for layers with no data
+  }
   int ilayer=nLayers-1;
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){
     for(int ibiny=1; ibiny<=hmaps[ihist]->GetNbinsY(); ibiny++){
@@ -162,22 +170,23 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
   Int_t numStavePart =0;
 
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){// start from the last in order to have the runs from the oldest to the newest
-
     if (stoi(laynums[ihist]) < 3)   nChips=9; //IB layers
     else if (stoi(laynums[ihist]) ==3 || stoi(laynums[ihist]) ==4)    nChips=8./2;  //L3 and L4, Half stave
     else if (stoi(laynums[ihist]) ==5 || stoi(laynums[ihist]) ==6)    nChips=14./2; //L5 and L6, Half Stave
 
     if (stoi(laynums[ihist]) >=3) numStavePart = 1;
+    else numStavePart=0;
 
     for(int ibiny=1; ibiny<=hmaps[ihist]->GetNbinsY(); ibiny++){//loop on y bins (stave)s
       //cout << "\n stave number: " << ibiny-1 << endl;
-	
+    	
       TH1D *hproj = hmaps[ihist]->ProjectionX("proj",ibiny,ibiny); //single stave
       int deadchips = 0;
 
       for (Int_t StavePart=0; StavePart<= numStavePart; StavePart++){ //loop over the two Half Staves for OB
 	trend[ilayer][ibiny-1][StavePart]->SetName(Form("gr_L%s_stave%d_HS%i",laynums[ihist].c_str(),ibiny-1, StavePart));
 
+	ChipMin =1;
 	ChipMax =hmaps[ihist]->GetNbinsX() ;
 	if (stoi(laynums[ihist]) >= 3){
 	  if (StavePart ==0) { //HS Lower
@@ -190,15 +199,16 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
 	  }
 	}
 
+	deadchips = 0;
 	for(int ibinx=ChipMin; ibinx<=ChipMax; ibinx++){//evaluate the number of disabled chips
 	  if(hmaps[ihist]->GetBinContent(ibinx,ibiny)<1e-15)
 	    deadchips++;
 	}
 	if(deadchips>0){
 	  if (stoi(laynums[ihist]) < 3) {
-	    cout<<"Layer "<<laynums[ihist]<<" Stave "<<ibiny-1<<" Run: "<<runnumbers[ihist]<<" Chips number: " << nChips<<" --> Chips active:"<<nChips-deadchips<<endl;
+	    cout<<"Layer "<<laynums[ihist]<<" Stave "<<ibiny-1<<" Run: "<<runnumbers[ihist]<<" Number of chips: " << nChips<<" --> Chips active:"<<nChips-deadchips<<endl;
 	  } else {
-	    cout<<"Layer "<<laynums[ihist]<<" Stave "<<ibiny-1<<" Run: "<<runnumbers[ihist]<<" Hic number: " << nChips << " --> HICs active:"<<nChips-deadchips<<endl;
+	    cout<<"Layer "<<laynums[ihist]<<" Stave "<<ibiny-1<<" Run: "<<runnumbers[ihist]<<" Number of HICs: " << nChips << " --> HICs active:"<<nChips-deadchips<<endl;
 	  }
 	}
 
@@ -255,15 +265,35 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
       }
   }
 
-  int npoints = trend[0][0][0]->GetN();
-  TH1F *hfake = new TH1F("hfake", "; Run; Fake-hit Rate (/event/pixel)", npoints, -0.5, (double)npoints-0.5);
+  Int_t ilayEff=0;
+  int npoints=0;
+  TH1F *hfake[7];
+  nRunsTot =0;
+  for(int ilay=0; ilay<nLayers; ilay++){
+    if (nLayers==1) ilayEff = stoi(laynums[0]);
+    else if (IBorOB==1) ilayEff = ilay + stoi(laynums[0]) ;
+    else if (IBorOB==2) ilayEff = ilay + stoi(laynums[0]) ;
+    else ilayEff = ilay;
+    npoints    = trend[ilay][0][0]->GetN();
+    if (npoints==0) continue;
+    hfake[ilay]= new TH1F(Form("hfake_L%i", ilay), "; Run; Fake-hit Rate (/event/pixel)", npoints, -0.5, (double)npoints-0.5);
+    if (ilay>0 && nRunsB[ilayEff-1]!=0) nRunsTot += (nRunsB[ilayEff-1]+1);   
+    for(int ir=0; ir<=nRunsB[ilayEff]; ir++) {
+      hfake[ilay]->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[nRunsTot+ir])));
+    }
+  }
 
-  for(int ir=0; ir<(int)runnumbers.size()/nLayers; ir++)
-    hfake->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[(int)runnumbers.size()/nLayers-1-ir])));
-
+  TString PathOut = Form("../Plots/FHR_%s.root",filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str());
+  TFile * fileout = new TFile(PathOut, "RECREATE");
 
   //Draw
+  nRunsTot =0;
   for(int ilay=0; ilay<nLayers; ilay++){
+    if (nLayers==1) ilayEff = stoi(laynums[0]);
+    else if (IBorOB==1) ilayEff = ilay + stoi(laynums[0]) ;
+    else if (IBorOB==2) ilayEff = ilay + stoi(laynums[0]) ;
+    else ilayEff = ilay;
+    if (ilay>0) nRunsTot+= (nRunsB[ilayEff-1]+1);
     TCanvas *canvas = new TCanvas("canvas", "canvas");
     TCanvas *Secondcanvas = new TCanvas("Secondcanvas", "Secondcanvas");
     canvas->SetLogy();
@@ -276,63 +306,73 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
     Secondcanvas->SetMargin(0.0988,0.15,0.194,0.0993);
 
     Bool_t IsTwoCanvas=0;
-    if ((nLayers==4) || (nLayers==7 && ilay>=3) || (stoi(laynums[0]) ==3 || stoi(laynums[0]) ==4 || stoi(laynums[0]) ==5 || stoi(laynums[0]) ==6) ) {
-      //      canvas->Divide(2,1);
+    if ((IBorOB==2 && ilayEff>=3) || IBorOB==1 || (stoi(laynums[0]) ==3 || stoi(laynums[0]) ==4 || stoi(laynums[0]) ==5 || stoi(laynums[0]) ==6) ) {
       IsTwoCanvas = 1;
     }
 
     TLegend *leg = new TLegend(0.857, 0.197,0.997,0.898);
 
-    if (nLayers==4 && (ilay==1 || ilay==2 || ilay==3)) leg->SetNColumns(2);    
-    else if (nLayers==7 && ilay>=3) leg->SetNColumns(2);    
-    else  if (stoi(laynums[0]) ==4 || stoi(laynums[0]) ==5 || stoi(laynums[0]) ==6) leg->SetNColumns(2);
-
-    for(int istave=0; istave<hmaps[ilay*nRuns]->GetNbinsY(); istave++)
+    if (ilayEff>=3) leg->SetNColumns(2);  
+    for(int istave=0; istave<hmaps[nRunsTot]->GetNbinsY(); istave++)
       leg->AddEntry(trend[ilay][istave][0], Form("Stv%d",istave), "p");
-    hfake->GetYaxis()->SetRangeUser(1e-14, 1e-3);
-    hfake->GetXaxis()->SetTitleOffset(2);
-    hfake->SetTitle(Form("Layer-%s, %s",laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-
+    hfake[ilay]->GetYaxis()->SetRangeUser(1e-14, 1e-2);
+    hfake[ilay]->GetXaxis()->SetTitleOffset(2);
+    hfake[ilay]->SetTitle(Form("Layer-%s, %s",laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     canvas->cd();
-    if (IsTwoCanvas) hfake->SetTitle(Form("Layer-%s, HS Lower, %s",laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-    hfake->Draw();
-    for(int istave=0; istave<hmaps[ilay*nRuns]->GetNbinsY(); istave++)
+    if (IsTwoCanvas) hfake[ilay]->SetTitle(Form("Layer-%s, HS Lower, %s",laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    hfake[ilay]->Draw();
+    for(int istave=0; istave<hmaps[nRunsTot]->GetNbinsY(); istave++){
       trend[ilay][istave][0]->Draw("P same");
+      fileout->WriteTObject(trend[ilay][istave][0]);
+    }
     leg->Draw("same");
-
     if (!IsTwoCanvas){
-      canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s.pdf", laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-      canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s.root", laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s.pdf", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s.root", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     }
     else {
-      canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSLower.pdf", laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-      canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSLower.root", laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSLower.pdf", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSLower.root", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     }
 
     if (IsTwoCanvas){
       Secondcanvas->cd();
-      hfake->SetTitle(Form("Layer-%s, HS Upper, %s",laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-      hfake->Draw();
-      for(int istave=0; istave<hmaps[ilay*nRuns]->GetNbinsY(); istave++)
+      hfake[ilay]->SetTitle(Form("Layer-%s, HS Upper, %s",laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      hfake[ilay]->Draw();
+      for(int istave=0; istave<hmaps[nRunsTot]->GetNbinsY(); istave++){
 	trend[ilay][istave][1]->Draw("P same");      
+	fileout->WriteTObject(trend[ilay][istave][1]);
+      }
       leg->Draw("same");
 
-      Secondcanvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSUpper.pdf", laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-      Secondcanvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSUpper.root", laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      Secondcanvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSUpper.pdf", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      Secondcanvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSUpper.root", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     }
 
     delete canvas;
     delete Secondcanvas;
     delete leg;
   }
-
+  fileout->Close();
+  
   //Make GIF with TH2 for each run and for each layer
+  nRunsTot =0;
   irun=1;
   ilayer=nLayers-1;
   gStyle->SetPalette(1);
-  for(int ilay=0; ilay<nLayers; ilay++)//remove images if they exist already
-    gSystem->Unlink(Form("../Plots/Layer%s_fakehitratemap_%s.gif", laynums[ilay*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+  for(int ilay=0; ilay<nLayers; ilay++) {//remove images if they exist already
+    if (nLayers==1) ilayEff = stoi(laynums[0]);
+    else if (IBorOB==1) ilayEff = ilay + stoi(laynums[0]) ;
+    else if (IBorOB==2) ilayEff = ilay + stoi(laynums[0]) ;
+    else ilayEff = ilay;
+    if (ilay>0) nRunsTot+= (nRunsB[ilayEff-1]+1);
+    gSystem->Unlink(Form("../Plots/Layer%s_fakehitratemap_%s.gif", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+  }
+
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){// start from the last in order to have the runs from the oldest to the newest
+    if (ihist!=((int)hmaps.size()-1) && (stoi(laynums[ihist])!=stoi(laynums[ihist+1]))) {
+      nRunsTot-= (nRunsB[stoi(laynums[ihist])]+1);
+    }
     TCanvas *canvas = new TCanvas();
     canvas->cd();
     canvas->SetLogz();
@@ -343,27 +383,28 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
     hmaps[ihist]->SetMinimum(1e-14);
     hmaps[ihist]->SetMaximum(1e-3);
     hmaps[ihist]->GetZaxis()->SetTitle("Fake-hit Rate (/event/pixel)");
-    hmaps[ihist]->SetTitle(Form("Layer-%s, Run %06d (%d/%d)", laynums[ilayer*nRuns].c_str(), stoi(runnumbers[ihist]), irun,nRuns));
-    canvas->Print(Form("../Plots/Layer%s_fakehitratemap_%s.gif+40", laynums[ilayer*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    hmaps[ihist]->SetTitle(Form("Layer-%s, Run %06d (%d/%d)", laynums[nRunsTot].c_str(), stoi(runnumbers[ihist]), irun, nRunsB[stoi(laynums[ihist])]+1));
+    canvas->Print(Form("../Plots/Layer%s_fakehitratemap_%s.gif+40", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     irun++;
     if(!ihist && nLayers==1){
-      canvas->Print(Form("../Plots/Layer%s_fakehitratemap_%s.gif++40++", laynums[ilayer*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      canvas->Print(Form("../Plots/Layer%s_fakehitratemap_%s.gif++40++", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
       break;
     }
     if(nLayers>1){
       if(ihist>0){
         if(laynums[ihist-1]!=laynums[ihist]){
-          canvas->Print(Form("../Plots/Layer%s_fakehitratemap_%s.gif++40++", laynums[ilayer*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+          canvas->Print(Form("../Plots/Layer%s_fakehitratemap_%s.gif++40++", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
           ilayer--;
           irun=1;
         }
       }
       else if(!ihist && !ilayer){
-        canvas->Print(Form("../Plots/Layer%s_fakehitratemap_%s.gif++40++", laynums[ilayer*nRuns].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+        canvas->Print(Form("../Plots/Layer%s_fakehitratemap_%s.gif++40++", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
       }
     }
 
     delete canvas;
   }
 
+  cout << "\nROOT file " << PathOut << " has been created" << endl;
 }
