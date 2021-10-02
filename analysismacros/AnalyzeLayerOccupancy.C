@@ -16,7 +16,7 @@
 
 using namespace std;
 
-void SetStyle(TGraph *h, Int_t col, Style_t mkr);
+void SetStyle(TGraph *h, int col, Style_t mkr);
 void DoAnalysis(string filepath, const int nChips, string skipruns, int IBorOB);
 
 //
@@ -72,7 +72,7 @@ void AnalyzeLayerOccupancy(){
 //
 //Set Style
 //
-void SetStyle(TGraph *h, Int_t col, Style_t mkr){
+void SetStyle(TGraph *h, int col, Style_t mkr){
   h->SetLineColor(col);
   h->SetMarkerStyle(mkr);
   h->SetMarkerSize(1.4);
@@ -95,7 +95,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
   int nRunsB[7]={0};
   int nRunsTot=0;
   int nLayersInput =1;
-  Int_t col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
+  int col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
@@ -145,13 +145,13 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
   else nLayers=nLayersIB;
 
   TGraph *trend[nLayers][100][2];
-  for (Int_t ilay =0; ilay<7; ilay++){
+  for (int ilay =0; ilay<7; ilay++){
     trend[ilay][0][0] = new TGraph(); //to get npoints=0 for layers with no data
   }
   int ilayer=nLayers-1;
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){
     for(int ibiny=1; ibiny<=hmaps[ihist]->GetNbinsY(); ibiny++){
-      for (Int_t b=0; b<=1; b++){
+      for (int b=0; b<=1; b++){
 	trend[ilayer][ibiny-1][b] = new TGraph();
       }
     }
@@ -165,9 +165,9 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
   string histname = hmaps[0]->GetName();
   int irun=0;
 
-  Int_t ChipMin =1;
-  Int_t ChipMax =1;
-  Int_t numStavePart =0;
+  int ChipMin =1;
+  int ChipMax =1;
+  int numStavePart =0;
 
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){// start from the last in order to have the runs from the oldest to the newest
     if (stoi(laynums[ihist]) < 3)   nChips=9; //IB layers
@@ -183,7 +183,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
       TH1D *hproj = hmaps[ihist]->ProjectionX("proj",ibiny,ibiny); //single stave
       int deadchips = 0;
 
-      for (Int_t StavePart=0; StavePart<= numStavePart; StavePart++){ //loop over the two Half Staves for OB
+      for (int StavePart=0; StavePart<= numStavePart; StavePart++){ //loop over the two Half Staves for OB
 	trend[ilayer][ibiny-1][StavePart]->SetName(Form("gr_L%s_stave%d_HS%i",laynums[ihist].c_str(),ibiny-1, StavePart));
 
 	ChipMin =1;
@@ -212,9 +212,9 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
 	  }
 	}
 
-	Float_t StaveOccupancy=0;
+	double StaveOccupancy=0;
 	if(deadchips!=nChips){
-	  for (Int_t b=ChipMin; b<= ChipMax; b++){
+	  for (int b=ChipMin; b<= ChipMax; b++){
 	    StaveOccupancy+= hproj->GetBinContent(b);
 	  }
 	  //	  cout << "full int " <<hproj->Integral() << " StaveOccupancy " << StaveOccupancy<<  " average stave occupancy per chip " <<  StaveOccupancy/(nChips-deadchips) << endl;
@@ -265,7 +265,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
       }
   }
 
-  Int_t ilayEff=0;
+  int ilayEff=0;
   int npoints=0;
   TH1F *hfake[7];
   nRunsTot =0;
