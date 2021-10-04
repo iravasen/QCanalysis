@@ -157,9 +157,10 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
     }
     if(ihist>0)
       if(laynums[ihist-1]!=laynums[ihist]){
-        ilayer--;
+        ilayer = ilayer - TMath::Abs(stoi(laynums[ihist]) - stoi(laynums[ihist-1]));
       }
   }
+
   ilayer=nLayers-1;
   TH1F *hproj = new TH1F();
   string histname = hmaps[0]->GetName();
@@ -261,7 +262,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
     if(ihist>0)
       if(laynums[ihist-1]!=laynums[ihist]){
 	irun=0;
-	ilayer--;
+        ilayer = ilayer - TMath::Abs(stoi(laynums[ihist]) - stoi(laynums[ihist-1]));
       }
   }
 
@@ -274,10 +275,10 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
     else if (IBorOB==1) ilayEff = ilay + stoi(laynums[0]) ;
     else if (IBorOB==2) ilayEff = ilay + stoi(laynums[0]) ;
     else ilayEff = ilay;
+    if (ilay>0 && nRunsB[ilayEff-1]!=0) nRunsTot += (nRunsB[ilayEff-1]+1);   
     npoints    = trend[ilay][0][0]->GetN();
     if (npoints==0) continue;
     hfake[ilay]= new TH1F(Form("hfake_L%i", ilay), "; Run; Fake-hit Rate (/event/pixel)", npoints, -0.5, (double)npoints-0.5);
-    if (ilay>0 && nRunsB[ilayEff-1]!=0) nRunsTot += (nRunsB[ilayEff-1]+1);   
     for(int ir=0; ir<=nRunsB[ilayEff]; ir++) {
       hfake[ilay]->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[nRunsTot+ir])));
     }
@@ -294,6 +295,8 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
     else if (IBorOB==2) ilayEff = ilay + stoi(laynums[0]) ;
     else ilayEff = ilay;
     if (ilay>0) nRunsTot+= (nRunsB[ilayEff-1]+1);
+    npoints    = trend[ilay][0][0]->GetN();
+    if (npoints==0) continue;
     TCanvas *canvas = new TCanvas("canvas", "canvas");
     TCanvas *Secondcanvas = new TCanvas("Secondcanvas", "Secondcanvas");
     canvas->SetLogy();
@@ -311,8 +314,8 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
     }
 
     TLegend *leg = new TLegend(0.857, 0.197,0.997,0.898);
-
     if (ilayEff>=3) leg->SetNColumns(2);  
+
     for(int istave=0; istave<hmaps[nRunsTot]->GetNbinsY(); istave++)
       leg->AddEntry(trend[ilay][istave][0], Form("Stv%d",istave), "p");
     hfake[ilay]->GetYaxis()->SetRangeUser(1e-14, 1e-2);
@@ -366,6 +369,8 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
     else if (IBorOB==2) ilayEff = ilay + stoi(laynums[0]) ;
     else ilayEff = ilay;
     if (ilay>0) nRunsTot+= (nRunsB[ilayEff-1]+1);
+    npoints    = trend[ilay][0][0]->GetN();
+    if (npoints==0) continue;
     gSystem->Unlink(Form("../Plots/Layer%s_fakehitratemap_%s.gif", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
   }
 
