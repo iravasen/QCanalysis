@@ -31,7 +31,7 @@ void AnalyzeLayerOccupancy(){
   cin>>fpath;
   cout<<endl;
 
-  int IBorOB; 
+  int IBorOB;
   //IBorOB = 0 if I want to check all IB layers
   //IBorOB = 1 if I want to check all OB layers
   //IBorOB = 2 if I want to check all IB + OB layers or if I want to check a single layer
@@ -180,7 +180,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
 
     for(int ibiny=1; ibiny<=hmaps[ihist]->GetNbinsY(); ibiny++){//loop on y bins (stave)s
       //cout << "\n stave number: " << ibiny-1 << endl;
-    	
+
       TH1D *hproj = hmaps[ihist]->ProjectionX("proj",ibiny,ibiny); //single stave
       int deadchips = 0;
 
@@ -191,11 +191,11 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
 	ChipMax =hmaps[ihist]->GetNbinsX() ;
 	if (stoi(laynums[ihist]) >= 3){
 	  if (StavePart ==0) { //HS Lower
-	    ChipMin =1; 
+	    ChipMin =1;
 	    ChipMax = hmaps[ihist]->GetNbinsX()/2;
 	  }
 	  else { //HS Upper
-	    ChipMin =hmaps[ihist]->GetNbinsX()/2 +1 ; 
+	    ChipMin =hmaps[ihist]->GetNbinsX()/2 +1 ;
 	    ChipMax =hmaps[ihist]->GetNbinsX() ;
 	  }
 	}
@@ -241,7 +241,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
 	    SetStyle(trend[ilayer][ibiny-1][StavePart], col[ibiny-1-hmaps[ihist]->GetNbinsY()/3], 26);
 	  }
 	  else{
-	    SetStyle(trend[ilayer][ibiny-1][StavePart], col[ibiny-1-hmaps[ihist]->GetNbinsY()*2/3], 25);	    
+	    SetStyle(trend[ilayer][ibiny-1][StavePart], col[ibiny-1-hmaps[ihist]->GetNbinsY()*2/3], 25);
 	  }
 	}
 	else if (stoi(laynums[ihist]) ==5 || stoi(laynums[ihist])==6){
@@ -346,6 +346,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
 	trend[ilay][istave][1]->Draw("P same");      
 	fileout->WriteTObject(trend[ilay][istave][1]);
       }
+
       leg->Draw("same");
 
       Secondcanvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSUpper.pdf", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
@@ -363,6 +364,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
   irun=1;
   ilayer=nLayers-1;
   gStyle->SetPalette(1);
+  
   for(int ilay=0; ilay<nLayers; ilay++) {//remove images if they exist already
     if (nLayers==1) ilayEff = stoi(laynums[0]);
     else if (IBorOB==1) ilayEff = ilay + stoi(laynums[0]) ;
