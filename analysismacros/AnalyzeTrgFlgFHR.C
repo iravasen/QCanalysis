@@ -73,7 +73,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
 
   std::vector<TH2*> herr;
   std::vector<string> timestamps, runnumbers;
-  Int_t col[] = {TColor::GetColor("#ff3300"), TColor::GetColor("#ec6e0a"), TColor::GetColor("#daaa14"), TColor::GetColor("#c7e51e"), TColor::GetColor("#85dd69"), TColor::GetColor("#42d6b4"), TColor::GetColor("#00ceff"), TColor::GetColor("#009adf"), TColor::GetColor("#0067c0"), TColor::GetColor("#0033a1")};
+  int col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
@@ -140,7 +140,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
       if (IBorOB==2){
         IBorOBindex = i;
 	if (i==0) {ibinMin =1; ibinMax = 144;} //IB                                                        
-	else  {ibinMin =144; ibinMax = herr[iplot]->GetNbinsX();} //OB                               
+	else  {ibinMin =144+1; ibinMax = herr[iplot]->GetNbinsX();} //OB                               
       }   
       hproj = (TH1D*)herr[iplot]->ProjectionY(Form("herr_%d",iplot), ibinMin, ibinMax);
       for(int ibin=1; ibin<=hSummary->GetNbinsY(); ibin++){
@@ -150,6 +150,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
 	  SetStyle(trend[ibin-1][i], col[ibin<=10?ibin-1:ibin-11], ibin<=10?24:25);
         }
         trend[ibin-1][i]->SetPoint(ir,ir, hproj->GetBinContent(ibin));
+	//	cout <<" IB or OB " << i << " runnumber " <<  runnumbers[ir] << " " << ibin << " " << hproj->GetBinContent(ibin) << endl;
         if(hproj->GetBinContent(ibin)>max[i])
           max[i]=hproj->GetBinContent(ibin);
       }
@@ -188,8 +189,9 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
   //Draw trends
   int npoints = trend[0][0]->GetN();
   TH1F *hfake = new TH1F("hfake", "; Run; # Errors", npoints, -0.5, (double)npoints-0.5);
-  for(int ir=0; ir<(int)runnumbers.size(); ir++)
-      hfake->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[runnumbers.size()-1-ir])));
+  for(int ir=0; ir<(int)runnumbers.size(); ir++){
+    hfake->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[ir])));
+  }
 
   TLegend *leg = new TLegend(0.904, 0.197,0.997,0.898);
   leg->SetHeader("IDs");
