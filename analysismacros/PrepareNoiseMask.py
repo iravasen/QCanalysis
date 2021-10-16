@@ -46,11 +46,12 @@ def main():
     parser.add_argument("-f", "--file", required=True, help="Input file to be analysed")
     args = parser.parse_args()
     print(f"Analysing file: {args.file}")
-
+    runnum = args.file[50:56]
     #open file
     infl = ROOT.TFile.Open(args.file, "READ")
     ntriggers = GetTriggers(infl)
     print(f"Number of triggers: {ntriggers}")
+    file1 = open(f"../yaml/noise_masks/number_of_noisy_pix_{runnum}.txt","a")
     #Loop over all THnSparse and prepare yaml file with noisy pixels
     NOISECUT = 1e-6
     for key in infl.GetListOfKeys():
@@ -99,9 +100,10 @@ def main():
             if layer=="6" and stavenum=="22":
                 dict[85].append([226,248,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
             print(f"L{layer}_{int(stavenum):02d}: {npix} hot pixels above cut")
+            file1.write(f"L{layer}_{int(stavenum):02d} {npix}\n")
             with open(f"../yaml/noise_masks/L{layer}_{int(stavenum):02d}.yml", 'w') as f:
                 yaml.dump(dict, f)
-
+    file1.close()
 
 ## Function to get number of triggers
 def GetTriggers(infl):
