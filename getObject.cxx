@@ -35,7 +35,7 @@ TFile *outputfile;
 
 //to which CCDB we have to connect
 // For P2 operations put: qcdb.cern.ch:8083
-string ccdbport = "qcdb.cern.ch:8083";
+string ccdbport = "localhost:8083";
 
 
 int main(int argc, char **argv)

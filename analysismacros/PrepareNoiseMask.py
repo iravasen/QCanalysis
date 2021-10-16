@@ -76,18 +76,28 @@ def main():
                         dict.update({chipid:[[int(coord[0]-chipid*1024),int(coord[1]),fhr]]})
                     else:
                         dict[chipid].append([int(coord[0]-chipid*1024),int(coord[1]),fhr])
-                else: #ob - to be added
+                else: #ob
                     rowidx = int(int(coord[1]-1) / 512)
                     colidx = int(int(coord[0]-1) / 1024)
                     chipid = rowselector[rowidx][colidx]
+                    colfinal = 0
+                    rowfinal = 0
+                    if rowidx==0 or rowidx==2:
+                        rowfinal = 511*(rowidx+1) + rowidx - int(coord[1]-1)
+                        colfinal = int(coord[0]-1) - 1024*colidx
+                    if rowidx==1 or rowidx==3:
+                        rowfinal = int(coord[1]-1) - 512*(rowidx)
+                        colfinal = 1023*(colidx+1) + colidx - int(coord[0]-1) +1 ## last +1 to recover QC bug
                     if chipid not in dict:
-                        dict.update({chipid:[[int(coord[0]-1-colidx*1024),int(coord[1]-1)-rowidx*512,fhr]]})
+                        dict.update({chipid:[[colfinal,rowfinal,fhr]]})
                     else:
-                        dict[chipid].append([int(coord[0]-1-colidx*1024),int(coord[1]-1)-rowidx*512,fhr])
+                        dict[chipid].append([colfinal,rowfinal,fhr])
             ##save yaml
-            if int(layer)>2:
-                continue
             stavenum = obj.GetName()[14:15] if obj.GetName()[15:16] == "_" else obj.GetName()[14:16]
+            if layer=="4" and stavenum=="3":
+                dict[198].append([988,2,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
+            if layer=="6" and stavenum=="22":
+                dict[85].append([226,248,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
             print(f"L{layer}_{int(stavenum):02d}: {npix} hot pixels above cut")
             with open(f"../yaml/noise_masks/L{layer}_{int(stavenum):02d}.yml", 'w') as f:
                 yaml.dump(dict, f)
