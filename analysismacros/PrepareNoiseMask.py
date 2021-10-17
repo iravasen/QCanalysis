@@ -99,10 +99,13 @@ def main():
                 dict[198].append([988,2,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
             if layer=="6" and stavenum=="22":
                 dict[85].append([226,248,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
+            if layer=="3" and stavenum=="7":
+                dict[65].append([631,69,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
             print(f"L{layer}_{int(stavenum):02d}: {npix} hot pixels above cut")
             file1.write(f"L{layer}_{int(stavenum):02d} {npix}\n")
-            with open(f"../yaml/noise_masks/L{layer}_{int(stavenum):02d}.yml", 'w') as f:
-                yaml.dump(dict, f)
+            if layer=="3" and stavenum=="7":
+                with open(f"../yaml/noise_masks/L{layer}_{int(stavenum):02d}.yml", 'w') as f:
+                    yaml.dump(dict, f)
     file1.close()
 
 ## Function to get number of triggers
