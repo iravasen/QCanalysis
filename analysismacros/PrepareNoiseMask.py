@@ -53,7 +53,7 @@ def main():
     print(f"Number of triggers: {ntriggers}")
     file1 = open(f"../yaml/noise_masks/number_of_noisy_pix_{runnum}.txt","a")
     #Loop over all THnSparse and prepare yaml file with noisy pixels
-    NOISECUT = 1e-6
+    NOISECUT = 2e-6
     for key in infl.GetListOfKeys():
         obj=key.ReadObj()
         if obj.InheritsFrom("THnSparse"):
@@ -103,9 +103,9 @@ def main():
                 dict[65].append([631,69,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
             print(f"L{layer}_{int(stavenum):02d}: {npix} hot pixels above cut")
             file1.write(f"L{layer}_{int(stavenum):02d} {npix}\n")
-            if layer=="3" and stavenum=="7":
-                with open(f"../yaml/noise_masks/L{layer}_{int(stavenum):02d}.yml", 'w') as f:
-                    yaml.dump(dict, f)
+
+            with open(f"../yaml/noise_masks/L{layer}_{int(stavenum):02d}.yml", 'w') as f:
+                yaml.dump(dict, f)
     file1.close()
 
 ## Function to get number of triggers
