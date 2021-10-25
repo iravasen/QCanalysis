@@ -42,8 +42,13 @@ def main():
 
     rowselector = {0: coltochipid0l, 1: coltochipid8l, 2: coltochipid0u, 3: coltochipid8u}
 
+    noisyrowstave = {"L4_16":[0, 2, 177], "L6_04":[1,313,201], "L6_06":[2,250,252], "L6_20":[3,111,211],
+    "L4_03":[4,360,160], "L5_26":[5,319,25],"L5_09":[6,473,196],"L5_13":[7,198,148],"L5_32":[8,251,18], "L5_38":[9,227,19],
+    "L5_04":[10,189,169], "L5_07":[11,169,166]}# "stave": {id, row, chipid}
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--file", required=True, help="Input file to be analysed")
+    parser.add_argument("-m", "--merge", required=True, help="Merge with existing noise mask")
     args = parser.parse_args()
     print(f"Analysing file: {args.file}")
     runnum = args.file[50:56]
@@ -51,9 +56,10 @@ def main():
     infl = ROOT.TFile.Open(args.file, "READ")
     ntriggers = GetTriggers(infl)
     print(f"Number of triggers: {ntriggers}")
+
     file1 = open(f"../yaml/noise_masks/number_of_noisy_pix_{runnum}.txt","a")
     #Loop over all THnSparse and prepare yaml file with noisy pixels
-    NOISECUT = 2e-6
+    NOISECUT = 2e-5
     for key in infl.GetListOfKeys():
         obj=key.ReadObj()
         if obj.InheritsFrom("THnSparse"):
@@ -80,6 +86,10 @@ def main():
                 else: #ob
                     rowidx = int(int(coord[1]-1) / 512)
                     colidx = int(int(coord[0]-1) / 1024)
+                    if rowidx==1 or rowidx==3:
+                        colidx = int(int(coord[0]) / 1024)
+                    if colidx==49: ##bug??
+                        colidx = colidx-1
                     chipid = rowselector[rowidx][colidx]
                     colfinal = 0
                     rowfinal = 0
@@ -93,19 +103,61 @@ def main():
                         dict.update({chipid:[[colfinal,rowfinal,fhr]]})
                     else:
                         dict[chipid].append([colfinal,rowfinal,fhr])
-            ##save yaml
+
             stavenum = obj.GetName()[14:15] if obj.GetName()[15:16] == "_" else obj.GetName()[14:16]
+
+            #Add the entire noisy rows for some chip in some staves
+            staveid = f"L{layer}_{int(stavenum):02d}"
+            if staveid in noisyrowstave: ## if the stave is the one with noisy rows -> MASK FULL ROW
+                for icol in range(0,1024):
+                    check = 0
+                    if noisyrowstave[staveid][2] in dict:
+                        for el in dict[noisyrowstave[staveid][2]]:
+                            if el[0]==icol and el[1] == noisyrowstave[staveid][1]:
+                                check = 1
+                                break
+                        if check==0:
+                            dict[noisyrowstave[staveid][2]].append([icol, noisyrowstave[staveid][1], 1.0]) ##dummy FHR = 1.0
+                    else:
+                        dict.update({noisyrowstave[staveid][2]:[[icol,noisyrowstave[staveid][1],1.0]]})
+
+            #Add stuck pix
             if layer=="4" and stavenum=="3":
-                dict[198].append([988,2,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
+                if 198 not in dict:
+                    dict.update({198:[[988,2,1.0]]})
+                else:
+                    dict[198].append([988,2,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
             if layer=="6" and stavenum=="22":
                 dict[85].append([226,248,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
             if layer=="3" and stavenum=="7":
-                dict[65].append([631,69,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
+                if 65 not in dict:
+                    dict.update({65:[[631,69,1.0]]})
+                else:
+                    dict[65].append([631,69,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
             print(f"L{layer}_{int(stavenum):02d}: {npix} hot pixels above cut")
-            file1.write(f"L{layer}_{int(stavenum):02d} {npix}\n")
 
+            #Merge with existing mask (if specified in the option)
+            merge = dict.copy()
+            if args.merge:
+                with open(f"../yaml/noise_masks/L{layer}_{int(stavenum):02d}.yml", 'r') as f:
+                    dataold=yaml.load(f, Loader=yaml.FullLoader) or {}
+                merge.update(dataold)
+                for i in dict:
+                    if dict[i] != merge[i]:
+                        for j in dict[i]:
+                            check = 0
+                            for k in merge[i]:
+                                if j[0]==k[0] and j[1]==k[1]:
+                                    check = 1
+                                    break
+                            if j not in merge[i] and check==0:
+                                merge[i].append(j)
+
+            ##save yaml
+
+            file1.write(f"L{layer}_{int(stavenum):02d} {npix}\n")
             with open(f"../yaml/noise_masks/L{layer}_{int(stavenum):02d}.yml", 'w') as f:
-                yaml.dump(dict, f)
+                yaml.dump(merge, f)
     file1.close()
 
 ## Function to get number of triggers
@@ -116,10 +168,10 @@ def GetTriggers(infl):
         obj=key.ReadObj()
         name = obj.GetName()
         if obj.InheritsFrom("TH2") and ("L0" in name): ##just take L0
-            fhr_chip_ib = obj.GetBinContent(1,1)
+            fhr_chip_ib = obj.GetBinContent(1,2)
             if fhr_chip_ib<1e-15:
                 print("Please change chip, this bin is empty")
-        if obj.InheritsFrom("THnSparse") and ("L0_Stv0" in name): ##just take L0_00
+        if obj.InheritsFrom("THnSparse") and ("L0_Stv1" in name): ##just take L0_00
             h2 = obj.Projection(1,0)
             nhits_chip_ib = h2.Integral(1,1024,1,512)
             del h2
