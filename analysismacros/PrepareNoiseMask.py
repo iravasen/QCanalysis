@@ -48,7 +48,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--file", required=True, help="Input file to be analysed")
-    parser.add_argument("-m", "--merge", required=True, help="Merge with existing noise mask")
+    parser.add_argument("-m", "--merge", default=False, choices=('True','False'), help="Merge with existing noise mask")
     args = parser.parse_args()
     print(f"Analysing file: {args.file}")
     runnum = args.file[50:56]
@@ -138,7 +138,8 @@ def main():
 
             #Merge with existing mask (if specified in the option)
             merge = dict.copy()
-            if args.merge:
+            if args.merge == "True":
+                print("HEREHEREHEHREHEHRE")
                 with open(f"../yaml/noise_masks/L{layer}_{int(stavenum):02d}.yml", 'r') as f:
                     dataold=yaml.load(f, Loader=yaml.FullLoader) or {}
                 merge.update(dataold)
@@ -154,7 +155,6 @@ def main():
                                 merge[i].append(j)
 
             ##save yaml
-
             file1.write(f"L{layer}_{int(stavenum):02d} {npix}\n")
             with open(f"../yaml/noise_masks/L{layer}_{int(stavenum):02d}.yml", 'w') as f:
                 yaml.dump(merge, f)
