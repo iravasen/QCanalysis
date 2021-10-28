@@ -73,7 +73,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
 
   std::vector<TH2*> herr;
   std::vector<string> timestamps, runnumbers;
-  int col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
+  //int col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
+  int col[] = {810, 797, 827, 417, 868, 867, 860, 602, 921, 874};
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
@@ -134,7 +135,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
   int ir = 0;
   double max[2] = {-1., -1.};
   TH1D *hproj;
-  for(int iplot=0; iplot<(int)herr.size(); iplot++){
+  for(int iplot=(int)herr.size()-1; iplot>=0; iplot--){
     for (Int_t i=0; i<=1; i++){
       if (IBorOB==2){
 	IBorOBindex = i;
@@ -146,7 +147,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
 	if(ir==0){
 	  trend[ibin-1][i] = new TGraph();
 	  trend[ibin-1][i]->SetName(Form("gr_errID%d_%s",ibin, SIBorOB[IBorOBindex].Data()));
-	  SetStyle(trend[ibin-1][i], col[ibin<=10?ibin-1:ibin<=20?ibin-11:ibin-21], ibin<=10?24:ibin<=20?25:26);
+	  //	  SetStyle(trend[ibin-1][i], col[ibin<=10?ibin-1:ibin<=20?ibin-11:ibin-21], ibin<=10?24:ibin<=20?25:26);
+	  SetStyle(trend[ibin-1][i], col[ibin<=8?ibin-1:ibin<=16?ibin-9:ibin-17], ibin<=8?24:ibin<=16?25:26);
 	}
 	trend[ibin-1][i]->SetPoint(ir,ir, hproj->GetBinContent(ibin));
 	if(hproj->GetBinContent(ibin)>max[i])
@@ -187,7 +189,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
   int npoints = trend[0][0]->GetN();
   TH1F *hfake = new TH1F("hfake", "; Run; # Errors", npoints, -0.5, (double)npoints-0.5);
   for(int ir=0; ir<(int)runnumbers.size(); ir++)
-    hfake->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[ir])));
+    hfake->GetXaxis()->SetBinLabel(ir+1, Form("run%06d",  stoi(runnumbers[(int)runnumbers.size()-1-ir])));
 
   TLegend *leg = new TLegend(0.904, 0.197,0.997,0.898);
   leg->SetHeader("Error IDs");
