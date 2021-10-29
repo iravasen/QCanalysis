@@ -189,7 +189,6 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
   int npoints = trend[0][0]->GetN();
   TH1F *hfake = new TH1F("hfake", "; Run; # Errors", npoints, -0.5, (double)npoints-0.5);
   for(int ir=0; ir<(int)runnumbers.size(); ir++){
-    cout << "ir " << ir << " " <<     hfake->GetXaxis()->GetBinCenter(ir+1) << endl;
     hfake->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[(int)runnumbers.size()-1-ir])));
   }
 
