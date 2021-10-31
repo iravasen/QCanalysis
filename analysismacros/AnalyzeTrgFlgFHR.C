@@ -97,12 +97,10 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
     string runnum =  objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
 
     if(skipruns.find(runnum)!=string::npos) continue; //eventually skip runs specified by the user
-
     cout<<"... Reading "<<obj->GetName()<<endl;
     herr.push_back(h2);
     timestamps.push_back(timestamp);
     runnumbers.push_back(runnum);
-
   }
 
   int nRuns = (int)runnumbers.size();
@@ -135,7 +133,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
   int ir = 0;
   double max[2] = {-1., -1.};
   TH1D *hproj;
-  for(int iplot=0; iplot<(int)herr.size(); iplot++){
+  for(int iplot=(int)herr.size()-1; iplot>=0; iplot--){
     for (Int_t i=0; i<=1; i++){
       if (IBorOB==2){
         IBorOBindex = i;
@@ -174,12 +172,13 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
   //hSummary[ilay]->GetXaxis()->SetNdivisions(530);
   //hSummary[ilay]->GetYaxis()->SetNdivisions(516);
   hSummary->GetXaxis()->SetLabelSize(0.045);
-  hSummary->GetYaxis()->SetLabelSize(0.045);
-  hSummary->GetYaxis()->SetTitleOffset(1.3);
-  hSummary->GetZaxis()->SetLabelSize(0.045);
   hSummary->GetXaxis()->SetTitleSize(0.05);
+
+  hSummary->GetYaxis()->SetLabelSize(0.045);
   hSummary->GetYaxis()->SetTitleSize(0.05);
-  hSummary->GetYaxis()->SetTitleOffset(0.7);
+  hSummary->GetYaxis()->SetTitleOffset(1);
+
+  hSummary->GetZaxis()->SetLabelSize(0.045);
   hSummary->GetZaxis()->SetTitleSize(0.05);
   hSummary->GetZaxis()->SetTitleOffset(0.9);
 
@@ -190,13 +189,13 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
   int npoints = trend[0][0]->GetN();
   TH1F *hfake = new TH1F("hfake", "; Run; # Errors", npoints, -0.5, (double)npoints-0.5);
   for(int ir=0; ir<(int)runnumbers.size(); ir++){
-    hfake->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[ir])));
+    hfake->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers[(int)runnumbers.size()-1-ir])));
   }
 
   TLegend *leg = new TLegend(0.904, 0.197,0.997,0.898);
   leg->SetHeader("IDs");
   for(int iid=1; iid<=hSummary->GetNbinsY();iid++)
-    leg->AddEntry(trend[iid-1][0], Form("%d", iid), "p");
+    leg->AddEntry(trend[iid-1][0], hSummary->GetYaxis()->GetBinLabel(iid), "p");
 
   TCanvas canvas2;
   canvas2.cd();
