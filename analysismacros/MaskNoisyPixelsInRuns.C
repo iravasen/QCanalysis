@@ -356,6 +356,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
     }
     //    cout << "numStavePart " << numStavePart << endl;
     //cout<<"\n*************Layer "<<laynums[ihist]<<" Stave "<<stavenums[ihist]<<" Run: "<<runnumbers[ihist]<< endl;
+     
     for (int StavePart=0; StavePart< numStavePart; StavePart++){ //loop over the two Half Staves for OB      
       int nchipsactive = GetNchipsActive(hmaps[ihist],nChips, MaxRange, StavePart, IB);
       if (numStavePart==1){
@@ -374,6 +375,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
 	fhrall1.push_back(GetFHRwithMasking(hmaps[ihist],nchipsactive,ntrig[irun],hHotMap[nLayers==1 ? 0 : ilayIndex][stoi(stavenums[ihist])], StavePart, IB,  isHotPixelMapDrawn));
       }
     }
+    
     irun-- ;
 
     if(ihist>0){
@@ -460,13 +462,9 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
     TLegend *leg = new TLegend(0.904, 0.127,0.997,0.898);
     if (ilayEff>=3) leg->SetNColumns(2);
 
-    if (IBorOB==0) numStavePart=1;
-    else if (IBorOB==1) numStavePart=2;
-    else {
-      if (ilayEff < 3) numStavePart=1;
-      else numStavePart=2;
-    }
-
+    if (ilayEff < 3) numStavePart=1;
+    else numStavePart=2;
+    
     TString SStavePart[2] = {"HS Lower", "HS Upper"};
     if (numStavePart==1) {
       SStavePart[0] = "";
@@ -554,6 +552,9 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
       else if (IBorOB==1) ilayEff = ilay + 3 ;
       else ilayEff = ilay;
       if (nRunsB[ilayEff] == -1) continue;
+
+      if (ilayEff < 3) numStavePart=1;  
+      else  numStavePart=2;  
 
       TCanvas cnvT(Form("cnvT_%d",ilayEff), Form("cnv_%d",ilayEff),800,1200);
       TCanvas cnvB(Form("cnvB_%d",ilayEff), Form("cnvBOT_%d",ilayEff),800,1200);
