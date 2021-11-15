@@ -17,7 +17,7 @@
 
 using namespace std;
 
-void DoAnalysis(string filepath, bool IBorOB, string skipruns, long int refrun);
+void DoAnalysis(string filepath, int IBorOB, string skipruns, long int refrun);
 
 //
 // MAIN
@@ -69,6 +69,7 @@ void CompareLayerOccupancy(){
   TIter next(list);
   TKey *key;
   TObject *obj;
+  TH2 *h2;
   vector<string> laynums;
   while((key = ((TKey*)next()))){
     obj = key->ReadObj();
@@ -85,12 +86,18 @@ void CompareLayerOccupancy(){
 
     if(skipruns.find(runnum)!=string::npos) continue; //eventually skip runs specified by the user
 
-    laynums.push_back(laynum);
-    if ((int)laynums.size()==1 || ((int)laynums.size()>1 && laynum!=laynums[laynums.size()-2]))    cout << "\nLayer: " << laynum << "\nRuns: " <<endl;
-    cout<<runnum<<endl;
-    //    if((int)laynums.size()>1 && laynum!=laynums[laynums.size()-2])   break;
-  }
+    h2 = (TH2*)obj;
+    if(!h2->GetEntries()) {
+      //      cout << "Layer: " << laynum << " Run number: " << runnum << " --> No entries " <<endl;
+      continue;
+    }
 
+    laynums.push_back(laynum);
+    if ((int)laynums.size()==1 || ((int)laynums.size()>1 && laynum!=laynums[laynums.size()-2]))  {
+      cout << "\nLayer: " << laynum << "\nRuns: " <<endl;
+    }
+    cout<<runnum<<endl;
+  }
 
   long int refrun;
   cout<<"\n\n=>Insert a run you want to use as a reference for the comparison with all the others: \n"<<endl;
@@ -105,7 +112,7 @@ void CompareLayerOccupancy(){
 //
 // Analyse data
 //
-void DoAnalysis(string filepath, bool IBorOB, string skipruns, long int refrun){
+void DoAnalysis(string filepath, int IBorOB, string skipruns, long int refrun){
 
   gStyle->SetOptStat(0000);
 
@@ -197,23 +204,20 @@ void DoAnalysis(string filepath, bool IBorOB, string skipruns, long int refrun){
     if (nLayers==1) ilayEff = stoi(laynums[0]);
     else if (IBorOB==1) ilayEff = ilay + 3 ;
     else ilayEff = ilay;
-    if (ilay>0 && nRunsB[ilayEff]!=-1) nRunsTot += (nRunsB[ilayEff-1]+1);
-    cout << "ilay " << ilay << " ilayEff: " << ilayEff << " nRunsTot " << nRunsTot << endl;
+    if (ilay>0 && nRunsB[ilayEff-1]!=-1) nRunsTot += (nRunsB[ilayEff-1]+1);
+    if (nRunsB[ilayEff] ==-1) continue;
+    //    cout << "ilay " << ilay << " ilayEff: " << ilayEff << " nRunsTot " << nRunsTot << endl;
     hCorr[ilay] = new TH2D(Form("hCorr_L%s",laynums[nRunsTot].c_str()), Form("Layer-%s - FHR corr. %s - Ref. run: %ld; FHR (run%ld); FHR (runs)",laynums[nRunsTot].c_str(),filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str(),refrun,refrun), 99, bins, 99, bins);
   }
 
-  //  int ilayer=nLayers-1;
   int ilayer=0;
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){
     if (IBorOB==1)  ilayer = stoi(laynums[ihist])-3;
     else ilayer = stoi(laynums[ihist]);
     if (nLayersInput==1) ilayer = 0;
-
+    //    cout << "ilayer " << ilayer << endl;
+    //    cout <<"laynum " << laynums[ihist] << " runnumber " << runnumbers[ihist]<< endl;
     if(stol(runnumbers[ihist])==refrun){
-      if(ihist>0)
-        if(laynums[ihist-1]!=laynums[ihist]){// in case the ref run is the first in the list of all layers
-	  //          ilayer--;
-        }
       continue; //skip ref run
     }
     //cout << "\n run number" << runnumbers[ihist] << endl;
@@ -225,12 +229,6 @@ void DoAnalysis(string filepath, bool IBorOB, string skipruns, long int refrun){
 	//cout<<"stave " << ibiny-1 << " chip " << ibinx-1 << "-> fhr ref run: " << fhr_refrun<<", fhr run: "<<fhr_run<<endl;
       }
     }
-    /*
-    if(ihist>0)
-      if(laynums[ihist-1]!=laynums[ihist]){
-        ilayer--;
-      }
-    */
   }
 
   gStyle->SetPalette(1);
@@ -241,7 +239,8 @@ void DoAnalysis(string filepath, bool IBorOB, string skipruns, long int refrun){
     if (nLayers==1) ilayEff = stoi(laynums[0]);
     else if (IBorOB==1) ilayEff = ilay + 3 ;
     else ilayEff = ilay;
-    if (ilay>0 && nRunsB[ilayEff]!=-1) nRunsTot += (nRunsB[ilayEff-1]+1);
+    if (ilay>0 && nRunsB[ilayEff-1]!=-1) nRunsTot += (nRunsB[ilayEff-1]+1);
+    if (nRunsB[ilayEff] ==-1) continue;
     cout << "nRunsTot " << nRunsTot << endl;
     TCanvas *canvas = new TCanvas();
     canvas->cd();
