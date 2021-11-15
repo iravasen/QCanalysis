@@ -86,11 +86,9 @@ void CompareLayerOccupancy(){
     if(skipruns.find(runnum)!=string::npos) continue; //eventually skip runs specified by the user
 
     laynums.push_back(laynum);
-    //cout<<"run: "<<runnum<<"   timestamp: "<<timestamp<<"    laynum: "<<laynum<<endl;
-    if((int)laynums.size()>1 && laynum!=laynums[laynums.size()-2])
-      break;
-
+    if ((int)laynums.size()==1 || ((int)laynums.size()>1 && laynum!=laynums[laynums.size()-2]))    cout << "\nLayer: " << laynum << "\nRuns: " <<endl;
     cout<<runnum<<endl;
+    //    if((int)laynums.size()>1 && laynum!=laynums[laynums.size()-2])   break;
   }
 
 
@@ -114,6 +112,13 @@ void DoAnalysis(string filepath, bool IBorOB, string skipruns, long int refrun){
   std::vector<TH2*> hmaps;
   std::vector<string> timestamps, runnumbers, laynums;
   int nTimes=0, nRuns=1;
+  int nRunsB[7]={-1};
+  for (int ilay=0; ilay < 7; ilay++){
+    nRunsB[ilay] =-1;
+  }
+  int nRunsTot=0;
+  int nRunsTotFixed=0;
+  int nLayersInput =1;
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
@@ -147,7 +152,6 @@ void DoAnalysis(string filepath, bool IBorOB, string skipruns, long int refrun){
     //cout<<runnum<<"  "<<timestamp<<endl;
     timestamps.push_back(timestamp);
     runnumbers.push_back(runnum);
-
     laynums.push_back(laynum);
 
     //position of ref run
@@ -155,17 +159,26 @@ void DoAnalysis(string filepath, bool IBorOB, string skipruns, long int refrun){
       posrefrun.push_back(nTimes);
 
     nTimes++;
-    if(nTimes>1 && laynum==laynums[laynums.size()-2])
-      nRuns++;
-    else nRuns=1;
+    if(nRunsB[stoi(laynum)]==-1) nRunsB[stoi(laynum)]=0;
+    if(nTimes>1){
+      if (laynum==laynums[laynums.size()-2]) {
+        nRunsB[stoi(laynum)]++;
+      }
+      else nLayersInput++;
+    }
   }
 
-  const int nLayersIB = (int)hmaps.size()==nRuns ? 1 : stoi(laynums[laynums.size()-1])+1;
-  const int nLayersOB = (int)hmaps.size()==nRuns ? 1 : stoi(laynums[laynums.size()-1])+1-3;
   int nLayers;
-  if (IBorOB==0) nLayers = nLayersIB;
-  else if (IBorOB==1) nLayers=nLayersOB;
-  else nLayers=nLayersIB;
+  if (nLayersInput==1) nLayers =1;
+  else {
+    if (IBorOB==0) nLayers = 3;
+    else if (IBorOB==1) nLayers = 4;
+    else nLayers = 7;
+  }
+  cout << "nLayers " << nLayers << endl;
+  for (int ilay=0; ilay < 7; ilay++){
+    cout <<     nRunsB[ilay]<< endl;
+  }
 
   TH2D *hCorr[nLayers];
   //bins
@@ -179,15 +192,27 @@ void DoAnalysis(string filepath, bool IBorOB, string skipruns, long int refrun){
       exponent++;
     }
   }
-  for(int ilay=0; ilay<nLayers; ilay++)
-    hCorr[ilay] = new TH2D(Form("hCorr_L%s",laynums[ilay*nRuns].c_str()), Form("Layer-%s - FHR corr. %s - Ref. run: %ld; FHR (run%ld); FHR (runs)",laynums[ilay*nRuns].c_str(),filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str(),refrun,refrun), 99, bins, 99, bins);
+  int ilayEff=0;
+  for(int ilay=0; ilay<nLayers; ilay++) {
+    if (nLayers==1) ilayEff = stoi(laynums[0]);
+    else if (IBorOB==1) ilayEff = ilay + 3 ;
+    else ilayEff = ilay;
+    if (ilay>0 && nRunsB[ilayEff]!=-1) nRunsTot += (nRunsB[ilayEff-1]+1);
+    cout << "ilay " << ilay << " ilayEff: " << ilayEff << " nRunsTot " << nRunsTot << endl;
+    hCorr[ilay] = new TH2D(Form("hCorr_L%s",laynums[nRunsTot].c_str()), Form("Layer-%s - FHR corr. %s - Ref. run: %ld; FHR (run%ld); FHR (runs)",laynums[nRunsTot].c_str(),filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str(),refrun,refrun), 99, bins, 99, bins);
+  }
 
-  int ilayer=nLayers-1;
+  //  int ilayer=nLayers-1;
+  int ilayer=0;
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){
+    if (IBorOB==1)  ilayer = stoi(laynums[ihist])-3;
+    else ilayer = stoi(laynums[ihist]);
+    if (nLayersInput==1) ilayer = 0;
+
     if(stol(runnumbers[ihist])==refrun){
       if(ihist>0)
         if(laynums[ihist-1]!=laynums[ihist]){// in case the ref run is the first in the list of all layers
-          ilayer--;
+	  //          ilayer--;
         }
       continue; //skip ref run
     }
@@ -200,16 +225,24 @@ void DoAnalysis(string filepath, bool IBorOB, string skipruns, long int refrun){
 	//cout<<"stave " << ibiny-1 << " chip " << ibinx-1 << "-> fhr ref run: " << fhr_refrun<<", fhr run: "<<fhr_run<<endl;
       }
     }
+    /*
     if(ihist>0)
       if(laynums[ihist-1]!=laynums[ihist]){
         ilayer--;
       }
+    */
   }
 
   gStyle->SetPalette(1);
   //Draw
+  nRunsTot=0;
   TLine *line = new TLine(1e-14,1e-14,1e-3,1e-3);
   for(int ilay=0; ilay<nLayers; ilay++){
+    if (nLayers==1) ilayEff = stoi(laynums[0]);
+    else if (IBorOB==1) ilayEff = ilay + 3 ;
+    else ilayEff = ilay;
+    if (ilay>0 && nRunsB[ilayEff]!=-1) nRunsTot += (nRunsB[ilayEff-1]+1);
+    cout << "nRunsTot " << nRunsTot << endl;
     TCanvas *canvas = new TCanvas();
     canvas->cd();
     canvas->SetLogy();
@@ -220,8 +253,8 @@ void DoAnalysis(string filepath, bool IBorOB, string skipruns, long int refrun){
     hCorr[ilay]->Draw("COLZ");
     line->Draw("same");
     hCorr[ilay]->GetXaxis()->SetTitleOffset(1.2);
-    canvas->SaveAs(Form("../Plots/Layer%s_fakehitratecorr_refrun%ld_%s.pdf", laynums[ilay*nRuns].c_str(), refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-    canvas->SaveAs(Form("../Plots/Layer%s_fakehitratecorr_refrun%ld_%s.root", laynums[ilay*nRuns].c_str(), refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    canvas->SaveAs(Form("../Plots/Layer%s_fakehitratecorr_refrun%ld_%s.pdf", laynums[nRunsTot].c_str(), refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    canvas->SaveAs(Form("../Plots/Layer%s_fakehitratecorr_refrun%ld_%s.root", laynums[nRunsTot].c_str(), refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     delete canvas;
   }
 
