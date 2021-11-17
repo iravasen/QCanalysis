@@ -113,7 +113,7 @@ void CompareLayerOccupancy(){
       if (lay == LastLayerInList) continue;
       if ((int)RunList[lay].size() == 0) continue; //the layer has no runs
       for (Int_t l = 0; l< (int)RunList[lay].size(); l++){
-	if (RunList[0][i] == RunList[lay][l])  break;
+	if (RunList[LastLayerInList][i] == RunList[lay][l])  break;
 	else {
 	  if (l== (int)RunList[lay].size()-1) {
 	    isCommon=0; //the run is not common to one layer, therefore it's not a common run
