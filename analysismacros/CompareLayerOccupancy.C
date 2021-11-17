@@ -71,6 +71,10 @@ void CompareLayerOccupancy(){
   TObject *obj;
   TH2 *h2;
   vector<string> laynums;
+  vector<int> RunList[7];
+  vector<int> CommonRunList;
+  int LastLayerInList=-1;
+
   while((key = ((TKey*)next()))){
     obj = key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
@@ -92,11 +96,38 @@ void CompareLayerOccupancy(){
       continue;
     }
 
+    LastLayerInList = stoi(laynum);
     laynums.push_back(laynum);
+    RunList[stoi(laynum)].push_back(stoi(runnum));
     if ((int)laynums.size()==1 || ((int)laynums.size()>1 && laynum!=laynums[laynums.size()-2]))  {
-      cout << "\nLayer: " << laynum << "\nRuns: " <<endl;
+      //cout << "\nLayer: " << laynum << "\nRuns: " <<endl;
     }
-    cout<<runnum<<endl;
+    //    cout<<runnum<<endl;
+  }
+
+  bool isCommon=1;
+  for (Int_t i = 0; i< (int)RunList[LastLayerInList].size(); i++){
+    isCommon=1; //let's suppose the run i is common to all layers
+    for (Int_t lay = 0; lay<7; lay++){ 
+      if (isCommon==0) break; // if a run is missing for one layer, than it's not a common run
+      if (lay == LastLayerInList) continue;
+      if ((int)RunList[lay].size() == 0) continue; //the layer has no runs
+      for (Int_t l = 0; l< (int)RunList[lay].size(); l++){
+	if (RunList[0][i] == RunList[lay][l])  break;
+	else {
+	  if (l== (int)RunList[lay].size()-1) {
+	    isCommon=0; //the run is not common to one layer, therefore it's not a common run
+	    break;
+	  }
+	}
+      }
+    }
+    if (isCommon) CommonRunList.push_back(RunList[LastLayerInList][i]);
+  }
+
+  cout << "Common runs: " << endl;
+  for (int i=0; i<(int)CommonRunList.size(); i++){
+    cout << CommonRunList[i] << endl;
   }
 
   long int refrun;
@@ -182,9 +213,9 @@ void DoAnalysis(string filepath, int IBorOB, string skipruns, long int refrun){
     else if (IBorOB==1) nLayers = 4;
     else nLayers = 7;
   }
-  cout << "nLayers " << nLayers << endl;
+  cout << "nLayers= " << nLayers << endl;
   for (int ilay=0; ilay < 7; ilay++){
-    cout <<     nRunsB[ilay]<< endl;
+    //    cout <<     nRunsB[ilay]<< endl;
   }
 
   TH2D *hCorr[nLayers];
@@ -241,7 +272,6 @@ void DoAnalysis(string filepath, int IBorOB, string skipruns, long int refrun){
     else ilayEff = ilay;
     if (ilay>0 && nRunsB[ilayEff-1]!=-1) nRunsTot += (nRunsB[ilayEff-1]+1);
     if (nRunsB[ilayEff] ==-1) continue;
-    cout << "nRunsTot " << nRunsTot << endl;
     TCanvas *canvas = new TCanvas();
     canvas->cd();
     canvas->SetLogy();
