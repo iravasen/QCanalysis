@@ -21,6 +21,9 @@ private :
 	vector<string> runNumbers_;
 	vector<string> layerNumbers_;
 
+	vector<string>  runNumbers_skips;
+	std::vector<TH2*> hmaps_skips;
+
 	string skip_ans,skip_runs,skip_layers;
 
 	std::vector<TH2*> hmaps;
@@ -74,30 +77,27 @@ public :
 		for (auto i : runNumbers_){ cout << i <<", "; }
 		cout << endl << "Found layers: ";
 		for (auto i : layerNumbers_){ cout << i <<", "; }
-		cout << endl;
+		cout << endl<<endl;
 
 		cout<<"Would you like to skip some run(s)? [y/n]";
 		cin>>skip_ans;
 		if(skip_ans=="y" || skip_ans=="Y"){
-		  cout<<endl;
 		  cout<<"Specify run number(s) separated by comma (no white spaces!):";
 		  cin>>skip_runs;
-		  cout<<"skip_runs: "<<skip_runs<<endl;
-		  cout<<endl;}
-		  vector<int> skiplist;
-		  stringstream text_stream(skip_runs); string item;
-		  while (std::getline(text_stream, item, ',')) {
-		      skiplist.push_back(stoi(item));
-		  }
-
-		cout<<"Would you like to skip some layers(s)? [y/n] ";
-		cin>>skip_ans;
-		if(skip_ans=="y" || skip_ans=="Y"){
 		  cout<<endl;
-		  cout<<"Specify layer number(s) separated by comma (no white spaces!):";
-		  cin>>skip_layers;
-		  cout<<"skip_layers: "<<skip_layers<<endl;
-		  cout<<endl;}
+		}
+
+		for (auto hist: hmaps)	{
+			string objname = (string)hist->GetName();
+			string run     = objname.substr(objname.find("run")+3, 6);
+			if (skip_runs.find(run) == std::string::npos)
+				hmaps_skips.push_back(hist);
+		}
+
+		for (auto run : runNumbers_) {
+			if (skip_runs.find(run) == std::string::npos)
+				runNumbers_skips.push_back(run);
+		}
 
 
 	} // end of loadFile()s
@@ -125,7 +125,7 @@ public :
 	}
 
 	vector<string> Runs() {
-		return runNumbers_;
+		return runNumbers_skips;
 	}
 
 	int nLayers() {
@@ -133,16 +133,16 @@ public :
 	}
 
 	int nRuns() {
-		return runNumbers_.size();
+		return runNumbers_skips.size();
 	}
 
 	std::vector<TH2*> loadedHists() {
-		return hmaps;
+		return hmaps_skips;
 	}
 
 	std::vector<TH2*> loadLayer(int layer) {
 		std::vector<TH2*> hmaps_per_layer; // empty list, histograms of layer
-		for (auto hist: hmaps)	{
+		for (auto hist: hmaps_skips)	{
 			string objname = (string)hist->GetName();
 			if (stoi(objname.substr(objname.find("L")+1,1))==layer){ // Check title for layer
 				hmaps_per_layer.push_back(hist);
