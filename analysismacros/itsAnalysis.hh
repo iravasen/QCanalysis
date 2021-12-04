@@ -26,7 +26,7 @@ private :
 	std::vector<TH2*> hmaps;
 
 public :
-	itsAnalysis() { // Function to load in a ROOT file
+	itsAnalysis(string histType) { // Function to load in a ROOT file
 		// We will ask for the file to analyse and load that
 		cout<<"\n\n=> Available file(s) for the analysis: \n"<<endl;
 		gSystem->Exec("ls ../Data/*THRMAPS_DEADPIXMAPS* -Art | tail -n 500");
@@ -51,7 +51,7 @@ public :
 			string objname = (string)obj->GetName();
 			string objtitle = (string)obj->GetTitle();
 			if(objname.find("Stv")!=string::npos) break;
-			if(objtitle.find("DeadPixel")!=string::npos) break;
+			if(objtitle.find(histType)==string::npos) continue;
 
 			//Load in histograms into vector<TH2*>
 			hmaps.push_back((TH2*)obj);
@@ -84,7 +84,11 @@ public :
 		  cin>>skip_runs;
 		  cout<<"skip_runs: "<<skip_runs<<endl;
 		  cout<<endl;}
-		else {skip_runs=" ";}
+		  vector<int> skiplist;
+		  stringstream text_stream(skip_runs); string item;
+		  while (std::getline(text_stream, item, ',')) {
+		      skiplist.push_back(stoi(item));
+		  }
 
 		cout<<"Would you like to skip some layers(s)? [y/n] ";
 		cin>>skip_ans;
@@ -94,16 +98,26 @@ public :
 		  cin>>skip_layers;
 		  cout<<"skip_layers: "<<skip_layers<<endl;
 		  cout<<endl;}
-		else {skip_layers=" ";}
+
 
 	} // end of loadFile()s
 
 	int nChips(int layer) { // Function to return number of chips in a its Layer
 		int nChips_ = -999;
 		if (layer == 0 || layer == 1 || layer == 2) nChips_ = 9;
-		if (layer == 3 || layer == 4) nChips_ = 108;
-		if (layer == 5 || layer == 6) nChips_ = 196;
+		if (layer == 3 || layer == 4) nChips_ = 8;	// Modules instead of chips
+		if (layer == 5 || layer == 6) nChips_ = 14; // Modules instead of chips
 		return nChips_;
+	}
+
+	int stavesInLayer(int layer)	{
+		int staves;
+		if (layer == 0) staves = 11;
+		if (layer == 1) staves = 16;
+		if (layer == 2) staves = 20;
+		if (layer == 3 || layer == 4) staves = 54;
+		if (layer == 5 || layer == 6) staves = 90;
+		return staves;
 	}
 
 	vector<string> Layers() {
@@ -123,7 +137,24 @@ public :
 	}
 
 	std::vector<TH2*> loadedHists() {
-			return hmaps;
+		return hmaps;
+	}
+
+	std::vector<TH2*> loadLayer(int layer) {
+		std::vector<TH2*> hmaps_per_layer; // empty list, histograms of layer
+		for (auto hist: hmaps)	{
+			string objname = (string)hist->GetName();
+			if (stoi(objname.substr(objname.find("L")+1,1))==layer){ // Check title for layer
+				hmaps_per_layer.push_back(hist);
+			}
+		}
+		return hmaps_per_layer;
+	}
+
+	string getRunNumber(TH2* hist) {
+		string objname = hist->GetName();
+		string runN = objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
+		return runN;
 	}
 
 }; // end of class def
