@@ -152,4 +152,21 @@ void analyseLayerThresholds(){
       delete leg2;
     }
   }
+
+  for (string layer : laynums){ // loop over layers
+    TCanvas *canvas = new TCanvas();
+    canvas->cd();
+    canvas->SetLogz();
+    canvas->SetTickx();
+    canvas->SetTicky();
+    canvas->SetRightMargin(0.15);
+    for(auto hist : myAnalysis.loadLayer(stoi(layer))){ //loop over number of histograms
+      hist->Draw("colz");
+      hist->SetMinimum(8.5);
+      hist->SetMaximum(14);
+      hist->GetZaxis()->SetTitle("Avg. Threshold (DAC)");
+      canvas->Print(Form("../Plots/Layer%s_thresholds_run%s-run%s.gif+40", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+    }
+  }
+
 } // end of analyseLayerThresholds()
