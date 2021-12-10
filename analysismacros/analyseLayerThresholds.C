@@ -143,8 +143,9 @@ void analyseLayerThresholds(){
         trend[stoi(layer)][istave]->Draw("P same");
       }
       leg2->Draw("same");
-      canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
-      canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.root", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+      //canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+      canvas->SaveAs(Form("../Plots/Layer%sL_thresholds_run%s-run%s.png", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+      //canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.root", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
 
       delete canvas;
       delete leg;
@@ -155,16 +156,14 @@ void analyseLayerThresholds(){
   for (string layer : laynums){ // loop over layers
     TCanvas *canvas = new TCanvas();
     canvas->cd();
+    canvas->SetLogz();
     canvas->SetTickx();
     canvas->SetTicky();
     canvas->SetRightMargin(0.15);
-    auto histos = myAnalysis.loadLayer(stoi(layer));
-    for(int i = histos.size()-1; i >= 0; i--){ //loop over number of histograms
-      auto hist = histos[i];
+    for(auto hist : myAnalysis.loadLayer(stoi(layer))){ //loop over number of histograms
       hist->Draw("colz");
       hist->SetMinimum(8.5);
       hist->SetMaximum(14);
-      hist->SetTitle(Form("Layer%s Run%s (%i/%i);Chip Number; Stave Number",layer.c_str(),myAnalysis.getRunNumber(hist).c_str(),(int)histos.size()-i,(int)histos.size()));
       hist->GetZaxis()->SetTitle("Avg. Threshold (DAC)");
       canvas->Print(Form("../Plots/Layer%s_thresholds_run%s-run%s.gif+40", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
     }

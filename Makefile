@@ -43,22 +43,22 @@ CXXFLAGS     += -DUSENCURSES
 SYSLIBS       = -lmenu -lncurses
 endif
 
-QCINC      = -I$(HOME)/alice/sw/ubuntu1804_x86-64/QualityControl/latest/include
-COMO2INC   = -I$(HOME)/alice/sw/ubuntu1804_x86-64/Common-O2/latest/include
-O2INC      = -I$(HOME)/alice/sw/ubuntu1804_x86-64/O2/latest/include
-BOOSTINC   = -I$(HOME)/alice/sw/ubuntu1804_x86-64/boost/latest/include
-FAIRLOGINC = -I$(HOME)/alice/sw/ubuntu1804_x86-64/FairLogger/latest/include
-FAIRMQINC  = -I$(HOME)/alice/sw/ubuntu1804_x86-64/FairMQ/latest/include/fairmq
-FAIRMQINC2 = -I$(HOME)/alice/sw/ubuntu1804_x86-64/FairMQ/latest/include/
-JALIENINC  = -I$(HOME)/alice/sw/ubuntu1804_x86-64/JAliEn-ROOT/latest/include
-FMTINC     = -I$(HOME)/alice/sw/ubuntu1804_x86-64/fmt/latest/include/
+QCINC      = -I$(HOME)/alice/sw/ubuntu2004_x86-64/QualityControl/latest/include
+COMO2INC   = -I$(HOME)/alice/sw/ubuntu2004_x86-64/Common-O2/latest/include
+O2INC      = -I$(HOME)/alice/sw/ubuntu2004_x86-64/O2/latest/include
+BOOSTINC   = -I$(HOME)/alice/sw/ubuntu2004_x86-64/boost/latest/include
+FAIRLOGINC = -I$(HOME)/alice/sw/ubuntu2004_x86-64/FairLogger/latest/include
+FAIRMQINC  = -I$(HOME)/alice/sw/ubuntu2004_x86-64/FairMQ/latest/include/fairmq
+FAIRMQINC2 = -I$(HOME)/alice/sw/ubuntu2004_x86-64/FairMQ/latest/include/
+JALIENINC  = -I$(HOME)/alice/sw/ubuntu2004_x86-64/JAliEn-ROOT/latest/include
+FMTINC     = -I$(HOME)/alice/sw/ubuntu2004_x86-64/fmt/latest/include/
 
 ROOTINC    = -I$(ROOTSYS)/include
 #INCLUDES   = $(QCINC) $(COMO2INC) $(O2INC) $(FAIRMQINC) $(FAIRLOGINC) $(MSGSLINC) $(BOOSTINC) $(ARROWINC) $(INFOLOGINC) $(ROOTINC)
 INCLUDES   =  $(BOOSTINC) $(QCINC) $(COMO2INC) $(O2INC) $(ROOTINC) $(FAIRLOGINC) $(FAIRMQINC) $(FAIRMQINC2) $(FMTINC) $(JALIENINC)
 CXXFLAGS   += $(ROOTCFLAGS) $(INCLUDES)
-QCLIBS     = -L$(HOME)/alice/sw/ubuntu1804_x86-64/QualityControl/latest/lib -lO2QualityControl
-O2LIBS     = -L$(HOME)/alice/sw/ubuntu1804_x86-64/O2/latest/lib -lO2CCDB
+QCLIBS     = -L$(HOME)/alice/sw/ubuntu2004_x86-64/QualityControl/latest/lib -lO2QualityControl
+O2LIBS     = -L$(HOME)/alice/sw/ubuntu2004_x86-64/O2/latest/lib -lO2CCDB
 LIBS       = $(QCLIBS) $(O2LIBS) $(ROOTLIBS) $(SYSLIBS)
 
 #------------------------------------------------------------------------------
