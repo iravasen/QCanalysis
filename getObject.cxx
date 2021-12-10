@@ -873,12 +873,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
     }// end of case 2
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*case 3: {//download a tree (only an example now!)
-      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/QCFHRTest", "Occupancy/PixelTree", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
-      break;
-    }//end of case 3*/
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 case 3: {
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "AngularDistribution", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "ClusterUsage", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
