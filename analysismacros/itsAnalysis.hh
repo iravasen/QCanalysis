@@ -12,7 +12,7 @@
 //---------------------------------------------------------------------------
 // Description:
 // Class for loading ROOT files to analyse in ALICE ITS2 Threshold QC
-// Author: B. Hofman
+// Questions: bas.hofman@cern.ch
 //---------------------------------------------------------------------------
 
 class itsAnalysis {
@@ -112,11 +112,13 @@ public :
 
 	int stavesInLayer(int layer)	{
 		int staves;
-		if (layer == 0) staves = 11;
+		if (layer == 0) staves = 12;
 		if (layer == 1) staves = 16;
 		if (layer == 2) staves = 20;
-		if (layer == 3 || layer == 4) staves = 54;
-		if (layer == 5 || layer == 6) staves = 90;
+		if (layer == 3)	staves = 24*2;
+		if (layer == 4) staves = 30*2;
+		if (layer == 5)	staves = 42*2;
+		if (layer == 6) staves = 48*2;
 		return staves;
 	}
 
