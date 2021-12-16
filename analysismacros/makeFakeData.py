@@ -13,7 +13,8 @@ for run in range(0,10):
 	for i in range (0,7):
 		hist = ROOT.TH2F("hist", "hist", chips[layer[i]], 0, chips[layer[i]],stave[layer[i]],0,stave[layer[i]])
 		hist.SetStats(0)
-		hist.SetTitle("Threshold")
+		hist.SetTitle("DeadPixel")
+		#hist.SetTitle("Threshold")
 		hist.SetName('h2_L{}_run{}'.format(layer[i],run+100000))
 
 		for j in range (0,chips[layer[i]]):
