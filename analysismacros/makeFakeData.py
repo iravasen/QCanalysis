@@ -3,11 +3,11 @@ import numpy as np
 import random
 ROOT.EnableImplicitMT() # Tell ROOT you want to go parallel
 
-fakeDataFile = ROOT.TFile.Open("fakeData.root","RECREATE")
+fakeDataFile = ROOT.TFile.Open("xx","RECREATE")
 
 layer = [0,1,2,3,4,5,6]
 chips = [9,9,9,8,8,14,14]
-stave = [12,16,20,54,54,90,90]
+stave = [12,16,20,48,60,84,96]
 
 for run in range(0,10):
 	for i in range (0,7):
