@@ -34,7 +34,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, int IBorOB);
 //
 // MAIN
 //
-void AnalyzeLayerOccupancy_cps(){
+void AnalyzeLayerOccupancy(){
   string fpath;
   int nchips=9;
   cout<<"\n\n=> Available file(s) for the analysis (the last should be the file you want!): \n"<<endl;
@@ -377,6 +377,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
     }
     leg->Draw("same");
      if (!IsTwoCanvas){
+    // The number 27 is the sum of the 2*6 digit run numbers+ len("_to_run")+len("from_run")
      string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
      string canvas_name = Form("Layer%s_fakehitrate_w_error_and_trig_data", laynums[nRunsTot].c_str()); 
        canvas->SetName(canvas_name.c_str());
@@ -388,11 +389,12 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
       canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s.root", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     }
     else {
+   // The number 27 is the sum of the 2*6 digit run numbers+ len("_to_run")+len("from_run") 
       string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
       string canvas_name2 = Form("Layer%s_fakehitrate_w_error_and_trig_data_HSLower",laynums[nRunsTot].c_str());
         canvas->SetName(canvas_name2.c_str());
 //    canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSLower.pdf", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-         auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("Layer%s",laynums[nRunsTot].c_str()), "OfflineQC", DetectorName,1,Runperiod);
+         auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()), "OfflineQC", DetectorName,1,Runperiod);
         mo2->setIsOwner(false);
         ccdb->storeMO(mo2);
       canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSLower.root", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
@@ -410,9 +412,10 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
 
  //     Secondcanvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSUpper.pdf", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
       string Secondcanvas_name = Form("Layer%s_fakehitrate_w_error_and_trig_data_HSUpper",laynums[nRunsTot].c_str());
+  // The number 27 is the sum of the 2*6 digit run numbers+ len("_to_run")+len("from_run")
       string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
       Secondcanvas->SetName(Secondcanvas_name.c_str());
-      auto mo3= std::make_shared<o2::quality_control::core::MonitorObject>(Secondcanvas, TaskName+Form("Layer%s",laynums[nRunsTot].c_str()), "OfflineQC", DetectorName,1,Runperiod);
+      auto mo3= std::make_shared<o2::quality_control::core::MonitorObject>(Secondcanvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()), "OfflineQC", DetectorName,1,Runperiod);
       mo3->setIsOwner(false);
       ccdb->storeMO(mo3);
 
