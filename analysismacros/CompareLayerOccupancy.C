@@ -14,10 +14,21 @@
 #include <TSystem.h>
 #include <TGraph.h>
 #include <TLine.h>
+#include "QualityControl/PostProcessingInterface.h"
+#include "QualityControl/Reductor.h"
+#include "QualityControl/DatabaseFactory.h"
+#include "QualityControl/RootClassFactory.h"
+#include "QualityControl/DatabaseInterface.h"
+#include "QualityControl/MonitorObject.h"
+#include "QualityControl/QcInfoLogger.h"
+#include "QualityControl/CcdbDatabase.h"
+#include "inc/ccdb.h"
 
 using namespace std;
+using namespace o2::quality_control::repository;
+using namespace o2::quality_control::core;
 
-void DoAnalysis(string filepath, int IBorOB, string skipruns, long int refrun);
+void DoAnalysis(string filepath, int IBorOB, string skipruns, long int refrun, bool ccdb_upload);
 
 //
 // MAIN
@@ -31,6 +42,7 @@ void CompareLayerOccupancy(){
   cout<<endl;
 
   int IBorOB;
+  bool ccdb_upload;
   //IBorOB = 0 if I want to check all IB layers                                                                   
   //IBorOB = 1 if I want to check all OB layers                                                                    
   //IBorOB = 2 if I want to check all IB + OB layers or if I want to check a single layer                         
@@ -50,7 +62,7 @@ void CompareLayerOccupancy(){
   }
 
   //Choose whether to skip runs
-  string skipans, skipruns;
+  string skipans, skipruns, CCDB_up;
   cout<<endl;
   cout<<"Would you like to skip some run(s)? [y/n] ";
   cin>>skipans;
@@ -62,6 +74,17 @@ void CompareLayerOccupancy(){
   }
   else
     skipruns=" ";
+
+  cout<<"Would you like to upload the output to ccdb? [y/n] ";
+  cin>>CCDB_up;
+  cout<<endl;
+  if(CCDB_up =="y"||CCDB_up =="Y") ccdb_upload= true;
+  else ccdb_upload= false;
+
+if(ccdb_upload)SetTaskName(__func__);
+
+
+
 
   cout<<"Available runs in your file:\n"<<endl;
   TFile *infile=new TFile(fpath.c_str());
@@ -136,14 +159,14 @@ void CompareLayerOccupancy(){
 
 
   //Call
-  DoAnalysis(fpath, IBorOB, skipruns, refrun);
+  DoAnalysis(fpath, IBorOB, skipruns, refrun,ccdb_upload);
 
 }
 
 //
 // Analyse data
 //
-void DoAnalysis(string filepath, int IBorOB, string skipruns, long int refrun){
+void DoAnalysis(string filepath, int IBorOB, string skipruns, long int refrun, bool ccdb_upload){
 
   gStyle->SetOptStat(0000);
 
@@ -157,6 +180,17 @@ void DoAnalysis(string filepath, int IBorOB, string skipruns, long int refrun){
   int nRunsTot=0;
   int nRunsTotFixed=0;
   int nLayersInput =1;
+
+//Setting up the connection to the ccdb database
+
+//      CcdbDatabase* ccdb;
+//      if(ccdb_upload) ccdb = SetupConnection();       ~To-Do- Currently not working      
+  std::unique_ptr<DatabaseInterface> mydb = DatabaseFactory::create("CCDB");
+
+  auto* ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
+
+  ccdb->connect(ccdbport.c_str(), "", "", "");
+
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
@@ -282,9 +316,22 @@ void DoAnalysis(string filepath, int IBorOB, string skipruns, long int refrun){
     hCorr[ilay]->Draw("COLZ");
     line->Draw("same");
     hCorr[ilay]->GetXaxis()->SetTitleOffset(1.2);
-    canvas->SaveAs(Form("../Plots/Layer%s_fakehitratecorr_refrun%ld_%s.pdf", laynums[nRunsTot].c_str(), refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+if(ccdb_upload){
+    string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
+    string canvas_name = Form("Layer%s_fakehitratecorr",laynums[nRunsTot].c_str());
+    string Reference_run = to_string(refrun);
+
+    canvas->SetName(canvas_name.c_str());
+        auto mo= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()), "OfflineQC", DetectorName,1,Runperiod);
+        mo->addMetadata("Reference Run number",Reference_run.c_str());
+	mo->setIsOwner(false);
+        ccdb->storeMO(mo);
+	}
+canvas->SaveAs(Form("../Plots/Layer%s_fakehitratecorr_refrun%ld_%s.pdf", laynums[nRunsTot].c_str(), refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     canvas->SaveAs(Form("../Plots/Layer%s_fakehitratecorr_refrun%ld_%s.root", laynums[nRunsTot].c_str(), refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     delete canvas;
   }
 
+//Disconnencting the interface
+if(ccdb_upload) ccdb->disconnect();
 }
