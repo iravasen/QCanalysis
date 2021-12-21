@@ -21,7 +21,7 @@
 #include "QualityControl/MonitorObject.h"
 #include "QualityControl/QcInfoLogger.h"
 #include "QualityControl/CcdbDatabase.h"
-
+#include "inc/ccdb.h"
 
 //using namespace o2::framework;
 using namespace o2::quality_control::repository;
@@ -114,8 +114,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
   int col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 
 //Setting up the connection to the ccdb database
-  string ccdbport = "ccdb-test.cern.ch:8080";
-
+  
   std::unique_ptr<DatabaseInterface> mydb = DatabaseFactory::create("CCDB");
 
   auto* ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
