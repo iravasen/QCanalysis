@@ -13,11 +13,23 @@
 #include <TSystem.h>
 #include <TGraph.h>
 #include <TKey.h>
+#include "QualityControl/PostProcessingInterface.h"
+#include "QualityControl/Reductor.h"
+#include "QualityControl/DatabaseFactory.h"
+#include "QualityControl/RootClassFactory.h"
+#include "QualityControl/DatabaseInterface.h"
+#include "QualityControl/MonitorObject.h"
+#include "QualityControl/QcInfoLogger.h"
+#include "QualityControl/CcdbDatabase.h"
+#include "inc/ccdb.h"
 
+//using namespace o2::framework;
+using namespace o2::quality_control::repository;
+using namespace o2::quality_control::core;
 using namespace std;
 
 void SetStyle(TGraph *h, int col, Style_t mkr);
-void DoAnalysis(string filepath, const int nChips, string skipruns, int IBorOB);
+void DoAnalysis(string filepath, const int nChips, string skipruns, int IBorOB, bool ccdb_upload);
 
 //
 // MAIN
@@ -30,8 +42,10 @@ void AnalyzeLayerOccupancy(){
   cout<<"\nCopy file name: ";
   cin>>fpath;
   cout<<endl;
-
+  
   int IBorOB;
+  bool ccdb_upload;
+
   //IBorOB = 0 if I want to check all IB layers
   //IBorOB = 1 if I want to check all OB layers
   //IBorOB = 2 if I want to check all IB + OB layers or if I want to check a single layer
@@ -50,7 +64,7 @@ void AnalyzeLayerOccupancy(){
     IBorOB = 2;
   }
 
-  string skipans, skipruns;
+  string skipans, skipruns, CCDB_up;
   cout<<endl;
   cout<<"Would you like to skip some run(s)? [y/n] ";
   cin>>skipans;
@@ -62,10 +76,16 @@ void AnalyzeLayerOccupancy(){
   }
   else
     skipruns=" ";
+  cout<<"Would you like to upload the output to ccdb? [y/n] ";
+  cin>>CCDB_up;
+  cout<<endl; 
+ if(CCDB_up =="y"||CCDB_up =="Y") ccdb_upload= true;
+  else ccdb_upload= false;
+ 
+if(ccdb_upload)SetTaskName(__func__); 
 
-
-  //Call
-  DoAnalysis(fpath, nchips, skipruns, IBorOB);
+ //Call
+  DoAnalysis(fpath, nchips, skipruns, IBorOB, ccdb_upload );
 
 }
 
@@ -84,7 +104,7 @@ void SetStyle(TGraph *h, int col, Style_t mkr){
 //
 // Analyse data
 //
-void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
+void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB, bool ccdb_upload){
 
   gStyle->SetOptStat(0000);
 
@@ -100,6 +120,21 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
   int nRunsTotFixed=0;
   int nLayersInput =1;
   int col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
+
+//Setting up the connection to the ccdb database
+  
+//	CcdbDatabase* ccdb;
+//	if(ccdb_upload) ccdb = SetupConnection();	~To-Do- Currently not working
+
+std::unique_ptr<DatabaseInterface> mydb = DatabaseFactory::create("CCDB");
+
+auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
+
+  ccdb->connect(ccdbport.c_str(), "", "", "");
+
+
+  
+
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
@@ -350,14 +385,33 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
       fileout->WriteTObject(trend[ilay][istave][0]);
     }
     leg->Draw("same");
-    if (!IsTwoCanvas){
-      canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s.pdf", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+     if (!IsTwoCanvas){
+if(ccdb_upload){    
+	// The number 27 is the sum of the 2*6 digit run numbers+ len("_to_run")+len("from_run")
+     string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
+     string canvas_name = Form("Layer%s_fakehitrate_w_error_and_trig_data", laynums[nRunsTot].c_str()); 
+       canvas->SetName(canvas_name.c_str());
+        auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()), "OfflineQC", DetectorName,1,Runperiod);
+        mo1->setIsOwner(false);
+        ccdb->storeMO(mo1);}
+
+        canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s.pdf", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+       
       canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s.root", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     }
     else {
-      canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSLower.pdf", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+   // The number 27 is the sum of the 2*6 digit run numbers+ len("_to_run")+len("from_run") 
+      if(ccdb_upload){
+	string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
+      string canvas_name2 = Form("Layer%s_fakehitrate_w_error_and_trig_data_HSLower",laynums[nRunsTot].c_str());
+        canvas->SetName(canvas_name2.c_str());
+         auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()), "OfflineQC", DetectorName,1,Runperiod);
+        mo2->setIsOwner(false);
+        ccdb->storeMO(mo2);}
+
       canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSLower.root", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-    }
+      canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSLower.pdf", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+       }
 
     if (IsTwoCanvas){
       Secondcanvas->cd();
@@ -367,12 +421,20 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
 	trend[ilay][istave][1]->Draw("P same");      
 	fileout->WriteTObject(trend[ilay][istave][1]);
       }
-
       leg->Draw("same");
-
+	if(ccdb_upload){
+      string Secondcanvas_name = Form("Layer%s_fakehitrate_w_error_and_trig_data_HSUpper",laynums[nRunsTot].c_str());
+  // The number 27 is the sum of the 2*6 digit run numbers+ len("_to_run")+len("from_run")
+      string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
+      Secondcanvas->SetName(Secondcanvas_name.c_str());
+      auto mo3= std::make_shared<o2::quality_control::core::MonitorObject>(Secondcanvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()), "OfflineQC", DetectorName,1,Runperiod);
+      mo3->setIsOwner(false);
+      ccdb->storeMO(mo3);
+	}
       Secondcanvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSUpper.pdf", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
       Secondcanvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSUpper.root", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-    }
+ 	
+   }
 
     delete canvas;
     delete Secondcanvas;
@@ -428,4 +490,6 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB){
   }
 
   cout << "\nROOT file " << PathOut << " has been created" << endl;
+//Disconnencting the interface
+if(ccdb_upload) ccdb->disconnect();
 }
