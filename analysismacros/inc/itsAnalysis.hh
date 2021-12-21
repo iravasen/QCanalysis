@@ -180,6 +180,12 @@ public :
 		return runN;
 	}
 
+	string getRunNumber(THnSparse* hist) {
+		string objname = hist->GetName();
+		string runN = objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
+		return runN;
+	}
+
 }; // end of class def
 
 #endif
