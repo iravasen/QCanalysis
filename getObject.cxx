@@ -34,8 +34,8 @@ const int nStavesInLay[7] = {12, 16, 20, 24, 30, 42, 48};
 TFile *outputfile;
 
 //to which CCDB we have to connect
-// For P2 operations put: qcdb.cern.ch:8083
-string ccdbport = "localhost:8083";
+// For P2 operations put: ali-qcdb.cern.ch:8083
+string ccdbport = "ali-qcdb.cern.ch:8083";
 
 
 int main(int argc, char **argv)
