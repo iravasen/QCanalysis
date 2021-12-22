@@ -76,9 +76,9 @@ public :
 		} // end of loop over objects
 
 		cout << "Found run numbers: ";
-		for (auto i : runNumbers_){ cout << i <<", "; }
+		for (auto i : runNumbers_){ cout << i <<","; }
 		cout << endl << "Found layers: ";
-		for (auto i : layerNumbers_){ cout << i <<", "; }
+		for (auto i : layerNumbers_){ cout << i <<","; }
 		cout << endl<<endl;
 
 		cout<<"Would you like to skip some run(s)? [y/n]";

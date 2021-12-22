@@ -16,7 +16,6 @@ std::array<long int,5> CompareTwoRuns(THnSparse *href, THnSparse *h2){
     TH1D *hrefproj = (TH1D*)href->Projection(0);
     TH1D *h2proj = (TH1D*)h2->Projection(0);
     for(int ixbin=1; ixbin<=9216; ixbin++){
-
       if(hrefproj->GetBinContent(ixbin)==1 && h2proj->GetBinContent(ixbin)==1){//dead in both runs
         noisypix[2]++;
       }
@@ -31,7 +30,6 @@ std::array<long int,5> CompareTwoRuns(THnSparse *href, THnSparse *h2){
     delete hrefproj;
     delete h2proj;
   }
-
   return noisypix;
 }
 
@@ -45,7 +43,12 @@ void CompareDeadPixelsInRuns(){
   auto laynums      = myAnalysis.Layers();      //vec of layers
   auto runNumbers   = myAnalysis.Runs();        //vec of run numbers
   auto hmaps        = myAnalysis.loadedHists(); // all histograms for layers and runs needed
+  auto nRuns        = myAnalysis.nRuns();
 
+  cout<<"Runs that will be used for comparisons: "<<endl;
+  for (auto x: runNumbers){
+    cout<<x<<endl;
+  }
   string refrun;
   cout<<"\n\n=>Insert a run you want to use as a reference for the comparison with all the others: \n"<<endl;
   cin>>refrun;
@@ -53,7 +56,8 @@ void CompareDeadPixelsInRuns(){
   //Compare all the runs (non-empty ones) with the reference run chosen by the user
   long int first[nLayers][100], second[nLayers][100], both[nLayers][100];
   bool filled[nLayers][100];
-  for(int ilay=0; ilay<nLayers; ilay++){
+  for (string layer : laynums){ // loop over layers
+    int ilay=stoi(layer);
     for(int i=0; i<100; i++){
       first[ilay][i]=0; second[ilay][i]=0; both[ilay][i]=0;
       filled[ilay][i] = false;
@@ -97,8 +101,8 @@ void CompareDeadPixelsInRuns(){
       both[stoi(layer)][irun]+=noisypix[noisypix.size()-1][2];
       filled[stoi(layer)][irun] = true;
     }
-
   }
+
   //Make plot for each layer and for each stave in the root file
   TGraphErrors *ge_nref[nLayers];
   TGraphErrors *ge_n2[nLayers];
@@ -109,7 +113,9 @@ void CompareDeadPixelsInRuns(){
   double max[nLayers];
   double min[nLayers];
 
-  for(int ilay=0; ilay<nLayers; ilay++){
+  for (string layer : laynums){ // loop over layers
+    int ilay=stoi(layer);
+
     ge_nref[ilay] = new TGraphErrors();
     ge_n2[ilay] = new TGraphErrors();
     ge_ncom1[ilay] = new TGraphErrors();
@@ -137,13 +143,11 @@ void CompareDeadPixelsInRuns(){
       if(-(double)both[ilay][ir]/2.-(double)second[ilay][ir] < min[ilay]) min[ilay] = -(double)both[ilay][ir]/2.-(double)second[ilay][ir];
       ipoint++;
     }//end first loop on runs
-
     //Style
     SetStyle(ge_nref[ilay], kBlue);
     SetStyle(ge_ncom1[ilay], kBlack);
     SetStyle(ge_ncom2[ilay], kBlack);
     SetStyle(ge_n2[ilay], kRed+2);
-
   }//end loop on layers
 
   //Legend
@@ -155,7 +159,8 @@ void CompareDeadPixelsInRuns(){
   leg->AddEntry(ge_ncom1[0], "#splitline{#dead pix}{both}");
 
   //Draw plot for each layer
-  for(int ilay=0; ilay<nLayers; ilay++){
+  for (string layer : laynums){ // loop over layers
+    int ilay=stoi(layer);
 
     TCanvas *canvas = new TCanvas(Form("mycanvas_%d",ilay), Form("mycanvas_%d",ilay), 1300, 800);
     canvas->SetMargin(0.08, 0.1271, 0.1759, 0.0996);
@@ -167,39 +172,36 @@ void CompareDeadPixelsInRuns(){
     hfake->SetStats(0);
     ///draw labels on x axis
     int counter = 0;
+    cout<<"counter: "<<counter<<endl;
     for(Int_t k=4;k<3*runNumbers.size();k+=3){
       if(runNumbers[counter]==refrun){
+        cout<<"counter: "<<counter<<endl;
         k-=3;
         counter++;
         continue;
       }
-      hfake->GetXaxis()->SetBinLabel(k, Form("run%s",runNumbers[runNumbers.size()-1-counter].c_str()));
+      cout<<"counter: "<<counter<<endl;
+      hfake->GetXaxis()->SetBinLabel(k, Form("run%s",runNumbers[runNumbers.size()-2-counter].c_str()));
       counter++;
     }
     
     hfake->Draw();
-    //canvas->SetLogy();
-    //hfake->SetTitle(Form("Layer-%s - %s%06ld compared to all",nLayers>1 ? to_string(ilay).c_str():laynums[0].c_str(), filepath.find("run")==string::npos? "":"run",refrun));
-    hfake->SetTitle("TEST");
+    hfake->SetTitle(Form("Layer-%d - run%s compared to all",ilay, refrun.c_str()));
     ge_nref[ilay]->Draw("P E2 same");
     ge_ncom1[ilay]->Draw("E2 same");
     ge_ncom2[ilay]->Draw("E2 same");
     ge_n2[ilay]->Draw("E2 same");
     hfake->GetYaxis()->SetRangeUser(min[ilay]+0.1*min[ilay], max[ilay]+0.1*max[ilay]);
-    //hfake->GetYaxis()->SetLabelColor(kWhite);
     hfake->GetYaxis()->SetTickLength(0.005);
     hfake->GetYaxis()->SetMaxDigits(4);
     TLine *lineref = new TLine(-0.5, 0, x2+0.5, 0);
     lineref->SetLineColor(kGray-1);
     lineref->SetLineStyle(2);
     lineref->Draw("same");
-
-    //draw legend
     leg->Draw("same");
 
-    //canvas->SaveAs(Form("../Plots/Layer%s_DeadPixComparison_%s%ld_compared_to_run_%s.pdf", nLayers>1 ? to_string(ilay).c_str() : laynums[0].c_str(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-    //canvas->SaveAs(Form("../Plots/Layer%s_DeadPixComparison_%s%ld_compared_to_run_%s.root", nLayers>1 ? to_string(ilay).c_str() : laynums[0].c_str(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-    canvas->SaveAs(Form("../Plots/TEST_%i.png",ilay));
+    canvas->SaveAs(Form("../Plots/Layer%s_DeadPixComparison_run%s_compared_to_run%s_run%s.pdf", layer.c_str(),refrun.c_str(),runNumbers[0].c_str(),runNumbers[nRuns-1].c_str()));
+    canvas->SaveAs(Form("../Plots/Layer%s_DeadPixComparison_run%s_compared_to_run%s_run%s.root", layer.c_str(),refrun.c_str(),runNumbers[0].c_str(),runNumbers[nRuns-1].c_str()));
 
     delete canvas;
     delete hfake;
