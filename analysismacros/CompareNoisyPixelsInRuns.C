@@ -17,19 +17,30 @@
 #include <TSystem.h>
 #include <TKey.h>
 #include <THnSparse.h>
-
+#include "QualityControl/PostProcessingInterface.h"
+#include "QualityControl/Reductor.h"
+#include "QualityControl/DatabaseFactory.h"
+#include "QualityControl/RootClassFactory.h"
+#include "QualityControl/DatabaseInterface.h"
+#include "QualityControl/MonitorObject.h"
+#include "QualityControl/QcInfoLogger.h"
+#include "QualityControl/CcdbDatabase.h"
+#include "inc/ccdb.h"
 #include "inc/constants.h"
 
 using namespace std;
+using namespace o2::quality_control::repository;
+using namespace o2::quality_control::core;
 
 //Functions
 std::array<long int,5> CompareTwoRuns(THnSparse *href, THnSparse *h2);
 void SetStyle(TGraphErrors *ge, Color_t col);
-void DoAnalysis(string filepath, const int nChips, string skipruns, long int refrun, int IBorOB);
+void DoAnalysis(string filepath, const int nChips, string skipruns, long int refrun, int IBorOB, bool ccdb_upload);
 int nStavesInLay[7]= {0};
 
 void CompareNoisyPixelsInRuns(){
   string fpath;
+  bool ccdb_upload;
   int nchips=9;
   cout<<"\n\nAvailable file(s) for the analysis (the last should be the file you want!): \n"<<endl;
   gSystem->Exec("ls ../Data/*FHRMAPS_HITMAPS* -Art | tail -n 500");
@@ -68,7 +79,7 @@ void CompareNoisyPixelsInRuns(){
   }
 
   //Choose whether to skip runs
-  string skipans, skipruns;
+  string skipans, skipruns, CCDB_up;
   cout<<endl;
   cout<<"Would you like to skip some run(s)? [y/n] ";
   cin>>skipans;
@@ -80,6 +91,14 @@ void CompareNoisyPixelsInRuns(){
   }
   else
     skipruns=" ";
+
+  cout<<"Would you like to upload the output to ccdb? [y/n] ";
+  cin>>CCDB_up;
+  cout<<endl;
+  if(CCDB_up =="y"||CCDB_up =="Y") ccdb_upload= true;
+  else ccdb_upload= false;
+
+if(ccdb_upload)SetTaskName(__func__);
 
   cout<<"Available runs in your file:\n"<<endl;
   TFile *infile=new TFile(fpath.c_str());
@@ -115,13 +134,13 @@ void CompareNoisyPixelsInRuns(){
   cout<<"\n\n=>Insert a run you want to use as a reference for the comparison with all the others: \n"<<endl;
   cin>>refrun;
 
-  DoAnalysis(fpath, nchips, skipruns, refrun, IBorOB);
+  DoAnalysis(fpath, nchips, skipruns, refrun, IBorOB, ccdb_upload);
 }
 
 //
 // Analysis
 //
-void DoAnalysis(string filepath, const int nChips, string skipruns, long int refrun, int IBorOB){
+void DoAnalysis(string filepath, const int nChips, string skipruns, long int refrun, int IBorOB, bool ccdb_upload){
 
   gStyle->SetOptStat(0000);
 
@@ -129,6 +148,17 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
   std::vector<string> timestamps, runnumbers, stavenums, laynums;
   vector<int> posrefrun;
   int nLayers=1, nRuns=1;
+
+//Setting up the connection to the ccdb database
+
+//      CcdbDatabase* ccdb;
+//      if(ccdb_upload) ccdb = SetupConnection();       ~To-Do- Currently not working            
+  std::unique_ptr<DatabaseInterface> mydb = DatabaseFactory::create("CCDB");
+
+  auto* ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
+
+  ccdb->connect(ccdbport.c_str(), "", "", "");
+
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
@@ -365,7 +395,16 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
 
     //draw legend
     leg->Draw("same");
-
+	string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
+	string Reference_run = to_string(refrun);
+	if(ccdb_upload){
+	string canvas_name = Form("Layer%d_NoisyPixComparison_Allstaves",ilay);
+	canvas->SetName(canvas_name.c_str());
+	auto mo= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%d",ilay),TaskClass, DetectorName,1,Runperiod);
+        mo->addMetadata("Reference Run number",Reference_run.c_str());
+        mo->setIsOwner(false);
+        ccdb->storeMO(mo);	
+		}
     canvas->SaveAs(Form("../Plots/Layer%s_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf", laynums[indexLaynums].c_str(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     canvas->SaveAs(Form("../Plots/Layer%s_NoisyPixComparison_%s%ld_compared_to_run_%s.root", laynums[indexLaynums].c_str(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 
@@ -384,6 +423,9 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
       indexEff += nStavesInLay[ilay-1];
       indexLaynums = nRuns*indexEff;
     }
+      string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
+        string Reference_run = to_string(refrun);
+
     for(int is=0; is<nStavesInLay[ilay]; is++){
       TCanvas *canvas = new TCanvas(Form("mycanvas_%d_%d",ilay,is), Form("mycanvas_%d_%d",ilay,is), 1300, 800);
       canvas->SetMargin(0.08, 0.1271, 0.1759, 0.0996);
@@ -424,7 +466,15 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
 	else LayerTitle = "AllLayers_";
       }
       //      nLayers==1 ? Form("Layer%s_",laynums[ilay*nRuns*nStavesInLay[ilay]].c_str()) : "AllLayers_"
-      if(!ilay && !is) canvas->SaveAs(Form("../Plots/%sAllStaves_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf[", LayerTitle.Data(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      if(ccdb_upload){
+	canvas->SetName(Form("Layer%d-Stave%d_NoisyPixComparison",ilay,is));
+	auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%d",ilay),TaskClass, DetectorName,1,Runperiod);
+        mo2->addMetadata("Reference Run number",Reference_run.c_str());
+        mo2->setIsOwner(false);
+        ccdb->storeMO(mo2);
+
+	}
+	if(!ilay && !is) canvas->SaveAs(Form("../Plots/%sAllStaves_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf[", LayerTitle.Data(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
       canvas->SaveAs(Form("../Plots/%sAllStaves_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf", LayerTitle.Data() ,filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
       if(ilay==nLayers-1 && is==nStavesInLay[ilay]-1) canvas->SaveAs(Form("../Plots/%sAllStaves_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf]", LayerTitle.Data(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 
@@ -433,7 +483,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
       delete lineref;
     }
   }
-
+//Disconnencting the interface
+if(ccdb_upload) ccdb->disconnect();
 }
 
 //
