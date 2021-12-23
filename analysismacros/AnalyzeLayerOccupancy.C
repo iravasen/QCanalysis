@@ -391,7 +391,7 @@ if(ccdb_upload){
      string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
      string canvas_name = Form("Layer%s_fakehitrate_w_error_and_trig_data", laynums[nRunsTot].c_str()); 
        canvas->SetName(canvas_name.c_str());
-        auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()), "OfflineQC", DetectorName,1,Runperiod);
+        auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()), TaskClass, DetectorName,1,Runperiod);
         mo1->setIsOwner(false);
         ccdb->storeMO(mo1);}
 
@@ -405,7 +405,7 @@ if(ccdb_upload){
 	string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
       string canvas_name2 = Form("Layer%s_fakehitrate_w_error_and_trig_data_HSLower",laynums[nRunsTot].c_str());
         canvas->SetName(canvas_name2.c_str());
-         auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()), "OfflineQC", DetectorName,1,Runperiod);
+         auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()), TaskClass, DetectorName,1,Runperiod);
         mo2->setIsOwner(false);
         ccdb->storeMO(mo2);}
 
@@ -427,7 +427,7 @@ if(ccdb_upload){
   // The number 27 is the sum of the 2*6 digit run numbers+ len("_to_run")+len("from_run")
       string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
       Secondcanvas->SetName(Secondcanvas_name.c_str());
-      auto mo3= std::make_shared<o2::quality_control::core::MonitorObject>(Secondcanvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()), "OfflineQC", DetectorName,1,Runperiod);
+      auto mo3= std::make_shared<o2::quality_control::core::MonitorObject>(Secondcanvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()),TaskClass, DetectorName,1,Runperiod);
       mo3->setIsOwner(false);
       ccdb->storeMO(mo3);
 	}
