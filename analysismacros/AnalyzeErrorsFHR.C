@@ -302,5 +302,6 @@ if(ccdb_upload){
   }
 
 //Disconnencting the interface
-if(ccdb_upload) ccdb->disconnect();
+//if(ccdb_upload)
+ ccdb->disconnect();
 }

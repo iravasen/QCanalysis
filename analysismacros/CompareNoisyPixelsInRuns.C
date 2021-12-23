@@ -484,7 +484,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
     }
   }
 //Disconnencting the interface
-if(ccdb_upload) ccdb->disconnect();
+//if(ccdb_upload)
+ ccdb->disconnect();
 }
 
 //

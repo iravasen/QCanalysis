@@ -491,5 +491,6 @@ if(ccdb_upload){
 
   cout << "\nROOT file " << PathOut << " has been created" << endl;
 //Disconnencting the interface
-if(ccdb_upload) ccdb->disconnect();
+//if(ccdb_upload)
+ ccdb->disconnect();
 }

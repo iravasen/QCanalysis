@@ -333,5 +333,6 @@ canvas->SaveAs(Form("../Plots/Layer%s_fakehitratecorr_refrun%ld_%s.pdf", laynums
   }
 
 //Disconnencting the interface
-if(ccdb_upload) ccdb->disconnect();
+//if(ccdb_upload)
+ ccdb->disconnect();
 }
