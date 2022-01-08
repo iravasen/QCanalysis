@@ -17,16 +17,18 @@
 #include <TSystem.h>
 #include <TKey.h>
 #include <THnSparse.h>
-
+#include <TClass.h> 
 #include "inc/constants.h"
+#include <TAttAxis.h>
+#include <TAxis.h>
 
 using namespace std;
+vector<int> RunList[7];
 
 //Functions
 std::array<long int,5> CompareTwoRuns(THnSparse *href, THnSparse *h2);
 void SetStyle(TGraphErrors *ge, Color_t col);
 void DoAnalysis(string filepath, const int nChips, string skipruns, long int refrun, int IBorOB);
-int nStavesInLay[7]= {0};
 
 void CompareNoisyPixelsInRuns(){
   string fpath;
@@ -44,27 +46,16 @@ void CompareNoisyPixelsInRuns(){
   int IBorOB=0;
   if(fpath.find("IB")!=string::npos){
     IBorOB = 0;
-    nStavesInLay[0] = nStavesInLayAll[0];
-    nStavesInLay[1] = nStavesInLayAll[1];
-    nStavesInLay[2] = nStavesInLayAll[2];
   }
   else if (fpath.find("OB")!=string::npos){
     IBorOB = 1;
-    nStavesInLay[0] = nStavesInLayAll[3];
-    nStavesInLay[1] = nStavesInLayAll[4];
-    nStavesInLay[2] = nStavesInLayAll[5];
-    nStavesInLay[3] = nStavesInLayAll[6];
   }
   else if (fpath.find("all")!=string::npos){
     IBorOB = 2;
-    for (Int_t i =0; i < 7; i ++){
-      nStavesInLay[i] = nStavesInLayAll[i];
-    }
   }
   else{
     string layernum = fpath.substr(fpath.find("Layer")+5, 1);
     IBorOB = 2;
-    nStavesInLay[0] = nStavesInLayAll[stoi(layernum)];
   }
 
   //Choose whether to skip runs
@@ -81,13 +72,20 @@ void CompareNoisyPixelsInRuns(){
   else
     skipruns=" ";
 
-  cout<<"Available runs in your file:\n"<<endl;
+  //  cout<<"Available runs in your file:\n"<<endl;
   TFile *infile=new TFile(fpath.c_str());
   TList *list = (TList*)infile->GetListOfKeys();
   TIter next(list);
   TObject *obj;
   TKey *key;
   vector<string> stavenums;
+  vector<string> laynums;  
+  vector<int> CommonRunList;
+  int LastLayerInList=-1;
+
+  int counter=0;
+  bool isNewLayer=0;
+  bool isNewStave=0;
   while((key = ((TKey*)next()))){
     obj=key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
@@ -100,15 +98,64 @@ void CompareNoisyPixelsInRuns(){
     if(objname.find("Stv")==string::npos) continue;
     string runnum =  objname.substr(objname.find("run")+3, 6);
     string stvnum = objname.substr(objname.find("Stv")+3,2);
+    string laynum = objname.substr(objname.find("L")+1,1);
+
     if(skipruns.find(runnum)!=string::npos) continue; //eventually skip runs specified by the user
     if(stvnum.find("_")!=string::npos)
       stvnum = objname.substr(objname.find("Stv")+3,1);
     stavenums.push_back(stvnum);
-    //cout<<"run: "<<runnum<<"   timestamp: "<<timestamp<<"    laynum: "<<laynum<<endl;
-    if((int)stavenums.size()>1 && stvnum!=stavenums[stavenums.size()-2])
-      break;
+    //    if((int)stavenums.size()>1 && stvnum!=stavenums[stavenums.size()-2])  break;
 
-    cout<<runnum<<endl;
+    laynums.push_back(laynum);
+    LastLayerInList = stoi(laynum);
+
+    //CREATE THE LIST OF AVAILABLE RUNS FOR EACH LAYER (the input plots are ordered in tis way: for each Layer and Stave the full list of runnumber is given)
+    isNewLayer=0;
+    if ((int)laynums.size()==1 || ((int)laynums.size()>1 && laynum!=laynums[laynums.size()-2]))  { //new layer
+      //      cout << "\nLayer: " << laynum << "\nRuns: " <<endl;
+      isNewLayer=1;
+      isNewStave=0;
+    }
+    if (isNewLayer) {
+      //      cout<<"run: "<<runnum<<" laynum: "<<laynum<< " stavenum " << stvnum<< endl; //first stave of new layer
+      RunList[stoi(laynum)].push_back(stoi(runnum));
+    }
+    else {
+      if ((int)stavenums.size()>1 && stvnum==stavenums[stavenums.size()-2]){
+	if (!isNewStave) {
+	  RunList[stoi(laynum)].push_back(stoi(runnum));
+	  //	  cout<<"run: "<<runnum<<" laynum: "<<laynum<< " stavenum " << stvnum<< endl;
+	}
+      }
+      else{
+	isNewStave=1;
+      }
+    }
+  }
+
+  bool isCommon=1;
+  for (Int_t i = 0; i< (int)RunList[LastLayerInList].size(); i++){
+    isCommon=1; //let's suppose the run i is common to all layers
+    for (Int_t lay = 0; lay<7; lay++){
+      if (isCommon==0) break; // if a run is missing for one layer, than it's not a common run
+      if (lay == LastLayerInList) continue;
+      if ((int)RunList[lay].size() == 0) continue; //the layer has no runs
+      for (Int_t l = 0; l< (int)RunList[lay].size(); l++){
+        if (RunList[LastLayerInList][i] == RunList[lay][l])  break;
+        else {
+          if (l== (int)RunList[lay].size()-1) {
+            isCommon=0; //the run is not common to one layer, therefore it's not a common run
+            break;
+          }
+        }
+      }
+    }
+    if (isCommon) CommonRunList.push_back(RunList[LastLayerInList][i]);
+  }
+
+  cout << "\n\nCommon runs: " << endl;
+  for (int i=0; i<(int)CommonRunList.size(); i++){
+    cout << CommonRunList[i] << endl;
   }
 
   long int refrun;
@@ -128,7 +175,14 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
   std::vector<THnSparse*> hmaps;
   std::vector<string> timestamps, runnumbers, stavenums, laynums;
   vector<int> posrefrun;
-  int nLayers=1, nRuns=1;
+  int nTimes=0;
+  int nRunsB[7]={-1};
+  for (int ilay=0; ilay < 7; ilay++){
+    nRunsB[ilay] =-1;
+  }
+  int nRunsTot=0;
+  int nRunsTotFixed=0;
+  int nLayersInput =0;
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
@@ -137,6 +191,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
   TObject *obj;
   TKey *key;
   THnSparse *hsparse;
+  bool isNewStave=0;
+  bool isNewLayer=0;
   while((key=((TKey*)next()))){
     obj = key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
@@ -165,49 +221,92 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
     if(stol(runnum)==refrun) //position of refence run
       posrefrun.push_back((int)hmaps.size()-1);
 
-    if((int)laynums.size()>1 && laynum!=laynums[laynums.size()-1]){
-      nLayers++;
-    }
-
-    if((int)stavenums.size()>1 && stvnum==stavenums[stavenums.size()-1])
-      nRuns++;
-    else nRuns=1;
-
     timestamps.push_back(timestamp);
     runnumbers.push_back(runnum);
     laynums.push_back(laynum);
     stavenums.push_back(stvnum);
+
+    nTimes++;
+    if(nRunsB[stoi(laynum)]==-1) {
+      nRunsB[stoi(laynum)]=0;
+      nLayersInput++;
+    }
+
+    isNewLayer=0;
+    if ((int)laynums.size()==1 || ((int)laynums.size()>1 && laynum!=laynums[laynums.size()-2]))  { //new layer
+      //      cout << "\nLayer: " << laynum << "\nRuns: " <<endl;
+      isNewLayer=1;
+      isNewStave=0;
+    }
+    if (isNewLayer) {
+      //      cout << "isNewLayer " << endl;
+      //      cout<<"run: "<<runnum<<" laynum: "<<laynum<< " stavenum " << stvnum<< endl; //first stave of new layer
+      nRunsB[stoi(laynum)]++;
+    }
+    else {
+      //      cout << "isNewStave " << isNewStave << endl;
+      if ((int)stavenums.size()>1 && stvnum==stavenums[stavenums.size()-2]){
+	if (!isNewStave) {
+	  nRunsB[stoi(laynum)]++;
+	  //  cout<<"run: "<<runnum<<" laynum: "<<laynum<< " stavenum " << stvnum<< endl;
+	}
+      }
+      else{
+	isNewStave=1;
+      }
+    }
+  }
+
+  //  cout << "nLayersInput " << nLayersInput << endl;
+  int nLayers;
+  if (nLayersInput==1) nLayers =1;
+  else {
+    if (IBorOB==0) nLayers = 3;
+    else if (IBorOB==1) nLayers = 4;
+    else nLayers = 7;
+  }
+
+  //  cout << "nLayers= " << nLayers << endl;
+  int nRunsMax =0; //maximum number of runs among different layers
+  for (int ilay=0; ilay < 7; ilay++){
+    //    cout <<  "nRunsB " <<    nRunsB[ilay]<< endl;
+    if (nRunsB[ilay] > nRunsMax) nRunsMax = nRunsB[ilay];
   }
 
   //Compare all the runs (non-empty ones) with the reference run chosen by the user
-  vector<string> runlabel;
+  vector<int> runlabel[7];
   int istave = 0;
-  for(int ilay=0; ilay<nLayers; ilay++){
-    istave+=nStavesInLay[ilay];
-  }
-  istave--;
-  int ilayer = nLayers-1;
-  long int first[nLayers][nRuns], second[nLayers][nRuns], both[nLayers][nRuns];
+  int ilayer = 0;
+  long int first[7][nRunsMax], second[7][nRunsMax], both[7][nRunsMax];
   int irun=0;
   vector<array<long int,5>> noisypix;
-  for(int ilay=0; ilay<nLayers; ilay++)
-    for(int i=0; i<nRuns; i++){
+  int ilayEff = 0;
+  for(int ilay=0; ilay<7; ilay++) {
+    for(int i=0; i<nRunsMax; i++){
       first[ilay][i]=0; second[ilay][i]=0; both[ilay][i]=0;
     }
+  }
+
+  Bool_t isFirstLayer =1;
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){ //start from the bottom in order to start with the oldest run
+    //cout << "\nihist " << ihist << endl;    
     if(runnumbers[ihist].find(std::to_string(refrun))!=string::npos){
+      //cout << "reference run " << endl;
       if(ihist>0){// in case ref run is the first into the list of runs
         if(stavenums[ihist-1]!=stavenums[ihist]){
-          istave--;
           irun=0;
-        }
-        if(laynums[ihist-1]!=laynums[ihist]){
-          ilayer--;
         }
       }
       continue;
     }
-    //if(!hmaps[ihist]->GetEntries()) continue; // do not compare ref run with empty run (= empty maps)
+
+    if (IBorOB==1)  ilayer = stoi(laynums[ihist])-3;
+    else ilayer = stoi(laynums[ihist]);
+    if (nLayersInput==1) ilayer = 0;
+    istave = stoi(stavenums[ihist]);
+
+    //cout << "ilayer " << ilayer <<  " istave " << istave << " runnumber " << stoi(runnumbers[ihist]) << " irun " << irun << endl;
+    //    if(!hmaps[ihist]->GetEntries()) continue; // do not compare ref run with empty run (= empty maps)
 
     noisypix.push_back(CompareTwoRuns(hmaps[posrefrun[istave]], hmaps[ihist]));
     noisypix[noisypix.size()-1][3] = stol(stavenums[ihist]);
@@ -215,22 +314,31 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
     first[ilayer][irun]+=noisypix[noisypix.size()-1][0];
     second[ilayer][irun]+=noisypix[noisypix.size()-1][1];
     both[ilayer][irun]+=noisypix[noisypix.size()-1][2];
+    //    cout <<  first[ilayer][irun] << " " <<  second[ilayer][irun] << " " << both[ilayer][irun] << endl;
     irun++;
 
     //cout<<noisypix[noisypix.size()-1][0]<<"  "<<noisypix[noisypix.size()-1][1]<<"  "<<noisypix[noisypix.size()-1][2]<<"  "<<noisypix[noisypix.size()-1][3]<<endl;
-    if(ilayer==nLayers-1 && stavenums[ihist]=="0")
-      runlabel.push_back(runnumbers[ihist]);
+
+    if(stavenums[ihist]=="0"){
+      runlabel[stoi(laynums[ihist])].push_back(stoi(runnumbers[ihist]));
+    }
 
     if(ihist>0){
       if(stavenums[ihist-1]!=stavenums[ihist]){
-        istave--;
-        irun=0;
-      }
-      if(laynums[ihist-1]!=laynums[ihist]){
-        ilayer--;
+	irun=0;
       }
     }
   }//end loop on histograms
+
+  /*
+  cout << "Info on run label " << endl;
+  for (int l =0; l<7 ; l++){
+    cout << "Layer " << l << " " <<  (int)runlabel[l].size() << endl;
+    for (Int_t i=0; i<(int)runlabel[l].size(); i++){
+      cout << runlabel[l][i] << endl;
+    }
+  }
+  */
 
   //Make plot for each layer and for each stave in the root file
   TGraphErrors *ge_nref[nLayers];
@@ -246,6 +354,11 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
   double min[nLayers];
 
   for(int ilay=0; ilay<nLayers; ilay++){
+    if (nLayers==1) ilayEff = stoi(laynums[0]);
+    else if (IBorOB==1) ilayEff = ilay + 3 ;
+    else ilayEff = ilay;
+    //    cout << " ilay " << ilay << " ilayEff " << ilayEff << endl;
+
     ge_nref[ilay] = new TGraphErrors();
     ge_n2[ilay] = new TGraphErrors();
     ge_ncom1[ilay] = new TGraphErrors();
@@ -253,7 +366,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
     max[ilay] = -1.;
     min[ilay] = 1e35;
 
-    for(int ir=0; ir<nRuns-1; ir++){//first the older data and last the most recent
+    for(int ir=0; ir<nRunsB[ilayEff]-1; ir++){//first the older data and last the most recent
       //first couple of bar on the left
       //int ipoint = (int)noisypix.size()-icomp-1;
       if(!ir) xshift=1.;
@@ -285,14 +398,18 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
   double maxs[nLayers][100];
   double mins[nLayers][100];
   for(int ilay=nLayers-1; ilay>=0; ilay--){
-    for(int is=nStavesInLay[ilay]-1; is>=0; is--){
+    if (nLayers==1) ilayEff = stoi(laynums[0]);
+    else if (IBorOB==1) ilayEff = ilay + 3 ;
+    else ilayEff = ilay;
+    //    cout << " ilay " << ilay << " ilayEff " << ilayEff << endl;
+    for(int is=nStavesInLayAll[ilayEff]-1; is>=0; is--){
       maxs[ilay][is] = -1.;
       mins[ilay][is] = 1e35;
       ge_nref_stave[ilay][is] = new TGraphErrors();
       ge_ncom1_stave[ilay][is] = new TGraphErrors();
       ge_n2_stave[ilay][is] = new TGraphErrors();
       ge_ncom2_stave[ilay][is] = new TGraphErrors();
-      for(int ir=0; ir<nRuns-1; ir++){//first the older data and last the most recent
+      for(int ir=0; ir<nRunsB[ilayEff]-1; ir++){//first the older data and last the most recent
         if(!ir) xshift=1.;
         else xshift = 3.;
         ge_nref_stave[ilay][is]->SetPoint(ir, ir*xshift, (double)noisypix[cnt][2]/2.+(double)noisypix[cnt][0]/2.);
@@ -325,15 +442,12 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
   leg->AddEntry(ge_ncom1[0], "#splitline{#noisy pix}{both}");
 
   //Draw plot for each layer
-  Int_t indexEff = 0;
-  Int_t indexLaynums = 0;
   for(int ilay=0; ilay<nLayers; ilay++){
-    if (ilay==0) indexLaynums = 0;
-    else {
-      indexEff += nStavesInLay[ilay-1];
-      indexLaynums = nRuns*indexEff;
-    }
-    TCanvas *canvas = new TCanvas(Form("mycanvas_%d",ilay), Form("mycanvas_%d",ilay), 1300, 800);
+    if (nLayers==1) ilayEff = stoi(laynums[0]);
+    else if (IBorOB==1) ilayEff = ilay + 3 ;
+    else ilayEff = ilay;
+    //    cout << "ilay " << ilay << " i layEff " << ilayEff << endl;
+    TCanvas *canvas = new TCanvas(Form("mycanvas_%d",ilayEff), Form("mycanvas_%d",ilayEff), 1300, 800);
     canvas->SetMargin(0.08, 0.1271, 0.1759, 0.0996);
     canvas->cd();
 
@@ -344,12 +458,13 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
     //draw labels on x axis
     int counter = 0;
     for(Int_t k=4;k<=hfake->GetNbinsX()-3;k+=3){
-      hfake->GetXaxis()->SetBinLabel(k, Form("run%s",runlabel[counter].c_str()));
+      hfake->GetXaxis()->SetBinLabel(k, Form("run%i", runlabel[ilayEff][counter]));
       counter++;
     }
     hfake->Draw();
     //canvas->SetLogy();
-    hfake->SetTitle(Form("Layer-%s - %s%06ld compared to all",laynums[indexLaynums].c_str(), filepath.find("run")==string::npos? "":"run",refrun));
+    hfake->SetTitle(Form("Layer-%i - %s%06ld compared to all",ilayEff, filepath.find("run")==string::npos? "":"run",refrun));
+   
     ge_nref[ilay]->Draw("P E2 same");
     ge_ncom1[ilay]->Draw("E2 same");
     ge_ncom2[ilay]->Draw("E2 same");
@@ -357,7 +472,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
     hfake->GetYaxis()->SetRangeUser(min[ilay]+0.1*min[ilay], max[ilay]+0.1*max[ilay]);
     //hfake->GetYaxis()->SetLabelColor(kWhite);
     hfake->GetYaxis()->SetTickLength(0.005);
-    hfake->GetYaxis()->SetMaxDigits(4);
+    //    hfake->GetYaxis()->SetMaxDigits(4);
     TLine *lineref = new TLine(-0.5, 0, x2+0.5, 0);
     lineref->SetLineColor(kGray-1);
     lineref->SetLineStyle(2);
@@ -366,8 +481,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
     //draw legend
     leg->Draw("same");
 
-    canvas->SaveAs(Form("../Plots/Layer%s_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf", laynums[indexLaynums].c_str(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-    canvas->SaveAs(Form("../Plots/Layer%s_NoisyPixComparison_%s%ld_compared_to_run_%s.root", laynums[indexLaynums].c_str(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    canvas->SaveAs(Form("../Plots/Layer%i_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf", ilayEff,filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    canvas->SaveAs(Form("../Plots/Layer%i_NoisyPixComparison_%s%ld_compared_to_run_%s.root", ilayEff,filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 
     delete canvas;
     delete hfake;
@@ -375,17 +490,12 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
   }//end loop on layers
 
   //Draw plot for each stave
-  //Draw
-  indexEff = 0;
-  indexLaynums = 0;
   for(int ilay=0; ilay<nLayers; ilay++){
-    if (ilay==0) indexLaynums = 0;
-    else {
-      indexEff += nStavesInLay[ilay-1];
-      indexLaynums = nRuns*indexEff;
-    }
-    for(int is=0; is<nStavesInLay[ilay]; is++){
-      TCanvas *canvas = new TCanvas(Form("mycanvas_%d_%d",ilay,is), Form("mycanvas_%d_%d",ilay,is), 1300, 800);
+    if (nLayers==1) ilayEff = stoi(laynums[0]);
+    else if (IBorOB==1) ilayEff = ilay + 3 ;
+    else ilayEff = ilay;
+    for(int is=0; is<nStavesInLayAll[ilayEff]; is++){
+      TCanvas *canvas = new TCanvas(Form("mycanvas_%d_%d",ilayEff,is), Form("mycanvas_%d_%d",ilayEff,is), 1300, 800);
       canvas->SetMargin(0.08, 0.1271, 0.1759, 0.0996);
       canvas->cd();
 
@@ -396,12 +506,12 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
       //draw labels on x axis
       int counter = 0;
       for(Int_t k=4;k<=hfake->GetNbinsX()-3;k+=3){
-        hfake->GetXaxis()->SetBinLabel(k, Form("run%s",runlabel[counter].c_str()));
+        hfake->GetXaxis()->SetBinLabel(k, Form("run%i", runlabel[ilayEff][counter]));
         counter++;
       }
       hfake->Draw();
       //canvas->SetLogy();
-      hfake->SetTitle(Form("Layer-%s - Stave-%d - %s%06ld compared to all",laynums[indexLaynums].c_str(), is, filepath.find("run")==string::npos? "":"run",refrun));
+      hfake->SetTitle(Form("Layer-%i - Stave-%d - %s%06ld compared to all", ilayEff, is, filepath.find("run")==string::npos? "":"run",refrun));
       ge_nref_stave[ilay][is]->Draw("P E2 same");
       ge_ncom1_stave[ilay][is]->Draw("E2 same");
       ge_ncom2_stave[ilay][is]->Draw("E2 same");
@@ -409,7 +519,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
       hfake->GetYaxis()->SetRangeUser(mins[ilay][is]+0.1*mins[ilay][is], maxs[ilay][is]+0.1*maxs[ilay][is]);
       //hfake->GetYaxis()->SetLabelColor(kWhite);
       hfake->GetYaxis()->SetTickLength(0.005);
-      hfake->GetYaxis()->SetMaxDigits(4);
+      //      hfake->GetYaxis()->SetMaxDigits(4);
       TLine *lineref = new TLine(-0.5, 0, x2+0.5, 0);
       lineref->SetLineColor(kGray-1);
       lineref->SetLineStyle(2);
@@ -420,13 +530,15 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
       if (IBorOB==0) LayerTitle = "AllLayersIB_";
       else if (IBorOB==1) LayerTitle = "AllLayersOB_";
       else {
-	if (nLayers==1) LayerTitle = Form("Layer%s_",laynums[ilay*nRuns*nStavesInLay[ilay]].c_str());
+	//	if (nLayers==1) LayerTitle = Form("Layer%s_",laynums[ilay*nRuns*nStavesInLayAll[ilay]].c_str());
+	if (nLayers==1) LayerTitle = Form("Layer%i_",ilayEff);
 	else LayerTitle = "AllLayers_";
       }
-      //      nLayers==1 ? Form("Layer%s_",laynums[ilay*nRuns*nStavesInLay[ilay]].c_str()) : "AllLayers_"
+      //      nLayers==1 ? Form("Layer%s_",laynums[ilay*nRuns*nStavesInLayAll[ilay]].c_str()) : "AllLayers_"
+
       if(!ilay && !is) canvas->SaveAs(Form("../Plots/%sAllStaves_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf[", LayerTitle.Data(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
       canvas->SaveAs(Form("../Plots/%sAllStaves_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf", LayerTitle.Data() ,filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-      if(ilay==nLayers-1 && is==nStavesInLay[ilay]-1) canvas->SaveAs(Form("../Plots/%sAllStaves_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf]", LayerTitle.Data(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      if(ilay==nLayers-1 && is==nStavesInLayAll[ilayEff]-1) canvas->SaveAs(Form("../Plots/%sAllStaves_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf]", LayerTitle.Data(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 
       delete canvas;
       delete hfake;
