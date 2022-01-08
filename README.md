@@ -23,7 +23,7 @@ alienv load QualityControl/latest
 ```bash
 chmod +x startanalysis.sh
 ```
-Inside the folder there is also a MakeFile needed to compile *getObject.cxx*. As a **temporary solution**, you need to edit the lines 46,47,48,49,55,56 where you see a path to the "sw/" folder. Edit them by writing the correct path of the sw folder on your computer. 
+Inside the folder there is also a MakeFile needed to compile *getObject.cxx*. As a **temporary solution**, you need to edit the lines 46-54,60,61 where you see a path to the "sw/*operatingSytem*/" folder. Edit them by writing the correct path of the sw/*operatingSysyem*/ folder on your computer. 
 
 ## Start the analysis
 To start the download (optional) and analysis of the data you simply need to run the script *startanalysis.sh*:
