@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <array>
 #include <TH2.h>
 #include <TH3.h>
@@ -28,11 +29,11 @@ using namespace std;
 //const int nStavesInLayAll[7] = {12, 16, 20, 24, 30, 42, 48};
 
 //Functions
-std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips, double ntrig, TH2 *hhotmap, bool HalfStave, bool IB,  bool isHotPixelMapDrawn);
+std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips, double ntrig, TH2 *hhotmap, bool HalfStave, bool IB,  bool isHotPixelMapDrawn, bool isOnlyHotPixelMap);
 int GetNchipsActive(THnSparse *hmap, int maxchip, int MaxRange, bool HalfStave, bool IB);
 int GetNrunsWOhits(TH2 *hFhrStv);
 void SetStyle(TH1 *h, int col, Style_t mkr);
-void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixelMapDrawn);
+void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixelMapDrawn, bool isOnlyHotPixelMap);
 
 void MaskNoisyPixelsInRuns(){
   string fpath;
@@ -84,13 +85,23 @@ void MaskNoisyPixelsInRuns(){
     isHotPixelMapDrawn =1;
   }
 
-  DoAnalysis(fpath, skipruns, IBorOB, isHotPixelMapDrawn);
+  string drawonlypixelmap;
+  bool isOnlyHotPixelMap =0;
+  cout << "Would you like to skip the FHR vs #hot pixel plot? [y/n] ";
+  cin >> drawonlypixelmap;
+  if (drawonlypixelmap=="y" || drawonlypixelmap=="Y"){
+    cout << endl;
+    isOnlyHotPixelMap =1;
+  }
+
+  if (!isHotPixelMapDrawn && isOnlyHotPixelMap) {cout << "Choose the FHR vs #hot pixels masked and/or the hot pixel map. You have chosen none of them. " << endl; return;}
+  DoAnalysis(fpath, skipruns, IBorOB, isHotPixelMapDrawn, isOnlyHotPixelMap);
 }
 
 //
 // Analysis
 //
-void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixelMapDrawn){
+void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixelMapDrawn, bool isOnlyHotPixelMap){
 
   //TStopwatch t;
   //TStopwatch t1;
@@ -372,11 +383,11 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
       ilayIndex = stoi(laynums[ihist]);
       if (IBorOB == 1)       ilayIndex = stoi(laynums[ihist]) -3;
       if (StavePart==0)   {
-	fhrall.push_back(GetFHRwithMasking(hmaps[ihist],nchipsactive,ntrig[irun],hHotMap[nLayers==1 ? 0 : ilayIndex][stoi(stavenums[ihist])], StavePart, IB, isHotPixelMapDrawn));
-	if (numStavePart==1) fhrall1.push_back(GetFHRwithMasking(hmaps[ihist],nchipsactive,ntrig[irun],hHotMap[nLayers==1 ? 0 : ilayIndex][stoi(stavenums[ihist])], StavePart, IB,  isHotPixelMapDrawn));
+	fhrall.push_back(GetFHRwithMasking(hmaps[ihist],nchipsactive,ntrig[irun],hHotMap[nLayers==1 ? 0 : ilayIndex][stoi(stavenums[ihist])], StavePart, IB, isHotPixelMapDrawn, isOnlyHotPixelMap));
+	if (numStavePart==1) fhrall1.push_back(GetFHRwithMasking(hmaps[ihist],nchipsactive,ntrig[irun],hHotMap[nLayers==1 ? 0 : ilayIndex][stoi(stavenums[ihist])], StavePart, IB,  isHotPixelMapDrawn, isOnlyHotPixelMap));
       }
       else  {
-	fhrall1.push_back(GetFHRwithMasking(hmaps[ihist],nchipsactive,ntrig[irun],hHotMap[nLayers==1 ? 0 : ilayIndex][stoi(stavenums[ihist])], StavePart, IB,  isHotPixelMapDrawn));
+	fhrall1.push_back(GetFHRwithMasking(hmaps[ihist],nchipsactive,ntrig[irun],hHotMap[nLayers==1 ? 0 : ilayIndex][stoi(stavenums[ihist])], StavePart, IB,  isHotPixelMapDrawn, isOnlyHotPixelMap));
       }
     }
 
@@ -394,160 +405,163 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
     //    cout << "fhr all (HS Lower) " << fhrall1[fhrall1.size()-1][0] << endl;
   }
 
-  //special binning
-  double binstart = 0.4;
-  double binsmasked[nMasked+2];
-  binsmasked[0] = 0.1;
-  binsmasked[1] = 0.5;
-  for(int i=2; i<=nMasked+1; i++){
-    binsmasked[i] = binsmasked[i-1]+1.;
-  }
-
-  TH2F *hFhrStv[nLayers][100][2];
-
-  for(int ilay=0; ilay<nLayers; ilay++){
-    if (nLayers==1) ilayEff = stoi(laynums[0]);
-    else if (IBorOB==1) ilayEff = ilay + 3 ;
-    else ilayEff = ilay;
-    if (nRunsB[ilayEff] == -1) continue;
-    //    cout << "ilay " << ilay << " ilayEff " << ilayEff << endl;
-    for(int is=0; is<nStavesInLayAll[ilayEff]; is++){
-      for (int i=0; i<2; i++){
-	hFhrStv[ilay][is][i] = new TH2F(Form("h2FhrStv_%i_%d_HS%i", ilayEff,is, i), Form("Layer-%i - Stave-%d; # Hot Pixel Masked;Run", ilayEff,is),nMasked+1, binsmasked, nRunsB[ilayEff]+1, 0.5, nRunsB[ilayEff]+1.5);
-      }
-    }
-  }
-
-  //Fill histogram
-  int ilayer = 0;
-  int istave = 0;
-  irun=0;
-  //  cout << "\n\nfhr size " << (int)fhrall.size() << " = should correspond to nEntrieshmaps " << endl;
-  //  cout << "fhr size (nMasked) " << (int)fhrall[0].size() <<" = should correspond to nMasked+1 " << endl;
-  //  cout << "hmpas size\n " << hmaps.size() << endl;
-  for(int i=0; i<(int)fhrall.size(); i++){
-    if (IBorOB==1)  ilayer = stoi(laynums[(int)hmaps.size()-1-i])-3;
-    else ilayer = stoi(laynums[(int)hmaps.size()-1-i]);
-    if (nLayersInput==1) ilayer = 0;
-    istave = stoi(stavenums[(int)hmaps.size()-1-i]);
-    //    cout << "i " << i << " ilayer " << ilayer << " istave " << istave << " irun " << irun << endl;
-    //    cout << " ilayer " << laynums[(int)hmaps.size()-1-i] << " istave " << stavenums[(int)hmaps.size()-1-i] << " irun " << runnumbers[(int)hmaps.size()-1-i] << endl;
-    for(int ifhr=0; ifhr<(int)fhrall[i].size(); ifhr++){ //loop over number of pixels masked
-      for (int StavePart=0; StavePart< 2; StavePart++){ //loop over the two Half Staves for OB
-	if (StavePart==0) hFhrStv[ilayer][istave][StavePart]->SetBinContent(ifhr+1, irun+1, fhrall[i][ifhr]);
-	else hFhrStv[ilayer][istave][StavePart]->SetBinContent(ifhr+1, irun+1, fhrall1[i][ifhr]);
-      }
+  TString   pathfileFHRvsMasked = "";
+  TFile *  fileFHRvsMasked;
+  if (!isOnlyHotPixelMap){
+    //special binning
+    double binstart = 0.4;
+    double binsmasked[nMasked+2];
+    binsmasked[0] = 0.1;
+    binsmasked[1] = 0.5;
+    for(int i=2; i<=nMasked+1; i++){
+      binsmasked[i] = binsmasked[i-1]+1.;
     }
 
-    irun++;
-    if(i<(int)fhrall.size()-1){// in case ref run is the first into the list of runs
-      if(stavenums[fhrall.size()-i-2]!=stavenums[fhrall.size()-i-1]){
-        istave--;
-        irun=0;
-      }
-      if(laynums[fhrall.size()-i-2]!=laynums[fhrall.size()-i-1]){
-        istave = nStavesInLayAll[ilayer]-1;
-      }
-    }
-  }
+    TH2F *hFhrStv[nLayers][100][2];
 
-
-  cout << "\nFHR vs #masked pixels " << endl;
-  TString pathfileFHRvsMasked = Form("../Plots/FHRvsMasked_%s.root", filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
-  TFile *   fileFHRvsMasked = new TFile(pathfileFHRvsMasked, "RECREATE");
-  //Make FHR (averaged on all runs) vs #masked pix for all staves in a layer
-  for(int ilay=0; ilay<nLayers; ilay++){
-    if (nLayers==1) ilayEff = stoi(laynums[0]);
-    else if (IBorOB==1) ilayEff = ilay + 3 ;
-    else ilayEff = ilay;
-    if (nRunsB[ilayEff] == -1) continue;
-
-    //legend
-    TLegend *leg = new TLegend(0.904, 0.127,0.997,0.898);
-    if (ilayEff>=3) leg->SetNColumns(2);
-
-    if (ilayEff < 3) numStavePart=1;
-    else numStavePart=2;
-
-    TString SStavePart[2] = {"HS Lower", "HS Upper"};
-    if (numStavePart==1) {
-      SStavePart[0] = "";
-      SStavePart[1] = "";
-    }
-
-    for (int StavePart=0; StavePart< numStavePart; StavePart++){ //loop over the two Half Staves for OB
-      TCanvas cnv(Form("cnv_%d_HS%i",ilayEff, StavePart), Form("cnv_%d_HS%i",ilayEff, StavePart));
-      cnv.cd();
-      cnv.SetLogy();
-      cnv.SetLogx();
-      cnv.SetTickx();
-      cnv.SetTicky();
-      cnv.SetMargin(0.0988,0.1,0.1,0.0993);
-
-      TH1F *hframe = cnv.DrawFrame(0.1,7e-15,3*(nMasked),1e-3, Form("Layer %i %s - Average FHR %s; # Hot Pixels masked ; FHR (/event/pixel)",ilayEff, SStavePart[StavePart].Data(), filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str()));
-      hframe->SetBins(nMasked+1,binsmasked);
-
-      for(int is=0; is<nStavesInLayAll[ilayEff];is++){
-	TH1F *proj = (TH1F*)hFhrStv[ilay][is][StavePart]->ProjectionX(Form("proj_%d%d_HS%i",ilayEff,is, StavePart));
-	int runswohits = GetNrunsWOhits(hFhrStv[ilay][is][StavePart]);
-	proj->Scale(1./(nRunsB[ilayEff]+1-runswohits)); //Divide by the number of runs minus the ones without hits
-
-	for (int i=1; i<= proj->GetNbinsX(); i++){
-	  proj->SetBinError(i, 0);
+    for(int ilay=0; ilay<nLayers; ilay++){
+      if (nLayers==1) ilayEff = stoi(laynums[0]);
+      else if (IBorOB==1) ilayEff = ilay + 3 ;
+      else ilayEff = ilay;
+      if (nRunsB[ilayEff] == -1) continue;
+      //    cout << "ilay " << ilay << " ilayEff " << ilayEff << endl;
+      for(int is=0; is<nStavesInLayAll[ilayEff]; is++){
+	for (int i=0; i<2; i++){
+	  hFhrStv[ilay][is][i] = new TH2F(Form("h2FhrStv_%i_%d_HS%i", ilayEff,is, i), Form("Layer-%i - Stave-%d; # Hot Pixel Masked;Run", ilayEff,is),nMasked+1, binsmasked, nRunsB[ilayEff]+1, 0.5, nRunsB[ilayEff]+1.5);
 	}
-	/*
-	cout <<"ilay " << ilayEff <<  " stave " << is << " runs no hits  "<< runswohits << endl;
-	for (int i=1; i<= proj->GetNbinsX(); i++){
-	  int l = i*10;
-	  if (l>proj->GetNbinsX()) break;
-	  cout << "bin " << l << " " << proj->GetBinContent(l) << " +- " << proj->GetBinError(l) << endl;
+      }
+    }
+
+    //Fill histogram
+    int ilayer = 0;
+    int istave = 0;
+    irun=0;
+    //  cout << "\n\nfhr size " << (int)fhrall.size() << " = should correspond to nEntrieshmaps " << endl;
+    //  cout << "fhr size (nMasked) " << (int)fhrall[0].size() <<" = should correspond to nMasked+1 " << endl;
+    //  cout << "hmpas size\n " << hmaps.size() << endl;
+    for(int i=0; i<(int)fhrall.size(); i++){
+      if (IBorOB==1)  ilayer = stoi(laynums[(int)hmaps.size()-1-i])-3;
+      else ilayer = stoi(laynums[(int)hmaps.size()-1-i]);
+      if (nLayersInput==1) ilayer = 0;
+      istave = stoi(stavenums[(int)hmaps.size()-1-i]);
+      //    cout << "i " << i << " ilayer " << ilayer << " istave " << istave << " irun " << irun << endl;
+      //    cout << " ilayer " << laynums[(int)hmaps.size()-1-i] << " istave " << stavenums[(int)hmaps.size()-1-i] << " irun " << runnumbers[(int)hmaps.size()-1-i] << endl;
+      for(int ifhr=0; ifhr<(int)fhrall[i].size(); ifhr++){ //loop over number of pixels masked
+	for (int StavePart=0; StavePart< 2; StavePart++){ //loop over the two Half Staves for OB
+	  if (StavePart==0) hFhrStv[ilayer][istave][StavePart]->SetBinContent(ifhr+1, irun+1, fhrall[i][ifhr]);
+	  else hFhrStv[ilayer][istave][StavePart]->SetBinContent(ifhr+1, irun+1, fhrall1[i][ifhr]);
 	}
-	*/
-	if (ilayEff<3){
-	  SetStyle(proj, col[is<nStavesInLayAll[ilayEff]/2 ? is : is-nStavesInLayAll[ilayEff]/2],is<nStavesInLayAll[ilayEff]/2 ? 24:26);
+      }
+
+      irun++;
+      if(i<(int)fhrall.size()-1){// in case ref run is the first into the list of runs
+	if(stavenums[fhrall.size()-i-2]!=stavenums[fhrall.size()-i-1]){
+	  istave--;
+	  irun=0;
 	}
-	else if (ilayEff >= 3 && ilayEff<5){
-	  if((is)<nStavesInLayAll[ilayEff]/3){
-	    SetStyle(proj, col[is], 24);
+	if(laynums[fhrall.size()-i-2]!=laynums[fhrall.size()-i-1]){
+	  istave = nStavesInLayAll[ilayer]-1;
+	}
+      }
+    }
+
+    cout << "\nFHR vs #masked pixels " << endl;
+    pathfileFHRvsMasked = Form("../Plots/FHRvsMasked_%s.root", filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
+    fileFHRvsMasked = new TFile(pathfileFHRvsMasked, "RECREATE");
+    //Make FHR (averaged on all runs) vs #masked pix for all staves in a layer
+    for(int ilay=0; ilay<nLayers; ilay++){
+      if (nLayers==1) ilayEff = stoi(laynums[0]);
+      else if (IBorOB==1) ilayEff = ilay + 3 ;
+      else ilayEff = ilay;
+      if (nRunsB[ilayEff] == -1) continue;
+
+      //legend
+      TLegend *leg = new TLegend(0.904, 0.127,0.997,0.898);
+      if (ilayEff>=3) leg->SetNColumns(2);
+
+      if (ilayEff < 3) numStavePart=1;
+      else numStavePart=2;
+
+      TString SStavePart[2] = {"HS Lower", "HS Upper"};
+      if (numStavePart==1) {
+	SStavePart[0] = "";
+	SStavePart[1] = "";
+      }
+
+      for (int StavePart=0; StavePart< numStavePart; StavePart++){ //loop over the two Half Staves for OB
+	TCanvas cnv(Form("cnv_%d_HS%i",ilayEff, StavePart), Form("cnv_%d_HS%i",ilayEff, StavePart));
+	cnv.cd();
+	cnv.SetLogy();
+	cnv.SetLogx();
+	cnv.SetTickx();
+	cnv.SetTicky();
+	cnv.SetMargin(0.0988,0.1,0.1,0.0993);
+
+	TH1F *hframe = cnv.DrawFrame(0.1,7e-15,3*(nMasked),1e-3, Form("Layer %i %s - Average FHR %s; # Hot Pixels masked ; FHR (/event/pixel)",ilayEff, SStavePart[StavePart].Data(), filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str()));
+	hframe->SetBins(nMasked+1,binsmasked);
+
+	for(int is=0; is<nStavesInLayAll[ilayEff];is++){
+	  TH1F *proj = (TH1F*)hFhrStv[ilay][is][StavePart]->ProjectionX(Form("proj_%d%d_HS%i",ilayEff,is, StavePart));
+	  int runswohits = GetNrunsWOhits(hFhrStv[ilay][is][StavePart]);
+	  proj->Scale(1./(nRunsB[ilayEff]+1-runswohits)); //Divide by the number of runs minus the ones without hits
+
+	  for (int i=1; i<= proj->GetNbinsX(); i++){
+	    proj->SetBinError(i, 0);
 	  }
-	  else if ((is)<nStavesInLayAll[ilayEff]*2/3){
-	    SetStyle(proj, col[is-nStavesInLayAll[ilayEff]/3], 26);
+	  /*
+	    cout <<"ilay " << ilayEff <<  " stave " << is << " runs no hits  "<< runswohits << endl;
+	    for (int i=1; i<= proj->GetNbinsX(); i++){
+	    int l = i*10;
+	    if (l>proj->GetNbinsX()) break;
+	    cout << "bin " << l << " " << proj->GetBinContent(l) << " +- " << proj->GetBinError(l) << endl;
+	    }
+	  */
+	  if (ilayEff<3){
+	    SetStyle(proj, col[is<nStavesInLayAll[ilayEff]/2 ? is : is-nStavesInLayAll[ilayEff]/2],is<nStavesInLayAll[ilayEff]/2 ? 24:26);
 	  }
-	  else{
-	    SetStyle(proj, col[is-nStavesInLayAll[ilayEff]*2/3], 25);
+	  else if (ilayEff >= 3 && ilayEff<5){
+	    if((is)<nStavesInLayAll[ilayEff]/3){
+	      SetStyle(proj, col[is], 24);
+	    }
+	    else if ((is)<nStavesInLayAll[ilayEff]*2/3){
+	      SetStyle(proj, col[is-nStavesInLayAll[ilayEff]/3], 26);
+	    }
+	    else{
+	      SetStyle(proj, col[is-nStavesInLayAll[ilayEff]*2/3], 25);
+	    }
 	  }
+	  else {
+	    if((is)<int(nStavesInLayAll[ilayEff]/4))
+	      SetStyle(proj, col[is], 24);
+	    else if ((is)<2*int(nStavesInLayAll[ilayEff]/4))
+	      SetStyle(proj, col[is-int(nStavesInLayAll[ilayEff]/4)], 26);
+	    else if ((is)<3*nStavesInLayAll[ilayEff]/4)
+	      SetStyle(proj, col[is-2*int(nStavesInLayAll[ilayEff]/4)], 25);
+	    else
+	      SetStyle(proj, col[is-int(nStavesInLayAll[ilayEff]*3/4)], 30);
+	  }
+	  proj->Draw("PL same");
+	  fileFHRvsMasked->WriteTObject(proj);
+	  if (StavePart==0) leg->AddEntry(proj, Form("Stv%d",is),"p");
 	}
-	else {
-	  if((is)<int(nStavesInLayAll[ilayEff]/4))
-	    SetStyle(proj, col[is], 24);
-	  else if ((is)<2*int(nStavesInLayAll[ilayEff]/4))
-	    SetStyle(proj, col[is-int(nStavesInLayAll[ilayEff]/4)], 26);
-	  else if ((is)<3*nStavesInLayAll[ilayEff]/4)
-	    SetStyle(proj, col[is-2*int(nStavesInLayAll[ilayEff]/4)], 25);
-	  else
-	    SetStyle(proj, col[is-int(nStavesInLayAll[ilayEff]*3/4)], 30);
-	}
-	proj->Draw("PL same");
-	fileFHRvsMasked->WriteTObject(proj);
-	if (StavePart==0) leg->AddEntry(proj, Form("Stv%d",is),"p");
-      }
-      leg->Draw("same");
-      TString NameCnv = "";
+	leg->Draw("same");
+	TString NameCnv = "";
 
-      if (StavePart==0){
-	if (numStavePart==1) NameCnv = Form("../Plots/Layer%i_FHRpixmask_%s", ilayEff,filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
-	else NameCnv = Form("../Plots/Layer%i_HSLower_FHRpixmask_%s", ilayEff, filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
+	if (StavePart==0){
+	  if (numStavePart==1) NameCnv = Form("../Plots/Layer%i_FHRpixmask_%s", ilayEff,filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
+	  else NameCnv = Form("../Plots/Layer%i_HSLower_FHRpixmask_%s", ilayEff, filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
+	}
+	else NameCnv = Form("../Plots/Layer%i_HSUpper_FHRpixmask_%s", ilayEff, filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
+	cnv.SaveAs(NameCnv + ".pdf");
+	cnv.SaveAs(NameCnv + ".root");
       }
-      else NameCnv = Form("../Plots/Layer%i_HSUpper_FHRpixmask_%s", ilayEff, filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
-      cnv.SaveAs(NameCnv + ".pdf");
-      cnv.SaveAs(NameCnv + ".root");
     }
+    fileFHRvsMasked->Close();
   }
-  fileFHRvsMasked->Close();
 
-  //  cout << "Running time up to here: " << endl;
-  //  t1.Stop();
-  //  t1.Print();
+  //cout << "Running time up to here: " << endl;
+  //t1.Stop();
+  //t1.Print();
 
   if (isHotPixelMapDrawn){
     cout << "\nDrawing hot pixel map for each layer " << endl;
@@ -676,7 +690,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
     }
   }
 
-  cout << "The following file has been created: " <<  pathfileFHRvsMasked << "\n" << endl;
+  if (!isOnlyHotPixelMap)  cout << "The following file has been created: " <<  pathfileFHRvsMasked << "\n" << endl;
   //t.Stop();
   //cout << "\nRunning time: " << endl;
   //t.Print();
@@ -686,7 +700,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
 //
 // Function to compare two hitmaps --> returns an arrays with timestamp of run2, noisyPixInRefRun, noisyPixInRun2, noisyPixInCommon
 //
-std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips, double ntrig, TH2 *hhotmap, bool HS , bool IB, bool isHotPixelMapDrawn){
+std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips, double ntrig, TH2 *hhotmap, bool HS , bool IB, bool isHotPixelMapDrawn, bool isOnlyHotPixelMap){
 
   array<float,nMasked+1> fhrstave;
 
@@ -699,40 +713,62 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
     else iyMin = hmap->GetAxis(1)->GetNbins()/2 +1;
   }
   hmapclone->GetAxis(1)->SetRange(iyMin, iyMax);
-  for(int iter=0; iter<nMasked+1; iter++){
-    TH1F *hproj = (TH1F*)hmapclone->Projection(1);
-    long int totalhits = hproj->Integral();
-    float fhr = nchips==0 ? 0. : (float)totalhits / (512.*1024.*nchips*ntrig);
 
-    if(ntrig<0) fhr=0.;
-    fhrstave[iter] = fhr;
+  vector<array<double,3>> hmapclonecontent; 
+  array<double,3> mapclonecontent;
+  int coord[2];
+  long int totalhits =0;
 
-    int coord[2];
-    double max = -1.;
-    int x=0,y=0;
-    long int binwithmax = 0;
-    for(int ibin=0; ibin<hmapclone->GetNbins(); ibin++){
-      double bincontent = hmapclone->GetBinContent(ibin, coord);
-      if (IB==0){
-	if (coord[1] < iyMin || coord[1] > iyMax) continue;
-      }
-      if(bincontent>max){
-        max=bincontent;
-        binwithmax = ibin;
-        x=coord[0];
-        y=coord[1];
-      }
-    }
-
-    if(nchips) hmapclone->SetBinContent(binwithmax,0.);
-    if (isHotPixelMapDrawn){
-      if(totalhits!=0 && iter < 100) {
-	hhotmap->SetBinContent(((x-1)/4)+1, ((y-1)/4)+1, 1); // to avoid a marker in 0,0 for empty histos
-      }
-    }
-    delete hproj;
+  for(int ibin=0; ibin<hmapclone->GetNbins(); ibin++){
+    mapclonecontent[0] = hmapclone->GetBinContent(ibin, coord);
+    mapclonecontent[1] = coord[0];
+    mapclonecontent[2] = coord[1];
+    hmapclonecontent.push_back(mapclonecontent);
+    //    cout << "ibin " << hmapclonecontent[ibin][0] << " x " << hmapclonecontent[ibin][1] << " y " <<  hmapclonecontent[ibin][2] << endl;
   }
+  sort(hmapclonecontent.begin(), hmapclonecontent.end(), greater<>());
 
+  if (!isOnlyHotPixelMap){
+    for(int iter=0; iter<nMasked+1; iter++){
+      totalhits =0;
+      for (int i=iter; i< (int)hmapclonecontent.size(); i++){
+	totalhits += hmapclonecontent[i][0];
+      }
+      float fhr = nchips==0 ? 0. : (float)totalhits / (512.*1024.*nchips*ntrig);
+
+      if(ntrig<0) fhr=0.;
+      fhrstave[iter] = fhr;
+
+      double max = -1.;
+      int x=0,y=0;
+      long int binwithmax = 0;
+  
+      x = hmapclonecontent[iter][1];
+      y = hmapclonecontent[iter][2];
+      if (isHotPixelMapDrawn){
+	if(totalhits!=0 && iter < 100) {
+	  hhotmap->SetBinContent(((x-1)/4)+1, ((y-1)/4)+1, 1); // to avoid a marker in 0,0 for empty histos
+	}
+      }
+    }
+  }
+  else {
+    for(int iter=0; iter<1000; iter++){
+      totalhits =0;
+      for (int i=iter; i< (int)hmapclonecontent.size(); i++){
+	totalhits += hmapclonecontent[i][0];
+      }
+      int x=0,y=0;
+      x = hmapclonecontent[iter][1];
+      y = hmapclonecontent[iter][2];
+      if (isHotPixelMapDrawn){
+	if(totalhits!=0) {
+	  hhotmap->SetBinContent(((x-1)/4)+1, ((y-1)/4)+1, 1); // to avoid a marker in 0,0 for empty histos
+	}
+      }
+    }
+  }
+ 
   delete hmapclone;
 
   return fhrstave;
