@@ -103,10 +103,10 @@ void MaskNoisyPixelsInRuns(){
 //
 void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixelMapDrawn, bool isOnlyHotPixelMap){
 
-  //TStopwatch t;
-  //TStopwatch t1;
-  //t.Start();
-  //t1.Start();
+//  TStopwatch t;
+//  TStopwatch t1;
+//  t.Start();
+//  t1.Start();
   gStyle->SetOptStat(0000);
   int col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 
@@ -559,9 +559,9 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
     fileFHRvsMasked->Close();
   }
 
-  //cout << "Running time up to here: " << endl;
-  //t1.Stop();
-  //t1.Print();
+  //  cout << "Running time up to here: " << endl;
+  //  t1.Stop();
+  //  t1.Print();
 
   if (isHotPixelMapDrawn){
     cout << "\nDrawing hot pixel map for each layer " << endl;
@@ -691,9 +691,9 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
   }
 
   if (!isOnlyHotPixelMap)  cout << "The following file has been created: " <<  pathfileFHRvsMasked << "\n" << endl;
-  //t.Stop();
-  //cout << "\nRunning time: " << endl;
-  //t.Print();
+  //  t.Stop();
+  //  cout << "\nRunning time: " << endl;
+  //  t.Print();
 
 }
 
@@ -718,6 +718,7 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
   array<double,3> mapclonecontent;
   int coord[2];
   long int totalhits =0;
+  long int Fulltotalhits =0;
 
   for(int ibin=0; ibin<hmapclone->GetNbins(); ibin++){
     mapclonecontent[0] = hmapclone->GetBinContent(ibin, coord);
@@ -728,12 +729,16 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
   }
   sort(hmapclonecontent.begin(), hmapclonecontent.end(), greater<>());
 
+  for (int i=0; i< (int)hmapclonecontent.size(); i++){
+    Fulltotalhits += hmapclonecontent[i][0];
+  }
+
   if (!isOnlyHotPixelMap){
     for(int iter=0; iter<nMasked+1; iter++){
-      totalhits =0;
-      for (int i=iter; i< (int)hmapclonecontent.size(); i++){
-	totalhits += hmapclonecontent[i][0];
-      }
+      
+      if (iter ==0)      totalhits = Fulltotalhits;
+      else if (iter>0 && iter<=(int)hmapclonecontent.size())      totalhits = totalhits - hmapclonecontent[iter-1][0];
+      
       float fhr = nchips==0 ? 0. : (float)totalhits / (512.*1024.*nchips*ntrig);
 
       if(ntrig<0) fhr=0.;
