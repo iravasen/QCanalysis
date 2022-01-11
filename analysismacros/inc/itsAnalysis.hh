@@ -20,7 +20,8 @@ class itsAnalysis {
 private :
 	vector<string> runNumbers_;
 	vector<string> layerNumbers_;
-	vector<string>  runNumbers_skips;
+	vector<string> runNumbers_skips;
+	vector<string> layerNumbers_skips;
 
 	string skip_ans,skip_runs,skip_layers;
 
@@ -109,6 +110,19 @@ public :
 				runNumbers_skips.push_back(run);
 		}
 
+		cout<<"Would you like to skip some layer(s)? [y/n]";
+		cin>>skip_ans;
+		if(skip_ans=="y" || skip_ans=="Y"){
+		  cout<<"Specify layer number(s) separated by comma (no white spaces!):";
+		  cin>>skip_layers;
+		  cout<<endl;
+		}
+
+		for (auto run : layerNumbers_) {
+			if (skip_layers.find(run) == std::string::npos)
+				layerNumbers_skips.push_back(run);
+		}
+
 
 	} // end of loadFile()s
 
@@ -133,7 +147,7 @@ public :
 	}
 
 	vector<string> Layers() {
-		return layerNumbers_;
+		return layerNumbers_skips;
 	}
 
 	vector<string> Runs() {
@@ -141,7 +155,7 @@ public :
 	}
 
 	int nLayers() {
-		return layerNumbers_.size();
+		return layerNumbers_skips.size();
 	}
 
 	int nRuns() {
@@ -184,6 +198,15 @@ public :
 		string objname = hist->GetName();
 		string runN = objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
 		return runN;
+	}
+
+	int getStaveNumber (THnSparse* hist){
+		string hname = hist->GetName();
+		string stvnum = hname.substr(hname.find("Stv")+3,2);
+		if(stvnum.find("_")!=string::npos){
+		  stvnum = hname.substr(hname.find("Stv")+3,1);
+		}
+		return stoi(stvnum);
 	}
 
 }; // end of class def
