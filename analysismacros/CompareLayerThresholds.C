@@ -13,7 +13,6 @@ Int_t col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 void CompareLayerThresholds(){
   itsAnalysis myAnalysis("Threshold");
 
-  auto nLayers      = myAnalysis.nLayers();     // int of number of layers
   auto laynums      = myAnalysis.Layers();      //vec of layers
   auto runNumbers   = myAnalysis.Runs();        //vec<string> of run numbers
   auto hmaps        = myAnalysis.loadedHists(); // all histograms for layers and runs needed
@@ -27,8 +26,8 @@ void CompareLayerThresholds(){
   cout<<"\n\n=>Insert a run you want to use as a reference for the comparison with all the others: \n"<<endl;
   cin>>refrun;
 
-  TH2D *hCorr[nLayers];
-  TH2 *hRef[nLayers];
+  TH2D *hCorr[6];
+  TH2 *hRef[6];
   for (string layer : laynums){ // loop over layers
     int ilay = stoi(layer);
     hCorr[ilay] = new TH2D(Form("hCorr_L%s",layer.c_str()), Form("Layer-%s - THR corr. for run%s to run%s - Ref. run: %s; Chip Threshold (run%s); Chip Threshold (runs)",layer.c_str(),runNumbers[nRuns-1].c_str(),runNumbers[0].c_str(),refrun.c_str(),refrun.c_str()), 150, 7.5, 13.5, 150, 7.5, 13.5);

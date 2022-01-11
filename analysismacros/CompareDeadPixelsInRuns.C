@@ -39,7 +39,6 @@ Int_t col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 void CompareDeadPixelsInRuns(){
   itsAnalysis myAnalysis("Dead pixel Hits");
 
-  auto nLayers      = myAnalysis.nLayers();     // int of number of layers
   auto laynums      = myAnalysis.Layers();      //vec of layers
   auto runNumbers   = myAnalysis.Runs();        //vec of run numbers
   auto hmaps        = myAnalysis.loadedHists(); // all histograms for layers and runs needed
@@ -54,8 +53,8 @@ void CompareDeadPixelsInRuns(){
   cin>>refrun;
 
   //Compare all the runs (non-empty ones) with the reference run chosen by the user
-  long int first[nLayers][100], second[nLayers][100], both[nLayers][100];
-  bool filled[nLayers][100];
+  long int first[6][100], second[6][100], both[6][100];
+  bool filled[6][100];
   for (string layer : laynums){ // loop over layers
     int ilay=stoi(layer);
     for(int i=0; i<100; i++){
@@ -64,7 +63,7 @@ void CompareDeadPixelsInRuns(){
     }
   }
 
-  long int refHist[nLayers][100];
+  long int refHist[6][100];
   vector<array<long int,5>> noisypix;
   for (string layer : laynums){ // loop over layers
     auto hist = myAnalysis.loadLayerSparse(stoi(layer));
@@ -104,14 +103,14 @@ void CompareDeadPixelsInRuns(){
   }
 
   //Make plot for each layer and for each stave in the root file
-  TGraphErrors *ge_nref[nLayers];
-  TGraphErrors *ge_n2[nLayers];
-  TGraphErrors *ge_ncom1[nLayers];
-  TGraphErrors *ge_ncom2[nLayers];
+  TGraphErrors *ge_nref[6];
+  TGraphErrors *ge_n2[6];
+  TGraphErrors *ge_ncom1[6];
+  TGraphErrors *ge_ncom2[6];
 
   double xshift = 3.;
-  double max[nLayers];
-  double min[nLayers];
+  double max[6];
+  double min[6];
 
   for (string layer : laynums){ // loop over layers
     int ilay=stoi(layer);
@@ -150,14 +149,6 @@ void CompareDeadPixelsInRuns(){
     SetStyle(ge_n2[ilay], kRed+2);
   }//end loop on layers
 
-  //Legend
-  TLegend *leg = new TLegend(0.876,0.176, 0.994, 0.902);
-  leg->SetLineColor(0);
-  leg->SetTextFont(42);
-  leg->AddEntry(ge_nref[0], "#splitline{#dead pix}{ref. run only}", "f");
-  leg->AddEntry(ge_n2[0], "#splitline{#dead pix}{2nd run only}", "f");
-  leg->AddEntry(ge_ncom1[0], "#splitline{#dead pix}{both}");
-
   //Draw plot for each layer
   for (string layer : laynums){ // loop over layers
     int ilay=stoi(layer);
@@ -165,23 +156,20 @@ void CompareDeadPixelsInRuns(){
     TCanvas *canvas = new TCanvas(Form("mycanvas_%d",ilay), Form("mycanvas_%d",ilay), 1300, 800);
     canvas->SetMargin(0.08, 0.1271, 0.1759, 0.0996);
     canvas->cd();
-    //fake histo (just for the axes)
     double x2,y2;
     ge_ncom2[ilay]->GetPoint(ge_ncom2[ilay]->GetN()-1, x2,y2);
     TH1F *hfake = new TH1F("hfake","hfake", (int)3*runNumbers.size()+1, -3, 3*runNumbers.size()-2);
     hfake->SetStats(0);
+
     ///draw labels on x axis
     int counter = 0;
-    cout<<"counter: "<<counter<<endl;
     for(Int_t k=4;k<3*runNumbers.size();k+=3){
       if(runNumbers[counter]==refrun){
-        cout<<"counter: "<<counter<<endl;
         k-=3;
         counter++;
         continue;
       }
-      cout<<"counter: "<<counter<<endl;
-      hfake->GetXaxis()->SetBinLabel(k, Form("run%s",runNumbers[runNumbers.size()-2-counter].c_str()));
+      hfake->GetXaxis()->SetBinLabel(k, Form("run%s",runNumbers[runNumbers.size()-1-counter].c_str()));
       counter++;
     }
     
@@ -198,6 +186,14 @@ void CompareDeadPixelsInRuns(){
     lineref->SetLineColor(kGray-1);
     lineref->SetLineStyle(2);
     lineref->Draw("same");
+
+    //Legend
+    TLegend *leg = new TLegend(0.876,0.176, 0.994, 0.902);
+    leg->SetLineColor(0);
+    leg->SetTextFont(42);
+    leg->AddEntry(ge_nref[0], "#splitline{#dead pix}{ref. run only}", "f");
+    leg->AddEntry(ge_n2[0], "#splitline{#dead pix}{2nd run only}", "f");
+    leg->AddEntry(ge_ncom1[0], "#splitline{#dead pix}{both}");
     leg->Draw("same");
 
     canvas->SaveAs(Form("../Plots/Layer%s_DeadPixComparison_run%s_compared_to_run%s_run%s.pdf", layer.c_str(),refrun.c_str(),runNumbers[0].c_str(),runNumbers[nRuns-1].c_str()));
@@ -208,4 +204,4 @@ void CompareDeadPixelsInRuns(){
     delete lineref;
   }//end loop on layers
 
-} // end of analyseLayerThresholds()4`
+} // end of analyseLayerThresholds()
