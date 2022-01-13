@@ -15,7 +15,9 @@ TFile *file = TFile::Open(fpath.c_str());
    TIter next(keyslist);
    TKey *key;
    vector<string>runs_clusage, runs_eta, runs_phi, runs_ncl, runs_occ;
-   vector<double>fcluster, eta_ave, etacounts, relative_eta1, relative_eta2, phi_ave, phicounts, phicounts1, phicounts2, relative_phi1, relative_phi2, ncluster, rms_ncl, first_bin_edge_ncl, last_bin_edge_ncl, occ;
+   vector<double>fcluster, ncluster, rms_ncl, first_bin_edge_ncl, last_bin_edge_ncl, occ;
+   vector<double>phi_ave, phicounts, phicounts1, phicounts2, relative_phi1, relative_phi2; 
+   vector<double>eta_ave, etacounts, relative_eta1, relative_eta2; 
    vector<double>cycle_clusage, cycle_eta, cycle_phi, cycle_ncl, cycle_occ;
    double i,j,k,m,n=0;
 
@@ -291,7 +293,7 @@ TFile *file = TFile::Open(fpath.c_str());
   gr->GetXaxis()->Set(1+cycle_clusage.size(),gr->GetXaxis()->GetXmin(),1+cycle_clusage.size());
 
   for (auto itr : runs_clusage){
-     ++b;
+     b++;
      int binIndex=gr->GetXaxis()->FindBin(b);
       gr->GetXaxis()->SetBinLabel(binIndex,itr.data());
       gr->GetXaxis()->ChangeLabel(binIndex,60,-1,39,-1,-1);
@@ -301,6 +303,7 @@ TFile *file = TFile::Open(fpath.c_str());
   gr->GetXaxis()->SetTitle("Run");
   gr->GetYaxis()->SetTitle("nCluster in track/total cluster");
   gr->SetMarkerStyle(20);
+  gr->SetMarkerSize(0.5);
   gr->Draw("APL");
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -314,10 +317,10 @@ TFile *file = TFile::Open(fpath.c_str());
   auto gr2 = new TGraph(cycle_eta.size(),&cycle_eta[0],&eta_ave[0]);
   double b2=0;
   gr2->GetXaxis()->SetNdivisions(cycle_eta.size());
-  gr2->GetXaxis()->Set(1+cycle_eta.size(),gr->GetXaxis()->GetXmin(),1+cycle_eta.size());
+  gr2->GetXaxis()->Set(1+cycle_eta.size(),gr2->GetXaxis()->GetXmin(),1+cycle_eta.size());
 
   for (auto itr : runs_eta){
-     ++b2;
+     b2++;
      int binIndex=gr2->GetXaxis()->FindBin(b2);
       gr2->GetXaxis()->SetBinLabel(binIndex,itr.data());
       gr2->GetXaxis()->ChangeLabel(binIndex,60,-1,39,-1,-1);
@@ -327,6 +330,7 @@ TFile *file = TFile::Open(fpath.c_str());
   gr2->GetXaxis()->SetTitle("Run");
   gr2->GetYaxis()->SetTitle("Mean angle");
   gr2->SetMarkerStyle(20);
+  gr2->SetMarkerSize(0.5);
   gr2->Draw("APL");
   
   
@@ -346,7 +350,7 @@ TFile *file = TFile::Open(fpath.c_str());
   gr21->GetXaxis()->Set(1+cycle_eta.size(),gr21->GetXaxis()->GetXmin(),1+cycle_eta.size());
 
   for (auto itr : runs_eta){
-     ++b21;
+     b21++;
      int binIndex=gr21->GetXaxis()->FindBin(b21);
       gr21->GetXaxis()->SetBinLabel(binIndex,itr.data());
       gr21->GetXaxis()->ChangeLabel(binIndex,60,-1,39,-1,-1);
@@ -358,10 +362,12 @@ TFile *file = TFile::Open(fpath.c_str());
   gr21->GetXaxis()->SetTitle("Run");
   gr21->GetYaxis()->SetTitle("Number of counts in subrange / Total counts (-#pi/2)-(#pi/2)");
   gr21->SetMarkerStyle(20);
+  gr21->SetMarkerSize(0.5);
   gr21->SetMarkerColor(kRed);
   gr21->SetLineColor(kRed);
   gr21->Draw("APL");
   gr22->SetMarkerStyle(20);
+  gr22->SetMarkerSize(0.5);
   gr22->SetMarkerColor(kBlue);
   gr22->SetLineColor(kBlue);
   gr22->Draw("PL SAME");
@@ -393,7 +399,7 @@ TFile *file = TFile::Open(fpath.c_str());
   gr3->GetXaxis()->Set(1+cycle_phi.size(),gr3->GetXaxis()->GetXmin(),1+cycle_phi.size());
 
   for (auto itr : runs_phi){
-     ++b3;
+     b3++;
      int binIndex=gr3->GetXaxis()->FindBin(b3);
       gr3->GetXaxis()->SetBinLabel(binIndex,itr.data());
       gr3->GetXaxis()->ChangeLabel(binIndex,60,-1,39,-1,-1);
@@ -404,6 +410,7 @@ TFile *file = TFile::Open(fpath.c_str());
   gr3->GetXaxis()->SetTitle("Run");
   gr3->GetYaxis()->SetTitle("Mean angle");
   gr3->SetMarkerStyle(20);
+  gr3->SetMarkerSize(0.5);
   gr3->Draw("APL");
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -424,7 +431,7 @@ TFile *file = TFile::Open(fpath.c_str());
   gr31->GetXaxis()->Set(1+cycle_phi.size(),gr31->GetXaxis()->GetXmin(),1+cycle_phi.size());
 
   for (auto itr : runs_phi){
-     ++b31;
+     b31++;
      int binIndex=gr31->GetXaxis()->FindBin(b31);
       gr31->GetXaxis()->SetBinLabel(binIndex,itr.data());
       gr31->GetXaxis()->ChangeLabel(binIndex,60,-1,39,-1,-1);
@@ -436,10 +443,12 @@ TFile *file = TFile::Open(fpath.c_str());
   gr31->GetXaxis()->SetTitle("Run");
   gr31->GetYaxis()->SetTitle("Number of counts in subrange / Total counts 0-2#pi");
   gr31->SetMarkerStyle(20);
+  gr31->SetMarkerSize(0.5);
   gr31->SetMarkerColor(kRed);
   gr31->SetLineColor(kRed);
   gr31->Draw("APL");
   gr32->SetMarkerStyle(20);
+  gr32->SetMarkerSize(0.5);
   gr32->SetMarkerColor(kBlue);
   gr32->SetLineColor(kBlue);
   gr32->Draw("PL SAME");
@@ -465,7 +474,7 @@ TFile *file = TFile::Open(fpath.c_str());
   gr4->GetXaxis()->Set(1+cycle_ncl.size(),gr4->GetXaxis()->GetXmin(),1+cycle_ncl.size());
 
   for (auto itr : runs_ncl){
-     ++b4;
+     b4++;
      int binIndex=gr4->GetXaxis()->FindBin(b4);
       gr4->GetXaxis()->SetBinLabel(binIndex,itr.data());
       gr4->GetXaxis()->ChangeLabel(binIndex,60,-1,39,-1,-1);
@@ -475,6 +484,7 @@ TFile *file = TFile::Open(fpath.c_str());
   gr4->GetXaxis()->SetTitle("Run");
   gr4->GetYaxis()->SetTitle("<Number of clusters per track>");
   gr4->SetMarkerStyle(20);
+  gr4->SetMarkerSize(0.5);
   gr4->Draw("APL");
   
 //////////////////////////////////////////NClusters RMS//////////////////////////////////////////////////////////////////////////////////////////
@@ -489,7 +499,7 @@ TFile *file = TFile::Open(fpath.c_str());
   gr41->GetXaxis()->Set(1+cycle_ncl.size(),gr41->GetXaxis()->GetXmin(),1+cycle_ncl.size());
 
   for (auto itr : runs_ncl){
-     ++b41;
+     b41++;
      int binIndex=gr41->GetXaxis()->FindBin(b41);
       gr41->GetXaxis()->SetBinLabel(binIndex,itr.data());
       gr41->GetXaxis()->ChangeLabel(binIndex,60,-1,39,-1,-1);
@@ -499,6 +509,7 @@ TFile *file = TFile::Open(fpath.c_str());
   gr41->GetXaxis()->SetTitle("Run");
   gr41->GetYaxis()->SetTitle("<RMS>");
   gr41->SetMarkerStyle(20);
+  gr41->SetMarkerSize(0.5);
   gr41->Draw("APL");
   
 
@@ -516,7 +527,7 @@ TFile *file = TFile::Open(fpath.c_str());
   gr43->GetXaxis()->Set(1+cycle_ncl.size(),gr43->GetXaxis()->GetXmin(),1+cycle_ncl.size());
 
   for (auto itr : runs_ncl){
-     ++b43;
+     b43++;
      int binIndex=gr43->GetXaxis()->FindBin(b43);
       gr43->GetXaxis()->SetBinLabel(binIndex,itr.data());
       gr43->GetXaxis()->ChangeLabel(binIndex,60,-1,39,-1,-1);
@@ -526,15 +537,17 @@ TFile *file = TFile::Open(fpath.c_str());
   gr43->GetXaxis()->SetTitle("Run");
   gr43->GetYaxis()->SetTitle("Value in x axis");
   gr43->SetMarkerStyle(20);
+  gr43->SetMarkerSize(0.5);
   gr43->SetMarkerColor(kRed);
   gr43->SetLineColor(kRed);
   gr43->GetHistogram()->SetMinimum(0.); //Set minimum y value
   gr43->Draw("APL");
   gr42->SetMarkerStyle(20);
+  gr42->SetMarkerSize(0.5);
   gr42->SetMarkerColor(kBlue);
   gr42->SetLineColor(kBlue);
   gr42->Draw("PL SAME"); 
-  auto legend2=new TLegend(0.809353,0.830621,0.951639,0.914941);
+  auto legend2=new TLegend(0.809353,0.85429,0.938849,0.91568);
   legend2->SetFillColor(0);
   legend2->AddEntry(gr42,"leftmost bin filled","lp");
   legend2->AddEntry(gr43,"rightmost bin filled","lp");
@@ -554,7 +567,7 @@ TFile *file = TFile::Open(fpath.c_str());
   gr5->GetXaxis()->Set(1+cycle_occ.size(),gr5->GetXaxis()->GetXmin(),1+cycle_occ.size());
 
   for (auto itr : runs_occ){
-     ++b5;
+     b5++;
      int binIndex=gr5->GetXaxis()->FindBin(b5);
       gr5->GetXaxis()->SetBinLabel(binIndex,itr.data());
       gr5->GetXaxis()->ChangeLabel(binIndex,60,-1,39,-1,-1);
@@ -564,7 +577,20 @@ TFile *file = TFile::Open(fpath.c_str());
   gr5->GetXaxis()->SetTitle("Run");
   gr5->GetYaxis()->SetTitle("nTracks/ROF");
   gr5->SetMarkerStyle(20);
+  gr5->SetMarkerSize(0.5);
   gr5->Draw("APL");
+  
+c1->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf[", runs_clusage.front().c_str(), runs_clusage.back().c_str())); 
+c1->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs_clusage.front().c_str(), runs_clusage.back().c_str()));   
+c2->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs_clusage.front().c_str(), runs_clusage.back().c_str()));   
+c21->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs_clusage.front().c_str(), runs_clusage.back().c_str()));   
+c3->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs_clusage.front().c_str(), runs_clusage.back().c_str()));   
+c31->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs_clusage.front().c_str(), runs_clusage.back().c_str()));   
+c4->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs_clusage.front().c_str(), runs_clusage.back().c_str()));   
+c41->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs_clusage.front().c_str(), runs_clusage.back().c_str()));   
+c43->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs_clusage.front().c_str(), runs_clusage.back().c_str()));   
+c5->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs_clusage.front().c_str(), runs_clusage.back().c_str()));   
+c5->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf]", runs_clusage.front().c_str(), runs_clusage.back().c_str()));     
   
 TFile *f = new TFile("../Plots/TrackTask_Result_trends.root", "RECREATE");
 f->cd();
@@ -590,6 +616,5 @@ delete gr42; delete gr43; delete legend2; delete c43;
 delete gr5; delete c5;
 
 }
-
 
 
