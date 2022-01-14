@@ -1,4 +1,4 @@
-#include "itsAnalysis.hh"
+#include "inc/itsAnalysis.hh"
 
 void SetStyle(TGraph *h, Int_t col, Style_t mkr){
   h->SetLineColor(col);
@@ -7,11 +7,10 @@ void SetStyle(TGraph *h, Int_t col, Style_t mkr){
   h->SetMarkerColor(col);
 }
 
-//Int_t col[] = {TColor::GetColor("#ff3300"), TColor::GetColor("#ec6e0a"), TColor::GetColor("#daaa14"), TColor::GetColor("#c7e51e"), TColor::GetColor("#85dd69"), TColor::GetColor("#42d6b4"), TColor::GetColor("#00ceff"), TColor::GetColor("#009adf"), TColor::GetColor("#0067c0"), TColor::GetColor("#0033a1")};
 Int_t col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 
 // Main function
-void analyseLayerThresholds(){
+void AnalyzeLayerThresholds(){
   itsAnalysis myAnalysis("Threshold");
 
   auto nLayers      = myAnalysis.nLayers();     // int of number of layers
@@ -115,9 +114,8 @@ void analyseLayerThresholds(){
         trend[stoi(layer)][istave]->Draw("P same");
       }
       leg->Draw("same");
-      //canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
-      canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.png", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
-      //canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.root", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+      canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+      canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.root", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
       delete canvas;
       delete leg;
     }
@@ -129,9 +127,8 @@ void analyseLayerThresholds(){
         trend[stoi(layer)][istave]->Draw("P same");
       }
       leg->Draw("same");
-      //canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
-      canvas->SaveAs(Form("../Plots/Layer%sU_thresholds_run%s-run%s.png", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
-      //canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.root", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+      canvas->SaveAs(Form("../Plots/Layer%sU_thresholds_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+      canvas->SaveAs(Form("../Plots/Layer%sU_thresholds_run%s-run%s.root", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
 
       TLegend *leg2 = new TLegend(0.904, 0.197,0.997,0.898);
       leg2->SetNColumns(2);
@@ -143,8 +140,8 @@ void analyseLayerThresholds(){
         trend[stoi(layer)][istave]->Draw("P same");
       }
       leg2->Draw("same");
-      canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
-      canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.root", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+      canvas->SaveAs(Form("../Plots/Layer%sL_thresholds_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+      canvas->SaveAs(Form("../Plots/Layer%sL_thresholds_run%s-run%s.root", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
 
       delete canvas;
       delete leg;
@@ -166,7 +163,10 @@ void analyseLayerThresholds(){
       hist->SetMaximum(14);
       hist->SetTitle(Form("Layer%s Run%s (%i/%i);Chip Number; Stave Number",layer.c_str(),myAnalysis.getRunNumber(hist).c_str(),(int)histos.size()-i,(int)histos.size()));
       hist->GetZaxis()->SetTitle("Avg. Threshold (DAC)");
+      // Save frames of GIF
       canvas->Print(Form("../Plots/Layer%s_thresholds_run%s-run%s.gif+40", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+      // Save last frame as gif++ so gif loops
+      if (i==0)canvas->Print(Form("../Plots/Layer%s_thresholds_run%s-run%s.gif++", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
     }
   }
 
