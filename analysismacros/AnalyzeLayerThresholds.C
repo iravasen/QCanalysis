@@ -17,8 +17,8 @@ void AnalyzeLayerThresholds(){
   auto runNumbers   = myAnalysis.Runs();        //vec of run numbers
   auto hmaps        = myAnalysis.loadedHists(); // all histograms for layers and runs needed
 
-  TGraph *trend[6][100]; //list of trends
-  for (int ilayer = 0; ilayer < 6; ++ilayer){ //loop over layers
+  TGraph *trend[7][100]; //list of trends
+  for (int ilayer = 0; ilayer < 7; ++ilayer){ //loop over layers
     for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){ //loop over number of histograms
       for(int ibiny=1; ibiny<=hmaps[ihist]->GetNbinsY(); ibiny++){ // Loop over y-bins (staves)
         trend[ilayer][ibiny-1] = new TGraph();
