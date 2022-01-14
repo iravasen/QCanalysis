@@ -59,7 +59,7 @@ def main():
 
     file1 = open(f"../yaml/noise_masks/number_of_noisy_pix_{runnum}.txt","a")
     #Loop over all THnSparse and prepare yaml file with noisy pixels
-    NOISECUT = 2e-5
+    NOISECUT = 2e-6
     for key in infl.GetListOfKeys():
         obj=key.ReadObj()
         if obj.InheritsFrom("THnSparse"):
@@ -78,18 +78,18 @@ def main():
                 npix = npix+1
                 chipid = 0
                 if int(layer)<3: #ib
-                    chipid = int((coord[0])/1024)
+                    chipid = int((coord[0]-1)/1024)
                     if chipid not in dict:
-                        dict.update({chipid:[[int(coord[0]-chipid*1024),int(coord[1]),fhr]]})
+                        dict.update({chipid:[[int(coord[0]-1-chipid*1024),int(coord[1]-1),fhr]]})
                     else:
-                        dict[chipid].append([int(coord[0]-chipid*1024),int(coord[1]),fhr])
+                        dict[chipid].append([int(coord[0]-1-chipid*1024),int(coord[1]-1),fhr])
                 else: #ob
                     rowidx = int(int(coord[1]-1) / 512)
                     colidx = int(int(coord[0]-1) / 1024)
-                    if rowidx==1 or rowidx==3:
-                        colidx = int(int(coord[0]) / 1024)
-                    if colidx==49: ##bug??
-                        colidx = colidx-1
+                    #if rowidx==1 or rowidx==3:
+                    #    colidx = int(int(coord[0]) / 1024)
+                    #if colidx==49: ##bug??
+                    #    colidx = colidx-1
                     chipid = rowselector[rowidx][colidx]
                     colfinal = 0
                     rowfinal = 0
@@ -98,7 +98,7 @@ def main():
                         colfinal = int(coord[0]-1) - 1024*colidx
                     if rowidx==1 or rowidx==3:
                         rowfinal = int(coord[1]-1) - 512*(rowidx)
-                        colfinal = 1023*(colidx+1) + colidx - int(coord[0]-1) +1 ## last +1 to recover QC bug
+                        colfinal = 1023*(colidx+1) + colidx - int(coord[0]-1)
                     if chipid not in dict:
                         dict.update({chipid:[[colfinal,rowfinal,fhr]]})
                     else:
@@ -108,6 +108,7 @@ def main():
 
             #Add the entire noisy rows for some chip in some staves
             staveid = f"L{layer}_{int(stavenum):02d}"
+            '''
             if staveid in noisyrowstave: ## if the stave is the one with noisy rows -> MASK FULL ROW
                 for icol in range(0,1024):
                     check = 0
@@ -120,6 +121,7 @@ def main():
                             dict[noisyrowstave[staveid][2]].append([icol, noisyrowstave[staveid][1], 1.0]) ##dummy FHR = 1.0
                     else:
                         dict.update({noisyrowstave[staveid][2]:[[icol,noisyrowstave[staveid][1],1.0]]})
+            '''
 
             #Add stuck pix
             if layer=="4" and stavenum=="3":
@@ -128,7 +130,10 @@ def main():
                 else:
                     dict[198].append([988,2,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
             if layer=="6" and stavenum=="22":
-                dict[85].append([226,248,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
+                if 85 not in dict:
+                    dict.update({85:[[226,248,1.0]]})
+                else:
+                    dict[85].append([226,248,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
             if layer=="3" and stavenum=="7":
                 if 65 not in dict:
                     dict.update({65:[[631,69,1.0]]})
@@ -139,7 +144,6 @@ def main():
             #Merge with existing mask (if specified in the option)
             merge = dict.copy()
             if args.merge == "True":
-                print("HEREHEREHEHREHEHRE")
                 with open(f"../yaml/noise_masks/L{layer}_{int(stavenum):02d}.yml", 'r') as f:
                     dataold=yaml.load(f, Loader=yaml.FullLoader) or {}
                 merge.update(dataold)

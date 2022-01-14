@@ -34,8 +34,8 @@ const int nStavesInLay[7] = {12, 16, 20, 24, 30, 42, 48};
 TFile *outputfile;
 
 //to which CCDB we have to connect
-// For P2 operations put: qcdb.cern.ch:8083
-string ccdbport = "localhost:8083";
+// For P2 operations put: ali-qcdb.cern.ch:8083
+string ccdbport = "ali-qcdb.cern.ch:8083";
 
 
 int main(int argc, char **argv)
@@ -320,7 +320,7 @@ bool RunShifter(auto *ccdb, string myname, int opt){
       cout<<"Run interval selected:       "<<runts1[1]<<"-"<<runts2[1]<<endl;
       cout<<"Timestamp interval selected: "<<runts1[0]<<"-"<<runts2[0]<<endl;
 
-      outputfile = new TFile(Form("Data/Output_%s_%s_from_%s%s_to_%s%s%s.root",layername.c_str(), optname.c_str(), suffix.c_str(),runts1[1].c_str(), suffix.c_str(), runts2[1].c_str(), adderrordata? "_w_error_and_trig_data":""), "RECREATE");
+      outputfile = new TFile(Form("Data/Output%s_%s_from_%s%s_to_%s%s%s.root",layername.c_str(), optname.c_str(), suffix.c_str(),runts1[1].c_str(), suffix.c_str(), runts2[1].c_str(), adderrordata? "_w_error_and_trig_data":""), "RECREATE");
       outputfile->cd();
 
       if(layernum>=0){
@@ -418,6 +418,10 @@ bool RunShifter(auto *ccdb, string myname, int opt){
 // Expert mode
 //
 bool RunExpert(auto *ccdb, string myname, int opt){
+  int IBorOB;
+  int layernum;
+  if(opt==3) layernum=-2;
+  else{
 
   //choose IB, OB or both
   int IBorOB;
@@ -447,6 +451,9 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   }
   default: break;
   }
+
+  } 
+  
   //  cin>>layernum;
 
   //taskname
@@ -631,6 +638,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
     if(IBorOB==0)    layername = "all-IB-layers";
     else if (IBorOB==1) layername = "all-OB-layers";
     else layername = "all-layers";
+  if(layernum==-2) layername="";
   else
     layername = Form("Layer%d",layernum);
 
@@ -655,7 +663,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
     default: suffix="";
   }
   string optname = GetOptName(opt);
-  outputfile = new TFile(Form("Data/Output_%s_%s_from_%s%s_to_%s%s%s.root",layername.c_str(), optname.c_str(), suffix.c_str(),nums[0].c_str(), suffix.c_str(), nums[1].c_str(), adderrordata? "_w_error_and_trig_data":""), "RECREATE");
+  outputfile = new TFile(Form("Data/Output%s_%s_from_%s%s_to_%s%s%s.root",layername.c_str(), optname.c_str(), suffix.c_str(),nums[0].c_str(), suffix.c_str(), nums[1].c_str(), adderrordata? "_w_error_and_trig_data":""), "RECREATE");
   outputfile->cd();
 
   //Download depending on the option (opt)
@@ -864,12 +872,19 @@ bool RunExpert(auto *ccdb, string myname, int opt){
       break;
     }// end of case 2
 
-    case 3: {//download a tree (only an example now!)
-      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/QCFHRTest", "Occupancy/PixelTree", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
-      break;
-    }//end of case 3
-  }//end switch
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+case 3: {
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "AngularDistribution", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "ClusterUsage", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "EtaDistribution", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "PhiDistribution", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "NClusters", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "OccupancyROF", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+
+      break;
+    }//end of case 3 
+ }//end switch
   outputfile->Close();
   delete outputfile;
 
@@ -1246,9 +1261,79 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
     TH1 *h1s = 0x0;
     THnSparse *hSp = 0x0;
     TTree *tree;
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+    //AngularDistribution
+    if(objname.find("AngularDistribution")!=string::npos){
+      string histname = "";
+      histname = Form("AngularDistribution_h2_%s%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("run%d",runnumbers[i]) : "", timestamps[i]);
+
+      h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
+      outputfile->cd();
+      h2s->Write();
+    }
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //ClusterUsage
+    if(objname.find("ClusterUsage")!=string::npos){
+      string histname = "";
+      histname = Form("ClusterUsage_h1_%s%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("run%d",runnumbers[i]) : "", timestamps[i]);
+
+      h1s = dynamic_cast<TH1*>(obj->Clone(histname.c_str()));
+      outputfile->cd();
+      h1s->Write();
+    }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   //EtaDistribution
+   if(objname.find("EtaDistribution")!=string::npos){
+      string histname = "";
+      histname = Form("EtaDistribution_h1_%s%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("run%d",runnumbers[i]) : "", timestamps[i]);
+
+      h1s = dynamic_cast<TH1*>(obj->Clone(histname.c_str()));
+      outputfile->cd();
+      h1s->Write();
+    }
+    
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //PhiDistribution
+    if(objname.find("PhiDistribution")!=string::npos){
+      string histname = "";
+      histname = Form("PhiDistribution_h1_%s%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("run%d",runnumbers[i]) : "", timestamps[i]);
+
+      h1s = dynamic_cast<TH1*>(obj->Clone(histname.c_str()));
+      outputfile->cd();
+      h1s->Write();
+    }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+     //NClusters
+    if(objname.find("NClusters")!=string::npos){
+      string histname = "";
+      histname = Form("NClusters_h1_%s%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("run%d",runnumbers[i]) : "", timestamps[i]);
+
+      h1s = dynamic_cast<TH1*>(obj->Clone(histname.c_str()));
+      outputfile->cd();
+      h1s->Write();
+    }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+     //OccupancyROF
+    if(objname.find("OccupancyROF")!=string::npos){
+      string histname = "";
+      histname = Form("OccupancyROF_h1_%s%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("run%d",runnumbers[i]) : "", timestamps[i]);
+
+      h1s = dynamic_cast<TH1*>(obj->Clone(histname.c_str()));
+      outputfile->cd();
+      h1s->Write();
+    }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
     //if(strstr(c,"TH1")!=nullptr){
-    if(c.find("TH1")!=string::npos){
+    if(c.find("TH1")!=string::npos && objname.find("ClusterUsage")==string::npos && objname.find("EtaDistribution")==string::npos && objname.find("PhiDistribution")==string::npos && objname.find("NClusters")==string::npos && objname.find("OccupancyROF")==string::npos){
       string histname = "";
       histname = Form("h1_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
 
@@ -1257,7 +1342,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
       h1s->Write();
     }
     //if(strstr(c,"TH2")!=nullptr){
-    if(c.find("TH2")!=string::npos){
+    if(c.find("TH2")!=string::npos && objname.find("AngularDistribution")==string::npos){
       string histname = "";
       if(objname.find("Error")!=string::npos)
         histname = Form("h2_err%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
@@ -1333,7 +1418,8 @@ string GetOptName(int opt){
   switch(opt){
     case 1: return "FHRMAPS_HITMAPS";
     case 2: return "THRMAPS_DEADPIXMAPS";
-    case 3: return "NOISYPIX_TREE";
+//    case 3: return "NOISYPIX_TREE";
+    case 3: return "TrackTask";
     default: return "0";
   }
 }

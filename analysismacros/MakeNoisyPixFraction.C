@@ -15,7 +15,7 @@ void MakeNoisyPixFraction(string filename, string runnum){
   ifstream infile(filename.c_str());
   string stave;
   int noisypix;
-  TH1D *hhits = new TH1D("hhits",Form("Noisy pix fraction per stave run%s; ;noisy pix \\hbox{‰}",runnum.c_str()), nstavestot,0,(double)nstavestot);
+  TH1D *hhits = new TH1D("hhits",Form("Noisy pix fraction per stave run%s; ;noisy pix (per mille)",runnum.c_str()), nstavestot,0,(double)nstavestot);
   while(infile>>stave>>noisypix){
     string layer = stave.substr(1,1);
     string stavenum = stave.substr(3,2);
@@ -58,4 +58,6 @@ void MakeNoisyPixFraction(string filename, string runnum){
   hhits->SetMarkerStyle(20);
   hhits->SetMarkerSize(1.2);
   hhits->Draw("PE");
+
+  c->SaveAs(Form("../yaml/noise_masks/fractions/noisypix_fraction_%s.pdf",runnum.c_str()));
 }
