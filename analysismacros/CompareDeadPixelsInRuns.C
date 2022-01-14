@@ -53,8 +53,8 @@ void CompareDeadPixelsInRuns(){
   cin>>refrun;
 
   //Compare all the runs (non-empty ones) with the reference run chosen by the user
-  long int first[6][100], second[6][100], both[6][100];
-  bool filled[6][100];
+  long int first[7][100], second[7][100], both[7][100];
+  bool filled[7][100];
   for (string layer : laynums){ // loop over layers
     int ilay=stoi(layer);
     for(int i=0; i<100; i++){
@@ -63,7 +63,7 @@ void CompareDeadPixelsInRuns(){
     }
   }
 
-  long int refHist[6][100];
+  long int refHist[7][100];
   vector<array<long int,5>> noisypix;
   for (string layer : laynums){ // loop over layers
     auto hist = myAnalysis.loadLayerSparse(stoi(layer));
@@ -103,14 +103,14 @@ void CompareDeadPixelsInRuns(){
   }
 
   //Make plot for each layer and for each stave in the root file
-  TGraphErrors *ge_nref[6];
-  TGraphErrors *ge_n2[6];
-  TGraphErrors *ge_ncom1[6];
-  TGraphErrors *ge_ncom2[6];
+  TGraphErrors *ge_nref[7];
+  TGraphErrors *ge_n2[7];
+  TGraphErrors *ge_ncom1[7];
+  TGraphErrors *ge_ncom2[7];
 
   double xshift = 3.;
-  double max[6];
-  double min[6];
+  double max[7];
+  double min[7];
 
   for (string layer : laynums){ // loop over layers
     int ilay=stoi(layer);
