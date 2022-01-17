@@ -5,7 +5,7 @@
 #include "inc/itsAnalysis.hh"
 
 void MakeDeadPixelMap(){
-  itsAnalysis myAnalysis("Hits on Layer"); // Change to "Hits on Layer" if using FHR as fake data
+  itsAnalysis myAnalysis("Dead pixel Hits"); // Change to "Hits on Layer" if using FHR as fake data
 
   auto nLayers      = myAnalysis.nLayers();     // int of number of layers
   auto laynums      = myAnalysis.Layers();      //vec of layers
