@@ -57,7 +57,7 @@ void AnalyzeLayerThresholds(){
           if((ibiny-1)<hist->GetNbinsY()/6)
             SetStyle(trend[stoi(layer)][ibiny-1], col[ibiny-1], 24);
           else if ((ibiny-1)<hist->GetNbinsY()*2/6)
-            SetStyle(trend[stoi(layer)][ibiny-1], col[ibiny-1-(hist->GetNbinsY()/6)], 26);
+            SetStyle(trend[stoi(layer)][ibiny-1], col[ibiny-1-(hist->GetNbinsY()*1/6)], 26);
           else if ((ibiny-1)<hist->GetNbinsY()*3/6)
             SetStyle(trend[stoi(layer)][ibiny-1], col[ibiny-1-(hist->GetNbinsY()*2/6)], 25);
           else if ((ibiny-1)<hist->GetNbinsY()*4/6)
@@ -71,7 +71,7 @@ void AnalyzeLayerThresholds(){
           if((ibiny-1)<hist->GetNbinsY()/8)
             SetStyle(trend[stoi(layer)][ibiny-1], col[ibiny-1], 24);
           else if ((ibiny-1)<hist->GetNbinsY()*2/8)
-            SetStyle(trend[stoi(layer)][ibiny-1], col[ibiny-1-(hist->GetNbinsY()/8)], 26);
+            SetStyle(trend[stoi(layer)][ibiny-1], col[ibiny-1-(hist->GetNbinsY()*1/8)], 26);
           else if ((ibiny-1)<hist->GetNbinsY()*3/8)
             SetStyle(trend[stoi(layer)][ibiny-1], col[ibiny-1-(hist->GetNbinsY()*2/8)], 25);
           else if ((ibiny-1)<hist->GetNbinsY()*4/8)
@@ -107,47 +107,17 @@ void AnalyzeLayerThresholds(){
     hfake->SetStats(0);
     hfake->SetTitle(Form("Layer-%s, from run%s to run%s",layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
     hfake->Draw();
-    if(stoi(layer)<=2){
-      for(int istave=0; istave<myAnalysis.stavesInLayer(stoi(layer)); istave++){
-        leg->AddEntry(trend[stoi(layer)][istave], Form("Stv%d",istave), "p");
-        trend[stoi(layer)][istave]->Draw("P same");
-      }
-      leg->Draw("same");
-      canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
-      canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.root", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
-      delete canvas;
-      delete leg;
-    }
-    else{
-      leg->SetNColumns(2);
-      hfake->SetTitle(Form("Layer-%s Upper, from run%s to run%s",layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
-      for(int istave=0; istave<myAnalysis.stavesInLayer(stoi(layer))/2; istave++){
-        leg->AddEntry(trend[stoi(layer)][istave], Form("Stv%d",istave), "p");
-        trend[stoi(layer)][istave]->Draw("P same");
-      }
-      leg->Draw("same");
-      canvas->SaveAs(Form("../Plots/Layer%sU_thresholds_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
-      canvas->SaveAs(Form("../Plots/Layer%sU_thresholds_run%s-run%s.root", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
-
-      TLegend *leg2 = new TLegend(0.904, 0.197,0.997,0.898);
-      leg2->SetNColumns(2);
-      auto *hfake2 = (TH1F*)hfake->Clone();
-      hfake2->SetTitle(Form("Layer-%s Lower, from run%s to run%s",layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
-      hfake2->Draw();
-      for(int istave=myAnalysis.stavesInLayer(stoi(layer))/2; istave<myAnalysis.stavesInLayer(stoi(layer)); istave++){
-        leg2->AddEntry(trend[stoi(layer)][istave], Form("Stv%d",istave), "p");
-        trend[stoi(layer)][istave]->Draw("P same");
-      }
-      leg2->Draw("same");
-      canvas->SaveAs(Form("../Plots/Layer%sL_thresholds_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
-      canvas->SaveAs(Form("../Plots/Layer%sL_thresholds_run%s-run%s.root", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
-
-      delete canvas;
-      delete leg;
-      delete leg2;
-    }
+    if (stoi(layer)>=2) leg->SetNColumns(2);
+    for(int istave=0; istave<myAnalysis.stavesInLayer(stoi(layer)); istave++){
+      leg->AddEntry(trend[stoi(layer)][istave], Form("Stv%d",istave), "p");
+      trend[stoi(layer)][istave]->Draw("P same");      }
+    leg->Draw("same");
+    canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+    canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.root", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+    delete canvas;
+    delete leg;
   }
-
+/*
   for (string layer : laynums){ // loop over layers
     TCanvas *canvas = new TCanvas();
     canvas->cd();
@@ -168,5 +138,5 @@ void AnalyzeLayerThresholds(){
       if (i==0)canvas->Print(Form("../Plots/Layer%s_thresholds_run%s-run%s.gif++", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
     }
   }
-
+*/
 } // end of analyseLayerThresholds()
