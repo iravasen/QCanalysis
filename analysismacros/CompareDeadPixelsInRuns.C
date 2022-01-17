@@ -38,6 +38,7 @@ Int_t col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 // Main function
 void CompareDeadPixelsInRuns(){
   itsAnalysis myAnalysis("Dead pixel Hits");
+  //itsAnalysis myAnalysis("Hits on Layer");
 
   auto laynums      = myAnalysis.Layers();      //vec of layers
   auto runNumbers   = myAnalysis.Runs();        //vec of run numbers

@@ -139,10 +139,10 @@ public :
 		if (layer == 0) staves = 12;
 		if (layer == 1) staves = 16;
 		if (layer == 2) staves = 20;
-		if (layer == 3)	staves = 24*2;
-		if (layer == 4) staves = 30*2;
-		if (layer == 5)	staves = 42*2;
-		if (layer == 6) staves = 48*2;
+		if (layer == 3)	staves = 24;
+		if (layer == 4) staves = 30;
+		if (layer == 5)	staves = 42;
+		if (layer == 6) staves = 48;
 		return staves;
 	}
 

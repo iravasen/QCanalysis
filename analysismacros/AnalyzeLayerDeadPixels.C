@@ -10,7 +10,7 @@ void SetStyle(TGraph *h, Int_t col, Style_t mkr){
 Int_t col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 
 void AnalyzeLayerDeadPixels(){
-  itsAnalysis myAnalysis("DeadPixel");
+  itsAnalysis myAnalysis("Threshold");
 
   auto nLayers      = myAnalysis.nLayers();     // int of number of layers
   auto laynums      = myAnalysis.Layers();      //vec of layers
