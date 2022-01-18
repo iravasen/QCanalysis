@@ -13,6 +13,7 @@ using namespace std;
 const string ccdbport = "ccdb-test.cern.ch:8080";
 const string DetectorName = "ITS";
 string TaskName = "QC_Offline/";
+string TaskClass = "OfflineQC";
 /*CcdbDatabase* SetupConnection(){
 	std::unique_ptr<DatabaseInterface> mydb = DatabaseFactory::create("CCDB");
 	auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());

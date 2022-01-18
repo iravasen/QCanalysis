@@ -23,8 +23,21 @@
 #include <TStopwatch.h>
 #include <TClass.h> //new
 #include "inc/constants.h"
+#include "QualityControl/PostProcessingInterface.h"
+#include "QualityControl/Reductor.h"
+#include "QualityControl/DatabaseFactory.h"
+#include "QualityControl/RootClassFactory.h"
+#include "QualityControl/DatabaseInterface.h"
+#include "QualityControl/MonitorObject.h"
+#include "QualityControl/QcInfoLogger.h"
+#include "QualityControl/CcdbDatabase.h"
+#include "inc/ccdb.h"
+
 
 using namespace std;
+using namespace o2::quality_control::repository;
+using namespace o2::quality_control::core;
+
 //const int nMasked = 10; //5000
 //const int nStavesInLayAll[7] = {12, 16, 20, 24, 30, 42, 48};
 
@@ -33,7 +46,7 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
 int GetNchipsActive(THnSparse *hmap, int maxchip, int MaxRange, bool HalfStave, bool IB);
 int GetNrunsWOhits(TH2 *hFhrStv);
 void SetStyle(TH1 *h, int col, Style_t mkr);
-void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixelMapDrawn, bool isOnlyHotPixelMap);
+void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixelMapDrawn, bool isOnlyHotPixelMap, bool ccdb_upload);
 
 void MaskNoisyPixelsInRuns(){
   string fpath;
@@ -44,6 +57,7 @@ void MaskNoisyPixelsInRuns(){
   cin>>fpath;
   cout<<endl;
   int IBorOB;
+  bool ccdb_upload;
 
   //IBorOB = 0 if I want to check all IB layers
   //IBorOB = 1 if I want to check all OB layers
@@ -63,7 +77,7 @@ void MaskNoisyPixelsInRuns(){
     IBorOB = 2;
   }
 
-  string skipans, skipruns;
+  string skipans, skipruns, CCDB_up;
   cout<<endl;
   cout<<"Would you like to skip some run(s)? [y/n] ";
   cin>>skipans;
@@ -75,6 +89,14 @@ void MaskNoisyPixelsInRuns(){
   }
   else
     skipruns=" ";
+
+  cout<<"Would you like to upload the output to ccdb? [y/n] ";
+  cin>>CCDB_up;
+  cout<<endl;
+  if(CCDB_up =="y"||CCDB_up =="Y") ccdb_upload= true;
+  else ccdb_upload= false;
+
+  if(ccdb_upload)SetTaskName(__func__);
 
   string drawpixelmap;
   bool isHotPixelMapDrawn =0;
@@ -95,18 +117,19 @@ void MaskNoisyPixelsInRuns(){
   }
 
   if (!isHotPixelMapDrawn && isOnlyHotPixelMap) {cout << "Choose the FHR vs #hot pixels masked and/or the hot pixel map. You have chosen none of them. " << endl; return;}
-  DoAnalysis(fpath, skipruns, IBorOB, isHotPixelMapDrawn, isOnlyHotPixelMap);
+  DoAnalysis(fpath, skipruns, IBorOB, isHotPixelMapDrawn, isOnlyHotPixelMap, ccdb_upload);
+
 }
 
 //
 // Analysis
 //
-void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixelMapDrawn, bool isOnlyHotPixelMap){
+void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixelMapDrawn, bool isOnlyHotPixelMap, bool ccdb_upload){
 
-//  TStopwatch t;
-//  TStopwatch t1;
-//  t.Start();
-//  t1.Start();
+  //  TStopwatch t;
+  //  TStopwatch t1;
+  //  t.Start();
+  //  t1.Start();
   gStyle->SetOptStat(0000);
   int col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 
@@ -119,7 +142,19 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
   for (int ilay=0; ilay < 7; ilay++){
     nRunsB[ilay] =-1;
   }
+  //Setting up the connection to the ccdb database
 
+  
+  //      CcdbDatabase* ccdb;
+  //      if(ccdb_upload) ccdb = SetupConnection();       ~To-Do- Currently not working
+
+  std::unique_ptr<DatabaseInterface> mydb = DatabaseFactory::create("CCDB");
+
+  auto* ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
+
+  ccdb->connect(ccdbport.c_str(), "", "", "");
+
+  
   //Read the file and the list of plots with entries (hitmaps!)
   TFile *infile=new TFile(filepath_hit.c_str());
   TList *list = (TList*)infile->GetListOfKeys();
@@ -289,14 +324,14 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
       delete hprojsparse;
 
       /*
-      cout << "\nlayer " << ilay << " nchips/HIC " << NChipsPerHIC << " chipRows/HIC " << ChipRowsPerHIC << endl;
-      cout << "nEntrieshmaps " << nEntrieshmaps << endl;
-      cout << "stavefound " << stavefound << " chipfound " << chipfound << " half stave found " << HalfStaveFound << endl;
-      cout << "run " << runnumbers[nEntrieshmaps+stavefound*(nRunsB[ilayEff]+1)+ir] << endl;
-      cout << "stave " <<       stavenums[nEntrieshmaps+stavefound*(nRunsB[ilayEff]+1)+ir] << endl;
-      cout << "hits_chip " << hits_chip << endl;
-      cout << "X range " << hmaps[nEntrieshmaps+stavefound*(nRunsB[ilayEff]+1)+ir] -> GetAxis(0) ->GetXmax() << endl;
-      cout << "Y range " << hmaps[nEntrieshmaps+stavefound*(nRunsB[ilayEff]+1)+ir] -> GetAxis(1) ->GetXmax() << endl;
+	cout << "\nlayer " << ilay << " nchips/HIC " << NChipsPerHIC << " chipRows/HIC " << ChipRowsPerHIC << endl;
+	cout << "nEntrieshmaps " << nEntrieshmaps << endl;
+	cout << "stavefound " << stavefound << " chipfound " << chipfound << " half stave found " << HalfStaveFound << endl;
+	cout << "run " << runnumbers[nEntrieshmaps+stavefound*(nRunsB[ilayEff]+1)+ir] << endl;
+	cout << "stave " <<       stavenums[nEntrieshmaps+stavefound*(nRunsB[ilayEff]+1)+ir] << endl;
+	cout << "hits_chip " << hits_chip << endl;
+	cout << "X range " << hmaps[nEntrieshmaps+stavefound*(nRunsB[ilayEff]+1)+ir] -> GetAxis(0) ->GetXmax() << endl;
+	cout << "Y range " << hmaps[nEntrieshmaps+stavefound*(nRunsB[ilayEff]+1)+ir] -> GetAxis(1) ->GetXmax() << endl;
       */
 
       if(hits_chip/(ChipRowsPerHIC*512.*NChipsPerHIC*1024.*fhr_run) < 1e-15){//to avoid bugs due to bad runs
@@ -335,11 +370,11 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
   }
 
   /*
-  cout << "\n\n" << endl;
-  for (int i=0; i<nRunsTotAllLayers; i++){
+    cout << "\n\n" << endl;
+    for (int i=0; i<nRunsTotAllLayers; i++){
     cout << "i " << i << "ntrig " << ntrig[i] << endl;
-  }
-  cout << "\n\n" << endl;
+    }
+    cout << "\n\n" << endl;
   */
 
   int numStavePart = 2;
@@ -375,7 +410,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
     for (int StavePart=0; StavePart< numStavePart; StavePart++){ //loop over the two Half Staves for OB
       int nchipsactive = GetNchipsActive(hmaps[ihist],nChips, MaxRange, StavePart, IB);
       if (numStavePart==1){
-      if(nchipsactive<nChips) cout<<"\nLayer "<<laynums[ihist]<<" Stave "<<stavenums[ihist]<<" Run: "<<runnumbers[ihist]<<" --> Chips active:"<<nchipsactive<<endl;
+	if(nchipsactive<nChips) cout<<"\nLayer "<<laynums[ihist]<<" Stave "<<stavenums[ihist]<<" Run: "<<runnumbers[ihist]<<" --> Chips active:"<<nchipsactive<<endl;
       }
       else {
 	if(nchipsactive<nChips) cout<<"\nLayer "<<laynums[ihist]<<" Stave "<<stavenums[ihist]<< " Half Stave " << StavePart << " Run: "<<runnumbers[ihist]<<" --> Chips active:"<<nchipsactive<<endl;
@@ -544,28 +579,51 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
 	  fileFHRvsMasked->WriteTObject(proj);
 	  if (StavePart==0) leg->AddEntry(proj, Form("Stv%d",is),"p");
 	}
+
 	leg->Draw("same");
 	TString NameCnv = "";
-
+	// The number 27 is the sum of the 2*6 digit run numbers+ len("_to_run")+len("from_run")
+	string Runperiod = Form("%s",filepath_hit.substr(filepath_hit.find("from"),27).c_str());
 	if (StavePart==0){
-	  if (numStavePart==1) NameCnv = Form("../Plots/Layer%i_FHRpixmask_%s", ilayEff,filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
-	  else NameCnv = Form("../Plots/Layer%i_HSLower_FHRpixmask_%s", ilayEff, filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
+	  if (numStavePart==1){ NameCnv = Form("../Plots/Layer%i_FHRpixmask_%s", ilayEff,filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
+	    if(ccdb_upload){        
+	      canvas->SetName(Form("Layer%i_FHRpixmask",ilayEff));
+	      auto mo1 = std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%i",ilayEff),TaskClass, DetectorName,1,Runperiod);
+	      mo1->setIsOwner(false);
+	      ccdb->storeMO(mo1);
+	    }
+	  }
+	  else {NameCnv = Form("../Plots/Layer%i_HSLower_FHRpixmask_%s", ilayEff, filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
+	    if(ccdb_upload){
+	      canvas->SetName(Form("Layer%i_HSLower_FHRpixmask",ilayEff));
+	      auto mo2 = std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%i",ilayEff),TaskClass, DetectorName,1,Runperiod); 
+	      mo2->setIsOwner(false);
+	      ccdb->storeMO(mo2);}
+	  } 
 	}
-	else NameCnv = Form("../Plots/Layer%i_HSUpper_FHRpixmask_%s", ilayEff, filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
+	else{ NameCnv = Form("../Plots/Layer%i_HSUpper_FHRpixmask_%s", ilayEff, filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
+	  if(ccdb_upload){
+	    canvas->SetName(Form("Layer%i_HSUpper_FHRpixmask",ilayEff));
+	    auto mo3 = std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%i",ilayEff),TaskClass, DetectorName,1,Runperiod);
+	    mo3->setIsOwner(false);
+	    ccdb->storeMO(mo3);
+	  }
+	}
 	cnv.SaveAs(NameCnv + ".pdf");
 	cnv.SaveAs(NameCnv + ".root");
       }
     }
-    fileFHRvsMasked->Close();
+  fileFHRvsMasked->Close();
   }
+
 
   //  cout << "Running time up to here: " << endl;
   //  t1.Stop();
   //  t1.Print();
 
-  if (isHotPixelMapDrawn){
+  if (isHotPixelMapDrawn){				//Start of if condition for the drawing of hitmaps
     cout << "\nDrawing hot pixel map for each layer " << endl;
-    for(int ilay=0; ilay<nLayers; ilay++){
+    for(int ilay=0; ilay<nLayers; ilay++){		//Loop over all layers
       if (nLayers==1) ilayEff = stoi(laynums[0]);
       else if (IBorOB==1) ilayEff = ilay + 3 ;
       else ilayEff = ilay;
@@ -575,15 +633,17 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
       else  numStavePart=2;
 
       TCanvas cnvT(Form("cnvT_%d",ilayEff), Form("cnv_%d",ilayEff),800,1200);
-      TCanvas cnvB(Form("cnvB_%d",ilayEff), Form("cnvBOT_%d",ilayEff),800,1200);
+      TCanvas  cnvB(Form("cnvB_%d",ilayEff), Form("cnvBOT_%d",ilayEff),800,1200);
       cnvT.SetTopMargin(0.4);
+      TCanvas* canvasTop = &cnvT;
+      TCanvas* canvasBot = &cnvB;
       if (ilayEff<3) cnvT.Divide(1,nStavesInLayAll[ilayEff],0,0);
       else cnvT.Divide(1,nStavesInLayAll[ilayEff]/2,0,0);
       cnvB.SetTopMargin(0.4);
       cnvB.Divide(1,nStavesInLayAll[ilayEff]/2,0,0);
       if (ilayEff >= 3) cnvT.SetTitle(Form("cnvTOP_%d",ilayEff));
-
       int istaveeff=0;
+      //Loop over all staves
       for(int istave=0; istave<nStavesInLayAll[ilayEff]; istave++){
 	istaveeff = istave;
 	hHotMap[ilay][istave]->SetMarkerStyle(20);
@@ -624,7 +684,14 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
 	  hHotMap[ilay][istave]->GetXaxis()->SetNdivisions(530);
 	}
 	if (numStavePart == 2)   hHotMap[ilay][istave]->GetYaxis()->SetNdivisions(8);
+	if(ccdb_upload){
+	  string Runperiod = Form("%s",filepath_hit.substr(filepath_hit.find("from"),27).c_str());
+	  hHotMap[ilay][istave]->SetName(Form("FHR_Hitmap_Layer%d_Stave_%d",ilay,istave));
+	  auto mohp= std::make_shared<o2::quality_control::core::MonitorObject>(hHotMap[ilay][istave], TaskName+Form("/Layer%d",ilay),TaskClass, DetectorName,1,Runperiod);
+	  mohp->setIsOwner(false);
+	  ccdb->storeMO(mohp);
 
+	}
 	TLatex lat;
 	lat.SetTextAngle(90);
 	lat.SetNDC();
@@ -665,6 +732,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
       TString NameCnvB="";
       if (ilayEff<3) {
 	NameCnvT = Form("../Plots/Layer%i_Hotpixmap_%s", ilayEff,filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
+	canvasTop->SetName(Form("Layer%i_Hotpixmask",ilayEff));
       }
       else {
 	NameCnvT = Form("../Plots/Layer%i-TOP_Hotpixmap_%s", ilayEff,filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
@@ -674,26 +742,24 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
       }
       cnvT.SaveAs(NameCnvT + ".pdf");
       fileOutputT = new TFile(NameCnvT + ".root", "RECREATE");
-
+      //Loop over all staves
       for(int istave=0; istave<nStavesInLayAll[ilayEff]; istave++){
-	if (ilayEff < 3 || istave < nStavesInLayAll[ilayEff]/2) {
-	  fileOutputT->WriteTObject(hHotMapCloned[ilay][istave]);
-	}
-	else {
-	  fileOutputB->WriteTObject(hHotMapCloned[ilay][istave]);
-	}
-      }
+	if (ilayEff < 3 || istave < nStavesInLayAll[ilayEff]/2)  fileOutputT->WriteTObject(hHotMapCloned[ilay][istave]);
+	else  fileOutputB->WriteTObject(hHotMapCloned[ilay][istave]);
+      } //End of loop over staves
       fileOutputT->Close();
       if (ilayEff>=3)    fileOutputB->Close();
       cout << "The following root files have been created:\n" << NameCnvT << ".root" << endl;
       if (ilayEff>=3) cout << NameCnvB << ".root"<< endl;
     }
-  }
+  } //End of if-conditional for the drawing of hit maps
 
   if (!isOnlyHotPixelMap)  cout << "The following file has been created: " <<  pathfileFHRvsMasked << "\n" << endl;
   //  t.Stop();
   //  cout << "\nRunning time: " << endl;
   //  t.Print();
+  //Disconnencting the interface
+  ccdb->disconnect();
 
 }
 

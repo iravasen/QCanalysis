@@ -20,13 +20,16 @@ class itsAnalysis {
 private :
 	vector<string> runNumbers_;
 	vector<string> layerNumbers_;
-
-	vector<string>  runNumbers_skips;
-	std::vector<TH2*> hmaps_skips;
+	vector<string> runNumbers_skips;
+	vector<string> layerNumbers_skips;
 
 	string skip_ans,skip_runs,skip_layers;
 
+	std::vector<TH2*> hmaps_skips;
+	std::vector<THnSparse*> hmaps_skips_sparse;
+
 	std::vector<TH2*> hmaps;
+	std::vector<THnSparse*> hmaps_sparse;
 
 public :
 	itsAnalysis(string histType) { // Function to load in a ROOT file
@@ -53,11 +56,12 @@ public :
 		       ) { cout<<"<W> Object "<<obj->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;}   
 			string objname = (string)obj->GetName();
 			string objtitle = (string)obj->GetTitle();
-			if(objname.find("Stv")!=string::npos) break;
+			//if(objname.find("Stv")!=string::npos) break; //hsparse of pixel map has "stave" instead of Stv
 			if(objtitle.find(histType)==string::npos) continue;
 
-			//Load in histograms into vector<TH2*>
-			hmaps.push_back((TH2*)obj);
+			//Load in histograms into vector
+			if(obj->InheritsFrom("THnSparse"))hmaps_sparse.push_back((THnSparse*)obj);
+			else hmaps.push_back((TH2*)obj);
 
 			//Find runNumber if unique
 			string runnum =  objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
@@ -65,7 +69,6 @@ public :
 			  runNumbers_.push_back(runnum);
 			}
 			//Find layerNumbers_ if unique
-			//string laynum = objname.substr(objname.find("L")+1,1);
 			string laynum =  objname.find("L")==string::npos ? "noLayer":objname.substr(objname.find("L")+1, 1);
 			if (std::find(layerNumbers_.begin(), layerNumbers_.end(), laynum) == layerNumbers_.end()) {
 			  layerNumbers_.push_back(laynum);
@@ -74,9 +77,9 @@ public :
 		} // end of loop over objects
 
 		cout << "Found run numbers: ";
-		for (auto i : runNumbers_){ cout << i <<", "; }
+		for (auto i : runNumbers_){ cout << i <<","; }
 		cout << endl << "Found layers: ";
-		for (auto i : layerNumbers_){ cout << i <<", "; }
+		for (auto i : layerNumbers_){ cout << i <<","; }
 		cout << endl<<endl;
 
 		cout<<"Would you like to skip some run(s)? [y/n]";
@@ -91,12 +94,33 @@ public :
 			string objname = (string)hist->GetName();
 			string run     = objname.substr(objname.find("run")+3, 6);
 			if (skip_runs.find(run) == std::string::npos)
-				hmaps_skips.push_back(hist);
+				hmaps_skips.push_back((TH2*)hist);
+		}
+
+		for (auto hist: hmaps_sparse)	{
+			string objname = (string)hist->GetName();
+			string run     = objname.substr(objname.find("run")+3, 6);
+			if (skip_runs.find(run) == std::string::npos){
+				hmaps_skips_sparse.push_back((THnSparse*)hist);
+			}
 		}
 
 		for (auto run : runNumbers_) {
 			if (skip_runs.find(run) == std::string::npos)
 				runNumbers_skips.push_back(run);
+		}
+
+		cout<<"Would you like to skip some layer(s)? [y/n]";
+		cin>>skip_ans;
+		if(skip_ans=="y" || skip_ans=="Y"){
+		  cout<<"Specify layer number(s) separated by comma (no white spaces!):";
+		  cin>>skip_layers;
+		  cout<<endl;
+		}
+
+		for (auto run : layerNumbers_) {
+			if (skip_layers.find(run) == std::string::npos)
+				layerNumbers_skips.push_back(run);
 		}
 
 
@@ -123,7 +147,7 @@ public :
 	}
 
 	vector<string> Layers() {
-		return layerNumbers_;
+		return layerNumbers_skips;
 	}
 
 	vector<string> Runs() {
@@ -131,7 +155,7 @@ public :
 	}
 
 	int nLayers() {
-		return layerNumbers_.size();
+		return layerNumbers_skips.size();
 	}
 
 	int nRuns() {
@@ -153,10 +177,36 @@ public :
 		return hmaps_per_layer;
 	}
 
+	std::vector<THnSparse*> loadLayerSparse(int layer) {
+		std::vector<THnSparse*> hmaps_per_layer_sparse; // empty list, histograms of layer
+		for (auto hist: hmaps_skips_sparse)	{
+			string objname = (string)hist->GetName();
+			if (stoi(objname.substr(objname.find("L")+1,1))==layer){ // Check title for layer
+				hmaps_per_layer_sparse.push_back(hist);
+			}
+		}
+		return hmaps_per_layer_sparse;
+	}
+
 	string getRunNumber(TH2* hist) {
 		string objname = hist->GetName();
 		string runN = objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
 		return runN;
+	}
+
+	string getRunNumber(THnSparse* hist) {
+		string objname = hist->GetName();
+		string runN = objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
+		return runN;
+	}
+
+	int getStaveNumber (THnSparse* hist){
+		string hname = hist->GetName();
+		string stvnum = hname.substr(hname.find("Stv")+3,2);
+		if(stvnum.find("_")!=string::npos){
+		  stvnum = hname.substr(hname.find("Stv")+3,1);
+		}
+		return stoi(stvnum);
 	}
 
 }; // end of class def

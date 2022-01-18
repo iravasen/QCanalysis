@@ -322,7 +322,7 @@ if(ccdb_upload){
     string Reference_run = to_string(refrun);
 
     canvas->SetName(canvas_name.c_str());
-        auto mo= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()), "OfflineQC", DetectorName,1,Runperiod);
+        auto mo= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()),TaskClass, DetectorName,1,Runperiod);
         mo->addMetadata("Reference Run number",Reference_run.c_str());
 	mo->setIsOwner(false);
         ccdb->storeMO(mo);
@@ -333,5 +333,6 @@ canvas->SaveAs(Form("../Plots/Layer%s_fakehitratecorr_refrun%ld_%s.pdf", laynums
   }
 
 //Disconnencting the interface
-if(ccdb_upload) ccdb->disconnect();
+//if(ccdb_upload)
+ ccdb->disconnect();
 }

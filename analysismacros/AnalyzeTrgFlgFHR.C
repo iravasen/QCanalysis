@@ -13,11 +13,22 @@
 #include <TSystem.h>
 #include <TGraph.h>
 #include <TKey.h>
+#include "QualityControl/PostProcessingInterface.h"
+#include "QualityControl/Reductor.h"
+#include "QualityControl/DatabaseFactory.h"
+#include "QualityControl/RootClassFactory.h"
+#include "QualityControl/DatabaseInterface.h"
+#include "QualityControl/MonitorObject.h"
+#include "QualityControl/QcInfoLogger.h"
+#include "QualityControl/CcdbDatabase.h"
+#include "inc/ccdb.h"
 
 using namespace std;
+using namespace o2::quality_control::repository;
+using namespace o2::quality_control::core;
 
 void SetStyle(TGraph *h, Int_t col, Style_t mkr);
-void DoAnalysis(string filepath, const int nChips, string skipruns);
+void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_upload);
 TString SIBorOB[2]={"IB", "OB"};
 
 //
@@ -26,6 +37,8 @@ TString SIBorOB[2]={"IB", "OB"};
 void AnalyzeTrgFlgFHR(){
   string fpath;
   int nchips=9;
+  bool ccdb_upload;
+
   cout<<"\n\n=> Available file(s) for the analysis (the last should be the file you want!): \n"<<endl;
   gSystem->Exec("ls ../Data/*w_error_and_trig* -Art | tail -n 500");
   cout<<"\nCopy file name: ";
@@ -33,7 +46,7 @@ void AnalyzeTrgFlgFHR(){
   cout<<endl;
 
   //Choose whether to skip runs
-  string skipans, skipruns;
+  string skipans, skipruns, CCDB_up;
   cout<<endl;
   cout<<"Would you like to skip some run(s)? [y/n] ";
   cin>>skipans;
@@ -46,9 +59,16 @@ void AnalyzeTrgFlgFHR(){
   else
     skipruns=" ";
 
+  cout<<"Would you like to upload the output to ccdb? [y/n] ";
+  cin>>CCDB_up;
+  cout<<endl;
+  if(CCDB_up =="y"||CCDB_up =="Y") ccdb_upload= true;
+  else ccdb_upload= false;
+
+if(ccdb_upload)SetTaskName(__func__);
 
   //Call
-  DoAnalysis(fpath, nchips, skipruns);
+  DoAnalysis(fpath, nchips, skipruns, ccdb_upload);
 
 }
 
@@ -67,13 +87,23 @@ void SetStyle(TGraph *h, Int_t col, Style_t mkr){
 //
 // Analyse data
 //
-void DoAnalysis(string filepath, const int nChips, string skipruns){
+void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_upload){
 
   gStyle->SetOptStat(0000);
 
   std::vector<TH2*> herr;
   std::vector<string> timestamps, runnumbers;
   int col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
+
+//Setting up the connection to the ccdb database
+//      CcdbDatabase* ccdb;
+//      if(ccdb_upload) ccdb = SetupConnection();       ~To-Do- Currently not working  
+
+  std::unique_ptr<DatabaseInterface> mydb = DatabaseFactory::create("CCDB");
+
+  auto* ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
+
+  ccdb->connect(ccdbport.c_str(), "", "", "");
 
   //Read the file and the list of plots with entries
   TFile *infile=new TFile(filepath.c_str());
@@ -182,6 +212,17 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
   hSummary->GetZaxis()->SetTitleSize(0.05);
   hSummary->GetZaxis()->SetTitleOffset(0.9);
 
+string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
+
+if(ccdb_upload){
+    string canvas_name("FHRTrgFlgPlotSummary");
+
+    canvas.SetName(canvas_name.c_str());
+        auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(&canvas, TaskName,TaskClass, DetectorName,1,Runperiod);
+        mo1->setIsOwner(false);
+        ccdb->storeMO(mo1);
+        }
+
   canvas.SaveAs(Form("../Plots/FHRTrgFlgPlotSummary_%s.pdf[", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
   canvas.SaveAs(Form("../Plots/FHRTrgFlgPlotSummary_%s.pdf", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 
@@ -213,6 +254,15 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
     trend[iid-1][0]->Draw("P same");
   }
   leg->Draw("same");
+if(ccdb_upload){
+
+    string canvas_name2("FHRTrgFlags_trends_IB");
+
+    canvas2.SetName(canvas_name2.c_str());
+        auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(&canvas2, TaskName,TaskClass, DetectorName,1,Runperiod);
+        mo2->setIsOwner(false);
+        ccdb->storeMO(mo2);
+        }
 
   canvas2.SaveAs(Form("../Plots/FHRTrgFlgPlotSummary_%s.pdf", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
   if (IBorOB!=2)    canvas2.SaveAs(Form("../Plots/FHRTrgFlgPlotSummary_%s.pdf]", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
@@ -233,8 +283,20 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
   leg->Draw("same");
 
   if (IBorOB ==2){
-    canvas3.SaveAs(Form("../Plots/FHRTrgFlgPlotSummary_%s.pdf", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+if(ccdb_upload){
+
+    string canvas_name3("FHRTrgFlags_trends_OB");
+
+    canvas3.SetName(canvas_name3.c_str());
+        auto mo3= std::make_shared<o2::quality_control::core::MonitorObject>(&canvas3, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mo3->setIsOwner(false);
+        ccdb->storeMO(mo3);
+        }
+ canvas3.SaveAs(Form("../Plots/FHRTrgFlgPlotSummary_%s.pdf", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     canvas3.SaveAs(Form("../Plots/FHRTrgFlgPlotSummary_%s.pdf]", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
   }
+//Disconnencting the interface
+//if(ccdb_upload)
+ ccdb->disconnect();
 
 }
