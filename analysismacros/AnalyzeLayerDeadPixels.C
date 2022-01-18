@@ -89,7 +89,6 @@ void AnalyzeLayerDeadPixels(){
             maxtot=hproj->Integral(hist->GetNbinsX()/2+1,hist->GetNbinsX());
         }
 
-
         // Set style IB
         if (stoi(layer) <=2){
           if((ibiny-1)<hist->GetNbinsY()/2)
@@ -100,36 +99,22 @@ void AnalyzeLayerDeadPixels(){
         //Set Style OB
         for(int hs=0; hs<=1; hs++){
           if(stoi(layer) ==3 || stoi(layer)==4){
-            if((ibiny-1)<hist->GetNbinsY()/6)
+            if((ibiny-1)<hist->GetNbinsY()/3)
               SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1], 24);
-            else if ((ibiny-1)<hist->GetNbinsY()*2/6)
-              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*1/6)], 26);
-            else if ((ibiny-1)<hist->GetNbinsY()*3/6)
-              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*2/6)], 25);
-            else if ((ibiny-1)<hist->GetNbinsY()*4/6)
-              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*3/6)], 24);
-            else if ((ibiny-1)<hist->GetNbinsY()*5/6)
-              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*4/6)], 26);
-            else
-              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*5/6)], 25);
+            else if ((ibiny-1)<hist->GetNbinsY()*2/3)
+              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*1/3)], 26);
+            else if ((ibiny-1)<hist->GetNbinsY()*3/3)
+              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*2/3)], 25);
           }
           else if (stoi(layer) ==5 || stoi(layer)==6){
-            if((ibiny-1)<hist->GetNbinsY()/8)
+            if((ibiny-1)<hist->GetNbinsY()/4)
               SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1], 24);
-            else if ((ibiny-1)<hist->GetNbinsY()*2/8)
-              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*1/8)], 26);
-            else if ((ibiny-1)<hist->GetNbinsY()*3/8)
-              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*2/8)], 25);
-            else if ((ibiny-1)<hist->GetNbinsY()*4/8)
-              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*3/8)], 30);
-            else if ((ibiny-1)<hist->GetNbinsY()*5/8)
-              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*4/8)], 24);
-            else if ((ibiny-1)<hist->GetNbinsY()*6/8)
-              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*5/8)], 26);
-            else if ((ibiny-1)<hist->GetNbinsY()*7/8)
-              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*6/8)], 25);
-            else
-              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*7/8)], 30);
+            else if ((ibiny-1)<hist->GetNbinsY()*2/4)
+              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*1/4)], 26);
+            else if ((ibiny-1)<hist->GetNbinsY()*3/4)
+              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*2/4)], 25);
+            else if ((ibiny-1)<hist->GetNbinsY()*4/4)
+              SetStyle(trend[stoi(layer)][ibiny-1][hs], col[ibiny-1-(hist->GetNbinsY()*3/4)], 30);
           }
         }
       }
