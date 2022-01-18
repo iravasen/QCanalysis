@@ -40,7 +40,6 @@ using namespace o2::quality_control::core;
 std::array<long int,5> CompareTwoRuns(THnSparse *href, THnSparse *h2);
 void SetStyle(TGraphErrors *ge, Color_t col);
 void DoAnalysis(string filepath, const int nChips, string skipruns, long int refrun, int IBorOB, bool ccdb_upload);
-int nStavesInLay[7]= {0};
 
 void CompareNoisyPixelsInRuns(){
   string fpath;
