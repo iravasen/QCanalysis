@@ -1,5 +1,29 @@
+#include <string>
+#include <iostream>
+#include <vector>
+#include <TH2.h>
+#include <TFile.h>
+#include <TList.h>
+#include <TFile.h>
+#include <TCanvas.h>
+#include <TColor.h>
+#include <TStyle.h>
+#include <TLegend.h>
+#include <TMath.h>
+#include <TSystem.h>
+#include <TGraph.h>
+#include <TKey.h>
+#include "QualityControl/PostProcessingInterface.h"
+#include "QualityControl/Reductor.h"
+#include "QualityControl/DatabaseFactory.h"
+#include "QualityControl/RootClassFactory.h"
+#include "QualityControl/DatabaseInterface.h"
+#include "QualityControl/MonitorObject.h"
+#include "QualityControl/QcInfoLogger.h"
+#include "QualityControl/CcdbDatabase.h"
+#include "inc/ccdb.h"
 
-void trend_maker(){
+void Track_trending_postprocessing(){
 gROOT->SetBatch(kTRUE);
 string fpath;
 cout<<"Available file(s) for the analysis of track task:"<<endl;
@@ -20,6 +44,7 @@ TFile *file = TFile::Open(fpath.c_str());
    vector<double>eta_ave, etacounts, relative_eta1, relative_eta2; 
    vector<double>cycle_clusage, cycle_eta, cycle_phi, cycle_ncl, cycle_occ;
    double i,j,k,m,n=0;
+   bool ccdb_upload;
 
    cout<<"List of runs:"<<endl;
    for(auto&& keyAsObj : *file->GetListOfKeys()){
@@ -31,7 +56,7 @@ TFile *file = TFile::Open(fpath.c_str());
        }
     }
 
-   string skipans, skipruns;
+   string skipans, skipruns, CCDB_up;
    cout<<"Would you like to skip some run(s)? [y/n]"<<endl;
    cin>>skipans;
    if(skipans=="y" || skipans=="Y"){
@@ -42,6 +67,21 @@ TFile *file = TFile::Open(fpath.c_str());
    }
    else
      skipruns=" ";
+
+ cout<<"Would you like to upload the output to ccdb? [y/n] ";
+  cin>>CCDB_up;
+  cout<<endl;
+ if(CCDB_up =="y"||CCDB_up =="Y") ccdb_upload= true;
+  else ccdb_upload= false;
+
+if(ccdb_upload)SetTaskName(__func__);
+
+//Setting up the connection to the ccdb database
+std::unique_ptr<DatabaseInterface> mydb = DatabaseFactory::create("CCDB");
+
+auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
+
+  ccdb->connect(ccdbport.c_str(), "", "", "");
 
    while ((key=(TKey*)next())){
 
@@ -480,7 +520,7 @@ TFile *file = TFile::Open(fpath.c_str());
       gr4->GetXaxis()->ChangeLabel(binIndex,60,-1,39,-1,-1);
   }
   gr4->GetXaxis()->SetLabelSize(0.027);
-  gr4->SetNameTitle("hNClusters", "hNClusters");
+  gr4->SetNameTitle("MEAN_NClustersDistribution", "Mean number of clusters per track");
   gr4->GetXaxis()->SetTitle("Run");
   gr4->GetYaxis()->SetTitle("<Number of clusters per track>");
   gr4->SetMarkerStyle(20);
@@ -590,7 +630,56 @@ c4->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs_clusage.front(
 c41->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs_clusage.front().c_str(), runs_clusage.back().c_str()));   
 c43->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs_clusage.front().c_str(), runs_clusage.back().c_str()));   
 c5->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs_clusage.front().c_str(), runs_clusage.back().c_str()));   
-c5->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf]", runs_clusage.front().c_str(), runs_clusage.back().c_str()));     
+c5->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf]", runs_clusage.front().c_str(), runs_clusage.back().c_str()));
+if(ccdb_upload){
+string Runperiod = Form("run%s_to_run%s",runs_clusage.front().c_str(), runs_clusage.back().c_str());
+
+	c1->SetName("MEAN_Used_Clusters_Fraction");
+auto mo1 = std::make_shared<o2::quality_control::core::MonitorObject>(c1, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mo1->setIsOwner(false);
+        ccdb->storeMO(mo1);
+	
+	c2->SetName("Average_Eta_distribution");
+auto mo2 = std::make_shared<o2::quality_control::core::MonitorObject>(c2, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mo2->setIsOwner(false);
+        ccdb->storeMO(mo2);
+
+	c21->SetName("Rel_number_tracks_Eta_distribution");
+auto mo21 = std::make_shared<o2::quality_control::core::MonitorObject>(c21, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mo21->setIsOwner(false);
+        ccdb->storeMO(mo21);
+
+	c3->SetName("Average_Phi_distribution");
+auto mo3 = std::make_shared<o2::quality_control::core::MonitorObject>(c3, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mo3->setIsOwner(false);
+        ccdb->storeMO(mo3);
+
+	c31->SetName("Rel_number_tracks_Phi_distribution");
+auto mo31 = std::make_shared<o2::quality_control::core::MonitorObject>(c31, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mo31->setIsOwner(false);
+        ccdb->storeMO(mo31);
+
+	c4->SetName("MEAN_NClustersDistribution");
+auto mo4 = std::make_shared<o2::quality_control::core::MonitorObject>(c4, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mo4->setIsOwner(false);
+        ccdb->storeMO(mo4);
+
+	c41->SetName("RMS_NClustersDistribution");
+auto mo41 = std::make_shared<o2::quality_control::core::MonitorObject>(c41, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mo41->setIsOwner(false);
+        ccdb->storeMO(mo41);
+
+	c43->SetName("NClustersDistribution_min_max");
+auto mo43 = std::make_shared<o2::quality_control::core::MonitorObject>(c43, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mo43->setIsOwner(false);
+        ccdb->storeMO(mo43);
+
+	c5->SetName("MEAN_Track_Occupancy_ROF");
+auto mo5= std::make_shared<o2::quality_control::core::MonitorObject>(c5, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mo5->setIsOwner(false);
+        ccdb->storeMO(mo5);
+
+}     
   
 TFile *f = new TFile("../Plots/TrackTask_Result_trends.root", "RECREATE");
 f->cd();
@@ -614,7 +703,7 @@ delete gr4; delete c4;
 delete gr41; delete c41;
 delete gr42; delete gr43; delete legend2; delete c43;
 delete gr5; delete c5;
-
+ccdb->disconnect();
 }
 
 
