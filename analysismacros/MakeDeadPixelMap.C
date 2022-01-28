@@ -22,7 +22,7 @@ void MakeDeadPixelMap(){
     TCanvas cnv(Form("cnv_%d",ilay), Form("cnv_%d",ilay),800,1200);
 
     cnv.SetTopMargin(0.4);
-    if (ilay>=2) cnv.Divide(1,20,0,0);
+    if (ilay>=3) cnv.Divide(1,nStavesInLay/2,0,0);
     else cnv.Divide(1,nStavesInLay,0,0);
 
     int iHists = -1;
@@ -98,13 +98,16 @@ void MakeDeadPixelMap(){
 
       cout<<"Layer: "<<layer<<" stv: "<<istave<<" / "<<nStavesInLay-1<<endl;
 
-      if(((istave+1)%20==0 && istave!=0) || (istave+1)==nStavesInLay){
+      if(((ilay>=3) && (istave+1)==nStavesInLay/2) || (istave+1)==nStavesInLay){
           cnv.cd();
           TLatex lat;
           lat.SetNDC();
           lat.SetTextSize(0.03);
           lat.DrawLatex(0.01,0.98,Form("L%s",layer.c_str()));
-          cnv.SaveAs(Form("../Plots/Layer%i_Deadpixmap_run%s_to_run%s_upto_stv%i.pdf",ilay,runNumbers[nRuns-1].c_str(),runNumbers[0].c_str(),istave));
+
+          if ((ilay>=3) && (istave+1)==nStavesInLay/2) cnv.SaveAs(Form("../Plots/Layer%i_Top_Deadpixmap_run%s_to_run%s.pdf",ilay,runNumbers[nRuns-1].c_str(),runNumbers[0].c_str()));
+          else if ((ilay>=3) && (istave+1)==nStavesInLay) cnv.SaveAs(Form("../Plots/Layer%i_Bottom_Deadpixmap_run%s_to_run%s.pdf",ilay,runNumbers[nRuns-1].c_str(),runNumbers[0].c_str()));
+          else cnv.SaveAs(Form("../Plots/Layer%i_Deadpixmap_run%s_to_run%s.pdf",ilay,runNumbers[nRuns-1].c_str(),runNumbers[0].c_str()));
 
           cnt=0;
           iHists = -1;

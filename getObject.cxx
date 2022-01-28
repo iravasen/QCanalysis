@@ -431,7 +431,6 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   cin>> IBorOB;
 
   //Choose the layer number
-  int layernum;
   cout<<endl;
 
   switch(IBorOB){
