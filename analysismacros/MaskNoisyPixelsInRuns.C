@@ -256,7 +256,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
   int MaxRangeY = 0;
   int NChipsPerHIC   = 1;
   int ChipRowsPerHIC = 1;
-  int HICsPerHS = 0; //Number of HICs in each half stave
+  int LanesPerHS = 0; //Number of lanes in each half stave
   int HalfStaveFound = 0;
   vector<double> ntrig;
   int nEntrieshmaps =0;
@@ -304,12 +304,15 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
       if (ilayEff > 2) {
 	NChipsPerHIC=7;
 	ChipRowsPerHIC=2;
-	if (ilayEff < 5) HICsPerHS=4;
-	else  HICsPerHS=7;
-	if (chipfound < HICsPerHS) HalfStaveFound=0;
+	/*
+	if (ilayEff < 5) LanesPerHS=8;
+	else  LanesPerHS=14;
+	*/
+	LanesPerHS = h2_2[ir][ilayEff]->GetNbinsX()/2;
+	if (chipfound < LanesPerHS) HalfStaveFound=0;
 	else {
 	  HalfStaveFound =1;
-	  chipfoundeff = chipfound-HICsPerHS;
+	  chipfoundeff = chipfound-LanesPerHS;
 	}
       }
 
