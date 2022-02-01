@@ -522,7 +522,8 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
 	SStavePart[0] = "";
 	SStavePart[1] = "";
       }
-
+      
+      TCanvas *canvas = 0;
       for (int StavePart=0; StavePart< numStavePart; StavePart++){ //loop over the two Half Staves for OB
 	TCanvas cnv(Form("cnv_%d_HS%i",ilayEff, StavePart), Form("cnv_%d_HS%i",ilayEff, StavePart));
 	cnv.cd();
