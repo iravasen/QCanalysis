@@ -424,7 +424,6 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   else{
 
   //choose IB, OB or both
-  int IBorOB;
   cout << endl;
   cout << endl;
   cout << "Choose beteen IB (0), OB (1) or both (2, = all layers of IB and OB)" << endl;
@@ -634,12 +633,12 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   //Output file
   string layername;
   if(layernum==-1)
-    if(IBorOB==0)    layername = "all-IB-layers";
-    else if (IBorOB==1) layername = "all-OB-layers";
-    else layername = "all-layers";
+    if(IBorOB==0)    layername = "_all-IB-layers";
+    else if (IBorOB==1) layername = "_all-OB-layers";
+    else layername = "_all-layers";
   if(layernum==-2) layername="";
   else
-    layername = Form("Layer%d",layernum);
+    layername = Form("_Layer%d",layernum);
 
   int layernumEff=layernum;
   if(IBorOB==1) layernumEff=layernum+1;
