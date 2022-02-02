@@ -521,8 +521,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
       mo->setIsOwner(false);
       ccdb->storeMO(mo);	
     }
-    canvas->SaveAs(Form("../Plots/Layer%s_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf", laynums[indexLaynums].c_str(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-    canvas->SaveAs(Form("../Plots/Layer%s_NoisyPixComparison_%s%ld_compared_to_run_%s.root", laynums[indexLaynums].c_str(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    canvas->SaveAs(Form("../Plots/Layer%i_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf", ilayEff,filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+    canvas->SaveAs(Form("../Plots/Layer%i_NoisyPixComparison_%s%ld_compared_to_run_%s.root", ilayEff,filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 
     delete canvas;
     delete hfake;

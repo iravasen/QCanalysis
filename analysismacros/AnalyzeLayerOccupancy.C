@@ -223,9 +223,13 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
     else ilayer = stoi(laynums[ihist]);
     if (nLayersInput==1) ilayer = 0;
 
+    /*
     if (stoi(laynums[ihist]) < 3)   nChips=9; //IB layers
-    else if (stoi(laynums[ihist]) ==3 || stoi(laynums[ihist]) ==4)    nChips=8./2;  //L3 and L4, Half stave
-    else if (stoi(laynums[ihist]) ==5 || stoi(laynums[ihist]) ==6)    nChips=14./2; //L5 and L6, Half Stave
+    else if (stoi(laynums[ihist]) ==3 || stoi(laynums[ihist]) ==4)    nChips=16./2;  //L3 and L4, Half stave
+    else if (stoi(laynums[ihist]) ==5 || stoi(laynums[ihist]) ==6)    nChips=28./2; //L5 and L6, Half Stave
+    */
+    if (stoi(laynums[ihist]) < 3)   nChips= hmaps[ihist]->GetNbinsX(); //IB layers
+    else    nChips = hmaps[ihist]->GetNbinsX()/2;
 
     if (stoi(laynums[ihist]) >=3) numStavePart = 1;
     else numStavePart=0;
@@ -258,11 +262,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
 	    deadchips++;
 	}
 	if(deadchips>0){
-	  if (stoi(laynums[ihist]) < 3) {
-	    cout<<"Layer "<<laynums[ihist]<<" Stave "<<ibiny-1<<" Run: "<<runnumbers[ihist]<<" Number of chips: " << nChips<<" --> Chips active:"<<nChips-deadchips<<endl;
-	  } else {
-	    cout<<"Layer "<<laynums[ihist]<<" Stave "<<ibiny-1<<" Run: "<<runnumbers[ihist]<<" Number of HICs: " << nChips << " --> HICs active:"<<nChips-deadchips<<endl;
-	  }
+	  cout<<"Layer "<<laynums[ihist]<<" Stave "<<ibiny-1<<" Run: "<<runnumbers[ihist]<<" Number of lanes: " << nChips<<" --> Active lanes:"<<nChips-deadchips<<endl;
 	}
 
 	double StaveOccupancy=0;
