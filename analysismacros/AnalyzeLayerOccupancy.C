@@ -154,7 +154,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
     string objname = (string)obj->GetName();
     if(objname.find("Stv")!=string::npos) break;
     h2 = (TH2*)obj;
-    if(!h2->GetEntries()) continue;
+    //if(!h2->GetEntries()) continue;
     cout<<"... Reading "<<obj->GetName()<<endl;
     string timestamp = objname.find("run")==string::npos ? objname.substr(objname.find("_",2)+1, 13) : objname.substr(objname.find("_",6)+1, 13);
     string runnum =  objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
