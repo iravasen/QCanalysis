@@ -525,7 +525,6 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
 	SStavePart[0] = "";
 	SStavePart[1] = "";
       }
-      
       TCanvas *canvas = 0;
       for (int StavePart=0; StavePart< numStavePart; StavePart++){ //loop over the two Half Staves for OB
 	TCanvas cnv(Form("cnv_%d_HS%i",ilayEff, StavePart), Form("cnv_%d_HS%i",ilayEff, StavePart));
@@ -535,7 +534,8 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
 	cnv.SetTickx();
 	cnv.SetTicky();
 	cnv.SetMargin(0.0988,0.1,0.1,0.0993);
-
+        canvas = &cnv;    
+    
 	TH1F *hframe = cnv.DrawFrame(0.1,7e-15,3*(nMasked),1e-3, Form("Layer %i %s - Average FHR %s; # Hot Pixels masked ; FHR (/event/pixel)",ilayEff, SStavePart[StavePart].Data(), filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str()));
 	hframe->SetBins(nMasked+1,binsmasked);
 
@@ -547,14 +547,6 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
 	  for (int i=1; i<= proj->GetNbinsX(); i++){
 	    proj->SetBinError(i, 0);
 	  }
-	  /*
-	    cout <<"ilay " << ilayEff <<  " stave " << is << " runs no hits  "<< runswohits << endl;
-	    for (int i=1; i<= proj->GetNbinsX(); i++){
-	    int l = i*10;
-	    if (l>proj->GetNbinsX()) break;
-	    cout << "bin " << l << " " << proj->GetBinContent(l) << " +- " << proj->GetBinError(l) << endl;
-	    }
-	  */
 	  if (ilayEff<3){
 	    SetStyle(proj, col[is<nStavesInLayAll[ilayEff]/2 ? is : is-nStavesInLayAll[ilayEff]/2],is<nStavesInLayAll[ilayEff]/2 ? 24:26);
 	  }
@@ -775,7 +767,7 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
   array<float,nMasked+1> fhrstave;
 
   THnSparse *hmapclone = (THnSparse*)hmap->Clone(Form("%s_clone",hmap->GetName()));
-  //cout<<"\n" <<hmap->GetName()<<" --> "<<hmapclone->GetNbins()<<" noisy pixels"<<endl;
+
   int iyMin =1;
   int iyMax =hmapclone->GetAxis(1)->GetNbins();
   if (IB==0) {
@@ -784,24 +776,21 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
   }
   hmapclone->GetAxis(1)->SetRange(iyMin, iyMax);
 
-  vector<array<double,3>> hmapclonecontent; 
-  array<double,3> mapclonecontent;
+  vector<array<int,3>> hmapclonecontent; 
+  array<int,3> mapclonecontent;
   int coord[2];
   long int totalhits =0;
-  long int Fulltotalhits =0;
+  long int Fulltotalhits = 0;
 
   for(int ibin=0; ibin<hmapclone->GetNbins(); ibin++){
     mapclonecontent[0] = hmapclone->GetBinContent(ibin, coord);
+    if(coord[1]<iyMin || coord[1]>iyMax) continue; //consider 1 HS at a time
     mapclonecontent[1] = coord[0];
     mapclonecontent[2] = coord[1];
     hmapclonecontent.push_back(mapclonecontent);
-    //    cout << "ibin " << hmapclonecontent[ibin][0] << " x " << hmapclonecontent[ibin][1] << " y " <<  hmapclonecontent[ibin][2] << endl;
+    Fulltotalhits+=mapclonecontent[0];
   }
   sort(hmapclonecontent.begin(), hmapclonecontent.end(), greater<>());
-
-  for (int i=0; i< (int)hmapclonecontent.size(); i++){
-    Fulltotalhits += hmapclonecontent[i][0];
-  }
 
   if (!isOnlyHotPixelMap){
     for(int iter=0; iter<nMasked+1; iter++){
@@ -828,7 +817,7 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
     }
   }
   else {
-    for(int iter=0; iter<1000; iter++){
+    for(int iter=0; iter<nMasked+1; iter++){
       totalhits =0;
       for (int i=iter; i< (int)hmapclonecontent.size(); i++){
 	totalhits += hmapclonecontent[i][0];
@@ -837,9 +826,11 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
       x = hmapclonecontent[iter][1];
       y = hmapclonecontent[iter][2];
       if (isHotPixelMapDrawn){
-	if(totalhits!=0) {
+	if(totalhits!=0 && iter < 100) {
 	  hhotmap->SetBinContent(((x-1)/4)+1, ((y-1)/4)+1, 1); // to avoid a marker in 0,0 for empty histos
-	}
+	} else if(iter>=100) {
+          break;
+        }
       }
     }
   }
