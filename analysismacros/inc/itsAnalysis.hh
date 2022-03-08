@@ -32,7 +32,7 @@ private :
 	std::vector<THnSparse*> hmaps_sparse;
 
 public :
-	itsAnalysis(string histType) { // Function to load in a ROOT file
+	itsAnalysis(string histType) {  // Function to load in a ROOT file
 		// We will ask for the file to analyse and load that
 		cout<<"\n\n=> Available file(s) for the analysis: \n"<<endl;
 		gSystem->Exec("ls ../Data/*THRMAPS_DEADPIXMAPS* -Art | tail -n 500");
@@ -59,22 +59,98 @@ public :
 			//if(objname.find("Stv")!=string::npos) break; //hsparse of pixel map has "stave" instead of Stv
 			if(objtitle.find(histType)==string::npos) continue;
 
-			//Load in histograms into vector
-			if(obj->InheritsFrom("THnSparse"))hmaps_sparse.push_back((THnSparse*)obj);
-			else hmaps.push_back((TH2*)obj);
+			if(histType == "THR")	{
+				if(objname.find("AvgThrIB")!=string::npos){
+					if (std::find(layerNumbers_.begin(), layerNumbers_.end(), to_string(0)) == layerNumbers_.end()) {
+						layerNumbers_.push_back(to_string(0)); 
+						layerNumbers_.push_back(to_string(1)); 
+						layerNumbers_.push_back(to_string(2)); 
+					}
+					TH2F *h_L0 = new TH2F(("h2_L0_run"+itsAnalysis::getRunNumber((TH2*)obj)).c_str(),"ITS Layer0, Threshold Vs Chip and Stave",9,0,9,  12,0,12);
+					TH2F *h_L1 = new TH2F(("h2_L1_run"+itsAnalysis::getRunNumber((TH2*)obj)).c_str(),"ITS Layer1, Threshold Vs Chip and Stave",9,0,9,  16,0,16);
+					TH2F *h_L2 = new TH2F(("h2_L2_run"+itsAnalysis::getRunNumber((TH2*)obj)).c_str(),"ITS Layer2, Threshold Vs Chip and Stave",9,0,9,  20,0,20);
+					for(int xbin = 0; xbin < 9; xbin++){
+						for(int ybin = 0; ybin < 12; ybin++){
+							h_L0->SetBinContent(xbin+1,ybin+1,((TH2*)obj)->GetBinContent(xbin+1,ybin+1));
+						}
+						for(int ybin = 0; ybin < 16; ybin++){
+							h_L1->SetBinContent(xbin+1,ybin+1,((TH2*)obj)->GetBinContent(xbin+1,ybin+1+12));
+						}
+						for(int ybin = 0; ybin < 20; ybin++){
+							h_L2->SetBinContent(xbin+1,ybin+1,((TH2*)obj)->GetBinContent(xbin+1,ybin+1+12+16));
+						}
+					}
+					h_L0->SetStats(0); h_L1->SetStats(0);h_L2->SetStats(0);
+					hmaps.push_back(h_L0);
+					hmaps.push_back(h_L1);
+					hmaps.push_back(h_L2);
+				}
+
+
+				if(objname.find("AvgThrML")!=string::npos){
+					if (std::find(layerNumbers_.begin(), layerNumbers_.end(), to_string(3)) == layerNumbers_.end()) {
+						layerNumbers_.push_back(to_string(3)); 
+						layerNumbers_.push_back(to_string(4)); 
+					}
+					TH2F *h_L3 = new TH2F(("h2_L3_run"+itsAnalysis::getRunNumber((TH2*)obj)).c_str(),"ITS Layer3, Threshold Vs Chip and Stave",8*14,0,8*14,  24,0,24);
+					TH2F *h_L4 = new TH2F(("h2_L4_run"+itsAnalysis::getRunNumber((TH2*)obj)).c_str(),"ITS Layer4, Threshold Vs Chip and Stave",8*14,0,8*14,  30,0,30);
+					for(int xbin = 0; xbin < 8*14; xbin++){
+						for(int ybin = 0; ybin < 24; ybin++){
+							h_L3->SetBinContent(xbin+1,ybin+1,((TH2*)obj)->GetBinContent(xbin+1,ybin+1));
+						}
+						for(int ybin = 0; ybin < 30; ybin++){
+							h_L4->SetBinContent(xbin+1,ybin+1,((TH2*)obj)->GetBinContent(xbin+1,ybin+1+24));
+						}
+					}
+					h_L3->SetStats(0); h_L4->SetStats(0);
+					hmaps.push_back(h_L3);
+					hmaps.push_back(h_L4);
+				}
+
+
+				if(objname.find("AvgThrOL")!=string::npos){
+					if (std::find(layerNumbers_.begin(), layerNumbers_.end(), to_string(5)) == layerNumbers_.end()) {
+						layerNumbers_.push_back(to_string(5)); 
+						layerNumbers_.push_back(to_string(6)); 
+					}
+					TH2F *h_L5 = new TH2F(("h2_L5_run"+itsAnalysis::getRunNumber((TH2*)obj)).c_str(),"ITS Layer5, Threshold Vs Chip and Stave",14*14,0,14*14,  42,0,42);
+					TH2F *h_L6 = new TH2F(("h2_L6_run"+itsAnalysis::getRunNumber((TH2*)obj)).c_str(),"ITS Layer6, Threshold Vs Chip and Stave",14*14,0,14*14,  48,0,48);
+					for(int xbin = 0; xbin < 14*14; xbin++){
+						for(int ybin = 0; ybin < 42; ybin++){
+							h_L5->SetBinContent(xbin+1,ybin+1,((TH2*)obj)->GetBinContent(xbin+1,ybin+1));
+						}
+						for(int ybin = 0; ybin < 48; ybin++){
+							h_L6->SetBinContent(xbin+1,ybin+1,((TH2*)obj)->GetBinContent(xbin+1,ybin+1+42));
+						}
+					}
+					h_L5->SetStats(0); h_L6->SetStats(0);
+					hmaps.push_back(h_L5);
+					hmaps.push_back(h_L6);
+				}
+			}
+
+			else{
+				//Load in histograms into vector
+				if(obj->InheritsFrom("THnSparse"))hmaps_sparse.push_back((THnSparse*)obj);
+				else hmaps.push_back((TH2*)obj);
+
+				//Find layerNumbers_ if unique
+				string laynum =  objname.find("L")==string::npos ? "":objname.substr(objname.find("L")+1, 1);
+				if (std::find(layerNumbers_.begin(), layerNumbers_.end(), laynum) == layerNumbers_.end()) {
+				  layerNumbers_.push_back(laynum);
+				}
+			}
 
 			//Find runNumber if unique
 			string runnum =  objname.find("run")==string::npos ? "norun":objname.substr(objname.find("run")+3, 6);
 			if (std::find(runNumbers_.begin(), runNumbers_.end(), runnum) == runNumbers_.end()) {
 			  runNumbers_.push_back(runnum);
 			}
-			//Find layerNumbers_ if unique
-			string laynum =  objname.find("L")==string::npos ? "noLayer":objname.substr(objname.find("L")+1, 1);
-			if (std::find(layerNumbers_.begin(), layerNumbers_.end(), laynum) == layerNumbers_.end()) {
-			  layerNumbers_.push_back(laynum);
-			}
 
 		} // end of loop over objects
+
+		//Sort Layer numbers:
+		sort(layerNumbers_.begin(),layerNumbers_.end());
 
 		cout << "Found run numbers: ";
 		for (auto i : runNumbers_){ cout << i <<","; }
