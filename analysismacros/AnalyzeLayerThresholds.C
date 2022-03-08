@@ -11,7 +11,8 @@ Int_t col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 
 // Main function
 void AnalyzeLayerThresholds(){
-  itsAnalysis myAnalysis("Threshold");
+  itsAnalysis myAnalysis("THR");
+  //itsAnalysis myAnalysis("Threshold");
   
   auto laynums      = myAnalysis.Layers();      //vec of layers
   auto runNumbers   = myAnalysis.Runs();        //vec of run numbers
@@ -40,6 +41,7 @@ void AnalyzeLayerThresholds(){
 
         int nChips = myAnalysis.nChips(stoi(layer));
 
+
         if(stoi(layer)<=2){
           int deadchips = 0;
           for(int ibinx=1; ibinx<=hist->GetNbinsX(); ibinx++){//evaluate the number of disabled chips
@@ -54,6 +56,7 @@ void AnalyzeLayerThresholds(){
         }
 
         if(stoi(layer)>=3){
+          nChips = nChips * 14; // Went from HIC to chips
           int deadchips_upper =0 ,deadchips_lower = 0;
           int THR_upper = 0, THR_lower = 0;
 
@@ -117,7 +120,7 @@ void AnalyzeLayerThresholds(){
   }
   
   int npoints = myAnalysis.nRuns();
-  TH1F *hfake = new TH1F("hfake", "; Run; Avg. Threshold (DAC)", npoints, -0.5, (double)npoints-0.5);
+  TH1F *hfake = new TH1F("hfake", "; Run; Avg. Threshold (electrons)", npoints, -0.5, (double)npoints-0.5);
   for(int ir=0; ir<npoints; ir++) // Set bin labels to run numbers
       hfake->GetXaxis()->SetBinLabel(npoints-(ir), Form("run%06d",stoi(myAnalysis.Runs()[ir])));
   
@@ -129,7 +132,7 @@ void AnalyzeLayerThresholds(){
       canvas->SetTicky();
       canvas->SetMargin(0.0988,0.1,0.194,0.0993);
       TLegend *leg = new TLegend(0.904, 0.197,0.997,0.898);
-      hfake->GetYaxis()->SetRangeUser(8.5, 14);
+      hfake->GetYaxis()->SetRangeUser(100, 125);
       hfake->GetXaxis()->SetTitleOffset(2.8);
       hfake->SetStats(0);
       hfake->SetTitle(Form("Layer-%s, from run%s to run%s",layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
@@ -154,7 +157,7 @@ void AnalyzeLayerThresholds(){
         canvas->SetMargin(0.0988,0.1,0.194,0.0993);
         TLegend *leg = new TLegend(0.904, 0.197,0.997,0.898);
         leg->SetNColumns(2);
-        hfake->GetYaxis()->SetRangeUser(8.5, 14);
+        hfake->GetYaxis()->SetRangeUser(100,200);
         hfake->GetXaxis()->SetTitleOffset(2.8);
         hfake->SetStats(0);
         hfake->Draw();
@@ -178,7 +181,7 @@ void AnalyzeLayerThresholds(){
       }
     }
   }
-
+  
   for (string layer : laynums){ // loop over layers
     TCanvas *canvas = new TCanvas();
     canvas->cd();
@@ -189,10 +192,10 @@ void AnalyzeLayerThresholds(){
     for(int i = histos.size()-1; i >= 0; i--){ //loop over number of histograms
       auto hist = histos[i];
       hist->Draw("colz");
-      hist->SetMinimum(8.5);
-      hist->SetMaximum(14);
+      hist->SetMinimum(50);
+      hist->SetMaximum(280);
       hist->SetTitle(Form("Layer%s Run%s (%i/%i);Chip Number; Stave Number",layer.c_str(),myAnalysis.getRunNumber(hist).c_str(),(int)histos.size()-i,(int)histos.size()));
-      hist->GetZaxis()->SetTitle("Avg. Threshold (DAC)");
+      hist->GetZaxis()->SetTitle("Avg. Threshold (electrons)");
       // Save frames of GIF
       canvas->Print(Form("../Plots/Layer%s_thresholds_run%s-run%s.gif+40", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
       // Save last frame as gif++ so gif loops
