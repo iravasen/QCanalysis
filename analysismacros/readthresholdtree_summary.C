@@ -19,7 +19,7 @@ const int chipIDmax[7] = {107, 251, 431,3119, 6479, 14711, 24119};
 short int chipToLayer(int chipid);
 
 //MAIN
-void readthresholdtree_summary(std::string treepath = "../Data/tree.root", std::string title = "THR .... runnum ....", bool istuned = false){
+void readthresholdtree_summary(std::string treepath = "../Data/tree.root", std::string title = "THR .... runnum ....", std::string stavemap = "stave for which you want thr map"){
 
   //gStyle->SetOptStat(0000);
   //open file
@@ -33,6 +33,8 @@ void readthresholdtree_summary(std::string treepath = "../Data/tree.root", std::
   std::unordered_map<int,std::array<int,5>> countsum;
   std::unordered_map<int,std::array<int,2>> countsuccess_nolimits;
   std::unordered_map<int,std::array<int,2>> countsuccess_highnoise;
+  std::unordered_map<short int,std::vector<short int>> trackrow;
+
   TH2F *hChipOutRange = new TH2F("hChipOutRange","Hits out of injected range (all superimposed); Col; Row",1024,-0.5,1023.5,512,-0.5,511.5);
   TH1F *hThrLayer[7];
   for(int il=0; il<7; il++){
@@ -47,6 +49,27 @@ void readthresholdtree_summary(std::string treepath = "../Data/tree.root", std::
   TH2F *hNoiseChip = new TH2F("hNoiseChip","Noise distribution per chip; ChipID; Noise (e-)", 24120, -0.5, 24119.5, 30,0,40);
   hNoiseChip->SetStats(0);
 
+  TH1F *hRowsCountIB = new TH1F("hRowsCountIB","Rows collected per chip in IB; Chip ID; Number of rows",432,-0.5,431.5);
+  TH1F *hRowsCountML = new TH1F("hRowsCountML","Rows collected per chip in ML; Chip ID; Number of rows",6048,431.5,6479.5);
+  TH1F *hRowsCountOL = new TH1F("hRowsCountOL","Rows collected per chip in OL; Chip ID; Number of rows",17640,6479.5,24119.5);
+  TH1F *hRowsCountDistIB = new TH1F("hRowsCountDistIB","Rows collected per chip in IB; Number of rows; Counts",20,-0.5,19.5);
+  TH1F *hRowsCountDistML = new TH1F("hRowsCountDistML","Rows collected per chip in ML; Number of rows; Counts",20,-0.5,19.5);
+  TH1F *hRowsCountDistOL = new TH1F("hRowsCountDistOL","Rows collected per chip in OL; Number of rows; Counts",20,-0.5,19.5);
+  hRowsCountIB->SetStats(0); hRowsCountML->SetStats(0); hRowsCountOL->SetStats(0);
+
+  //stave map
+  TH2F *hThrMapStave = 0;
+  if(stavemap.find("L0")!=string::npos || stavemap.find("L1")!=string::npos || stavemap.find("L2")!=string::npos){
+    hThrMapStave = new TH2F("hThrMapStave",Form("Thr map %s; Col; Row",stavemap.c_str()), 1024*9, -0.5, 1024*9-0.5, 512,-0.5,512-0.5);
+  }
+  else if(stavemap.find("L3")!=string::npos || stavemap.find("L4")!=string::npos){
+    hThrMapStave = new TH2F("hThrMapStave",Form("Thr map %s; Col; Row",stavemap.c_str()), 1024*28, 0, 1024*28, 512*2,0,512*2);
+  }
+  else{
+    hThrMapStave = new TH2F("hThrMapStave",Form("Thr map %s; Col; Row",stavemap.c_str()), 1024*49, 0, 1024*49, 512*2,0,512*2);
+  }
+  hThrMapStave->SetStats(0);
+
   thtree->SetBranchAddress("chipid",&chipid[0]);
   thtree->SetBranchAddress("row",&row[0]);
   thtree->SetBranchAddress("thr",&thr[0]);
@@ -54,17 +77,63 @@ void readthresholdtree_summary(std::string treepath = "../Data/tree.root", std::
   thtree->SetBranchAddress("success",&success[0]);
 
   long int nentries = thtree->GetEntries();
+  o2::itsmft::ChipMappingITS mp;
+  int lay,sta,ssta,mod,chipInMod;
   //loop on tree entries
   for(long int i = 0; i<nentries; i++){
     thtree->GetEntry(i);
     short int crow = row[0];
     short int cchipid = chipid[0];
-    short int layer = chipToLayer(cchipid);
+    mp.expandChipInfoHW(cchipid, lay,sta, ssta, mod,  chipInMod);
+    short int layer = lay;
+    std::string staveid = Form("L%d_%02d",lay,sta);
+
+    //count rows
+    int countthisrow=0;
+    if(trackrow.count(cchipid)){//check for duplicates
+      if(trackrow[cchipid].size()>0){
+        for(int ir=0; ir<(int)trackrow[cchipid].size(); ir++){
+          if(crow==trackrow[cchipid][ir]) countthisrow++;
+        }
+      }
+    }
+
+    if(cchipid<432){
+      if(!countthisrow)
+        hRowsCountIB->Fill((int)cchipid);
+    }
+    else if(cchipid<6480){
+      if(!countthisrow)
+        hRowsCountML->Fill(cchipid);
+    }
+    else{
+      if(!countthisrow)
+        hRowsCountOL->Fill(cchipid);
+    }
+
+    trackrow[cchipid].push_back(crow);//save rows
+
     if(layer<0) {
       cout<<"Layer is negative! ChipID: "<<cchipid<<endl;
       continue;
     }
     for(int icol=0; icol<1024; icol++){//loop on columns
+
+      //Fill threshold map of selected stave (NOTE: no cuts applied on the tree!!)
+      if(staveid==stavemap){
+        if(layer<3){
+          //std::cout<<crow+1<<" "<<icol<<" "<<thr[icol]<<std::endl;
+          hThrMapStave->SetBinContent(icol + 1 + 1024*chipInMod, crow+1, thr[icol]);
+        }
+        else {
+          int colbin = chipInMod < 7 ? icol + 1 + chipInMod*1024 + (mod-1)*1024*7 : icol + 1 + (14-chipInMod)*1024 + (mod-1)*1024*7;
+          int rowbin = 1;
+          if(!ssta) rowbin = chipInMod < 7 ? crow+1 : crow+1+512;
+          else rowbin = chipInMod < 7 ? crow+1+1024 : crow+1+1536;
+          hThrMapStave->SetBinContent(colbin, rowbin, thr[icol]);
+        }
+      }
+
       //count unsuccess per chipid
       if(!success[icol] && thr[icol]<1e-9 && noise[icol]<1e-9){
         if(!countsuccess_nolimits.count(cchipid)){
@@ -105,7 +174,9 @@ void readthresholdtree_summary(std::string treepath = "../Data/tree.root", std::
       }
 
       //Calculate sums for averages
-      if(thr[icol]<1e-9 && (int)noise[icol]<1e-9) continue; //skip if didn't find upper and lower limits in the fit
+      if(thr[icol]<1e-9 && (int)noise[icol]<1e-9){
+        continue; //skip if didn't find upper and lower limits in the fit
+      }
       //if(noise[icol]>=15){
         //cout<<"ChipID: "<<cchipid<<" - (row,col)="<<"("<<crow<<","<<icol<<") has noise = "<<(int)noise[icol]<<" electrons"<<endl;
       //}
@@ -135,8 +206,6 @@ void readthresholdtree_summary(std::string treepath = "../Data/tree.root", std::
   hAvgThr->SetStats(0);hAvgNoi->SetStats(0);hAvgThrML->SetStats(0);hAvgNoiML->SetStats(0);hAvgThrOL->SetStats(0);hAvgNoiOL->SetStats(0);
 
   //loop over map, calculate averages, convert chipid, fill plot
-  o2::itsmft::ChipMappingITS mp;
-  int lay,sta,ssta,mod,chipInMod;
   for(auto const& [chipID, t_arr] : countsum){
     if(!t_arr[4]) continue;
     mp.expandChipInfoHW(chipID, lay,sta, ssta, mod,  chipInMod);
@@ -161,7 +230,7 @@ void readthresholdtree_summary(std::string treepath = "../Data/tree.root", std::
     }
   }
 
-  TFile *outROOT = new TFile(Form("../Data/out_threshold_run%d.root",runnum),"RECREATE");
+  /*TFile *outROOT = new TFile(Form("../Data/out_threshold_run%d.root",runnum),"RECREATE");
   hAvgThr->SetName(Form("hAvgThrIB_run%d_1600000000000",runnum));
   hAvgThrML->SetName(Form("hAvgThrML_run%d_1600000000001",runnum));
   hAvgThrOL->SetName(Form("hAvgThrOL_run%d_1600000000001",runnum));
@@ -169,7 +238,7 @@ void readthresholdtree_summary(std::string treepath = "../Data/tree.root", std::
   hAvgThrOL->Write();
   hAvgThrML->Write();
   outROOT->Close();
-  delete outROOT;
+  delete outROOT;*/
 
   //Fill histograms showing averages per HIC (and not per chip)
   TH2F *hAvgThrML_hic = new TH2F("hthrML_hic",Form("%s; Module; Stave",title.c_str()),8,-0.5,7.5,54,-0.5,53.5);
@@ -227,6 +296,35 @@ void readthresholdtree_summary(std::string treepath = "../Data/tree.root", std::
   for(auto const& [chipID, t_arr] : countsuccess_highnoise){
     hUnSuccess_highnoise->SetBinContent(chipID+1, ((float)t_arr[0] / (float)t_arr[1]) * 100.);
   }
+
+  //calculate distributions of number of rows
+  for(int ibin=1; ibin<=hRowsCountIB->GetNbinsX(); ibin++)
+    hRowsCountDistIB->Fill(hRowsCountIB->GetBinContent(ibin));
+  for(int ibin=1; ibin<=hRowsCountML->GetNbinsX(); ibin++)
+    hRowsCountDistML->Fill(hRowsCountML->GetBinContent(ibin));
+  for(int ibin=1; ibin<=hRowsCountOL->GetNbinsX(); ibin++)
+    hRowsCountDistOL->Fill(hRowsCountOL->GetBinContent(ibin));
+
+  //Draw row counter plots
+  for(int i=0; i<6; i++){
+    TCanvas cRowCount("cRowCount","cRowCount", 1000, 700);
+    switch(i){
+      case 0: hRowsCountIB->Draw("HIST"); cRowCount.SaveAs(Form("../Plots/RowCount_run%d.pdf[",runnum)); cRowCount.SaveAs(Form("../Plots/RowCount_run%d.pdf",runnum)); break;
+      case 1: hRowsCountML->Draw("HIST"); cRowCount.SaveAs(Form("../Plots/RowCount_run%d.pdf",runnum)); break;
+      case 2: hRowsCountOL->Draw("HIST"); cRowCount.SaveAs(Form("../Plots/RowCount_run%d.pdf",runnum)); break;
+      case 3: hRowsCountDistIB->Draw("HIST"); cRowCount.SetLogy(); cRowCount.SaveAs(Form("../Plots/RowCount_run%d.pdf",runnum)); break;
+      case 4: hRowsCountDistML->Draw("HIST"); cRowCount.SetLogy(); cRowCount.SaveAs(Form("../Plots/RowCount_run%d.pdf",runnum)); break;
+      case 5: hRowsCountDistOL->Draw("HIST"); cRowCount.SetLogy(); cRowCount.SaveAs(Form("../Plots/RowCount_run%d.pdf",runnum)); cRowCount.SaveAs(Form("../Plots/RowCount_run%d.pdf]",runnum)); break;
+    }
+  }
+
+  //Draw threshold map of selected stave
+  TCanvas cMapStave("cMapStave","cMapStave",1800, 400);
+  hThrMapStave->Draw("colz");
+  //if(stavemap.find("L0")!=string::npos || stavemap.find("L1")!=string::npos || stavemap.find("L2")!=string::npos){
+    //hThrMapStave->GetYaxis()->SetRangeUser(4,26);
+  //}
+  cMapStave.SaveAs(Form("../Plots/%s_thr_map_run%d.png",stavemap.c_str(),runnum));
 
   //Draw unsuccess rate
   for(int i=0; i<2; i++){

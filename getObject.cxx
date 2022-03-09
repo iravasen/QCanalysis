@@ -632,12 +632,13 @@ bool RunExpert(auto *ccdb, string myname, int opt){
 
   //Output file
   string layername;
-  if(layernum==-1)
+  if(layernum==-1){
     if(IBorOB==0)    layername = "_all-IB-layers";
     else if (IBorOB==1) layername = "_all-OB-layers";
     else layername = "_all-layers";
-  if(layernum==-2) layername="";
-  else
+  }
+  else if(layernum==-2) layername="";
+  else if (layernum>0)
     layername = Form("_Layer%d",layernum);
 
   int layernumEff=layernum;
