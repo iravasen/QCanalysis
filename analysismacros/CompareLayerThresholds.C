@@ -11,7 +11,8 @@ Int_t col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 
 // Main function
 void CompareLayerThresholds(){
-  itsAnalysis myAnalysis("Threshold");
+  //itsAnalysis myAnalysis("Threshold");
+  itsAnalysis myAnalysis("THR");
 
   auto laynums      = myAnalysis.Layers();      //vec of layers
   auto runNumbers   = myAnalysis.Runs();        //vec<string> of run numbers
@@ -30,7 +31,7 @@ void CompareLayerThresholds(){
   TH2 *hRef[7];
   for (string layer : laynums){ // loop over layers
     int ilay = stoi(layer);
-    hCorr[ilay] = new TH2D(Form("hCorr_L%s",layer.c_str()), Form("Layer-%s - THR corr. for run%s to run%s - Ref. run: %s; Chip Threshold (run%s); Chip Threshold (runs)",layer.c_str(),runNumbers[nRuns-1].c_str(),runNumbers[0].c_str(),refrun.c_str(),refrun.c_str()), 150, 7.5, 13.5, 150, 7.5, 13.5);
+    hCorr[ilay] = new TH2D(Form("hCorr_L%s",layer.c_str()), Form("Layer-%s - THR corr. for run%s to run%s - Ref. run: %s; Chip Threshold (run%s); Chip Threshold (runs)",layer.c_str(),runNumbers[nRuns-1].c_str(),runNumbers[0].c_str(),refrun.c_str(),refrun.c_str()), 250, 50, 300, 250, 50, 300);
     hCorr[ilay]->SetStats(0);
     
     for(auto hist : myAnalysis.loadLayer(ilay)){
@@ -51,7 +52,7 @@ void CompareLayerThresholds(){
 
   gStyle->SetPalette(1);
   //Draw
-  TLine *line = new TLine(7.5,7.5,13.5,13.5);
+  TLine *line = new TLine(50,50,300,300);
   for (string layer : laynums){ // loop over layers
     int ilay = stoi(layer);    TCanvas *canvas = new TCanvas();
     canvas->cd();
