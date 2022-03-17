@@ -1,4 +1,14 @@
 #include "inc/itsAnalysis.hh"
+#include "QualityControl/PostProcessingInterface.h"
+#include "QualityControl/Reductor.h"
+#include "QualityControl/DatabaseFactory.h"
+#include "QualityControl/RootClassFactory.h"
+#include "QualityControl/DatabaseInterface.h"
+#include "QualityControl/MonitorObject.h"
+#include "QualityControl/QcInfoLogger.h"
+#include "QualityControl/CcdbDatabase.h"
+#include "inc/ccdb.h"
+
 
 void SetStyle(TGraph *h, Int_t col, Style_t mkr){
   h->SetLineColor(col);
@@ -10,7 +20,26 @@ void SetStyle(TGraph *h, Int_t col, Style_t mkr){
 Int_t col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 
 void AnalyzeLayerDeadPixels(){
-  itsAnalysis myAnalysis("DeadPixel");
+
+bool ccdb_upload;
+string CCDB_up;
+  
+cout<<"Would you like to upload the output to ccdb? [y/n] ";
+  cin>>CCDB_up;
+  cout<<endl;
+ if(CCDB_up =="y"||CCDB_up =="Y") ccdb_upload= true;
+  else ccdb_upload= false;
+
+if(ccdb_upload)SetTaskName(__func__);
+
+std::unique_ptr<DatabaseInterface> mydb = DatabaseFactory::create("CCDB");
+
+auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
+
+  ccdb->connect(ccdbport.c_str(), "", "", "");
+
+
+itsAnalysis myAnalysis("DeadPixel");
 
   auto laynums      = myAnalysis.Layers();      //vec of layers
   auto runNumbers   = myAnalysis.Runs();        //vec of run numbers
@@ -139,14 +168,22 @@ void AnalyzeLayerDeadPixels(){
       hfake->GetYaxis()->SetRangeUser(8e-1, maxtot+0.5*maxtot);
       hfake->GetXaxis()->SetTitleOffset(2.8);
       hfake->SetStats(0);
-      hfake->SetTitle(Form("Layer-%s (%i Staves with DeadPixels), from run%s to run%s",layer.c_str(),(int)ceil(staveswithdead[stoi(layer)][0]/nRuns),runNumbers.back().c_str(),runNumbers[0].c_str()));
+      hfake->SetTitle(Form("Layer-%s (%i Staves with DeadPixels), from run%s to run%s; Run number; #Dead pixels",layer.c_str(),(int)ceil(staveswithdead[stoi(layer)][0]/nRuns),runNumbers.back().c_str(),runNumbers[0].c_str()));
       hfake->Draw();
       for(int istave=0; istave<myAnalysis.stavesInLayer(stoi(layer)); istave++){
         leg->AddEntry(trend[stoi(layer)][istave][0], Form("Stv%d",istave), "p");
         trend[stoi(layer)][istave][0]->Draw("P same");   
       }
       leg->Draw("same");
-      canvas->SaveAs(Form("../Plots/Layer%s_DeadPixels_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+      if(ccdb_upload){
+	string Runperiod = Form("from_run%s_to_run%s",runNumbers.back().c_str(),runNumbers[0].c_str());		
+ //   string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str()); //This should be used for actual data 
+	canvas->SetName(Form("Layer%s_Dead_pixels",layer.c_str()));
+	auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,1,Runperiod);
+        mo1->setIsOwner(false);
+        ccdb->storeMO(mo1);
+}
+	canvas->SaveAs(Form("../Plots/Layer%s_DeadPixels_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
       canvas->SaveAs(Form("../Plots/Layer%s_DeadPixels_run%s-run%s.root", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
       delete canvas;
       delete leg;
@@ -172,13 +209,29 @@ void AnalyzeLayerDeadPixels(){
         }
         leg->Draw("same");
         if(hs==0){
-          hfake->SetTitle(Form("Layer-%s HS-upper (%i Staves with DeadPixels), from run%s to run%s",layer.c_str(),(int)ceil(staveswithdead[stoi(layer)][0]/nRuns),runNumbers.back().c_str(),runNumbers[0].c_str()));
-          canvas->SaveAs(Form("../Plots/Layer%s_HS-upper_DeadPixels_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+          hfake->SetTitle(Form("Layer-%s HS-upper (%i Staves with DeadPixels), from run%s to run%s;Run number; #Dead pixels",layer.c_str(),(int)ceil(staveswithdead[stoi(layer)][0]/nRuns),runNumbers.back().c_str(),runNumbers[0].c_str()));
+if(ccdb_upload){
+        string Runperiod = Form("from_run%s_to_run%s",runNumbers.back().c_str(),runNumbers[0].c_str());
+//   string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str()); //This should be used for actual data 
+        canvas->SetName(Form("Layer%s_HS_Upper_Dead_pixels",layer.c_str()));
+        auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,1,Runperiod);
+        mo2->setIsOwner(false);
+        ccdb->storeMO(mo2);
+}
+         canvas->SaveAs(Form("../Plots/Layer%s_HS-upper_DeadPixels_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
       canvas->SaveAs(Form("../Plots/Layer%s_HS-upper_DeadPixels_run%s-run%s.root", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
         }
         if(hs==1){
-          hfake->SetTitle(Form("Layer-%s HS-lower (%i Staves with DeadPixels), from run%s to run%s",layer.c_str(),(int)ceil(staveswithdead[stoi(layer)][1]/nRuns),runNumbers.back().c_str(),runNumbers[0].c_str()));
-          canvas->SaveAs(Form("../Plots/Layer%s_HS-lower_DeadPixels_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
+          hfake->SetTitle(Form("Layer-%s HS-lower (%i Staves with DeadPixels), from run%s to run%s;Run number; #Dead pixels",layer.c_str(),(int)ceil(staveswithdead[stoi(layer)][1]/nRuns),runNumbers.back().c_str(),runNumbers[0].c_str()));
+if(ccdb_upload){
+        string Runperiod = Form("from_run%s_to_run%s",runNumbers.back().c_str(),runNumbers[0].c_str());  
+//   string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str()); //This should be used for actual data 
+        canvas->SetName(Form("Layer%s_HS_Lower_Dead_pixels",layer.c_str()));
+        auto mo3= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,1,Runperiod);
+        mo3->setIsOwner(false);
+        ccdb->storeMO(mo3);
+}
+         canvas->SaveAs(Form("../Plots/Layer%s_HS-lower_DeadPixels_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
       canvas->SaveAs(Form("../Plots/Layer%s_HS-lower_DeadPixels_run%s-run%s.root", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
         }
         delete canvas;
@@ -209,6 +262,8 @@ void AnalyzeLayerDeadPixels(){
       if (i==0)canvas->Print(Form("../Plots/Layer%s_DeadPixels_run%s-run%s.gif++", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
     }
   }
+//Disconnencting from the database
+ ccdb->disconnect();
 
 } // end of analyzeLayerDeadPixels()
 
