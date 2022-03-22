@@ -916,7 +916,7 @@ gr->GetXaxis()->SetLabelSize(0.027);
 gr->SetMarkerStyle(20);
 gr->SetTitle("Less probable #clusters per track");
 gr->GetXaxis()->SetTitle("Runs");
-gr->GetYaxis()->SetTitle("Lower edge of the bins with less entries");
+gr->GetYaxis()->SetTitle("Less probable #clusters per track");
 gr->Draw("APL");
 
 auto gr1 = new TGraph(cycle.size(),&cycle[0],&binminCenters1[0]);
