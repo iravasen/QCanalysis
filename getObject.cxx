@@ -638,7 +638,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
     else layername = "_all-layers";
   }
   else if(layernum==-2) layername="";
-  else if (layernum>0)
+  else
     layername = Form("_Layer%d",layernum);
 
   int layernumEff=layernum;
@@ -873,7 +873,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-case 3: {
+case 3: { //tracks
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "AngularDistribution", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "ClusterUsage", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "EtaDistribution", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
@@ -882,7 +882,17 @@ case 3: {
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "OccupancyROF", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
 
       break;
-    }//end of case 3 
+    }//end of case 3
+    //////////////////////////////////////////////////////////
+case 4: { //FEE
+      vector<string> goodrunlist = GetGoodRunList(ccdbApi, run1, run2, "Thr"); //good run list
+      cout<<"\nAll data in "<<"qc/ITS/MO/ITSFEE/LaneStatus/LaneStatusFlagError(ERROR,FAULT,WARNING)"<<" between run"<<run1<<" and run"<<run2<<" downloading..."<<endl;
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagERROR", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagFAULT", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagWARNING", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      break;
+    }//end of case 4
+
  }//end switch
   outputfile->Close();
   delete outputfile;
@@ -1325,8 +1335,18 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
       h1s = dynamic_cast<TH1*>(obj->Clone(histname.c_str()));
       outputfile->cd();
       h1s->Write();
-    }
+		}
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//LaneStatusFlag
+    string histname = "";
+    if(objname.find("LaneStatus/laneStatusFlagERROR")!=string::npos) histname = Form("h2_LSerror%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+    else if(objname.find("LaneStatus/laneStatusFlagFAULT")!=string::npos) histname = Form("h2_LSfault%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+    else if(objname.find("LaneStatus/laneStatusFlagOK")!=string::npos) histname = Form("h2_LSok%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+    else if(objname.find("LaneStatus/laneStatusFlagWARNING")!=string::npos) histname = Form("h2_LSwarning%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+    h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
+    outputfile->cd();
+    h2s->Write();
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -1419,6 +1439,7 @@ string GetOptName(int opt){
     case 2: return "THRMAPS_DEADPIXMAPS";
 //    case 3: return "NOISYPIX_TREE";
     case 3: return "TrackTask";
+		case 4: return "LaneStatusFlag";
     default: return "0";
   }
 }
