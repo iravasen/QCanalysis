@@ -21,8 +21,6 @@ void DoAnalysis(string filepath, const int nChips, string skipruns);
 TString SIBorOB[2]={"IB", "OB"};
 
 int ns[] = {12,16,20,24,30,42,48}; // n staves for each layer 
-int getlayer(int ifee);
-int getstave(int lay, int ifee);
 
 //
 // MAIN
@@ -319,23 +317,14 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
 			if(iLayer==5){for(int iStave=0; iStave<nstave[5]; iStave++)grt_L5[iStatus][iStave]->Draw("P");}
 			if(iLayer==6){for(int iStave=0; iStave<nstave[6]; iStave++)grt_L6[iStatus][iStave]->Draw("P");}
 			legLayer[iLayer]->Draw();
+			if(iStatus==0 && iLayer==0) ctrend2[iStatus][iLayer]->SaveAs(Form("../Plots/LaneStatusFlag_%s.pdf[", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 			ctrend2[iStatus][iLayer]->SaveAs(Form("../Plots/LaneStatusFlag_%s.pdf", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 			if(iStatus==NStatus-1&&iLayer==NLayer-1)ctrend2[iStatus][iLayer]->SaveAs(Form("../Plots/LaneStatusFlag_%s.pdf]", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 		}//iLayer
 	}//iStatus
 
 }
-int getlayer(int ifee){
-	return (ifee-1) < 36 ? 0 : (ifee-1) < 84 ? 1 : (ifee-1) < 144 ? 2 : (ifee-1) < 192 ? 3 : (ifee-1) < 252 ? 4 : (ifee-1) < 336 ? 5 : 6;
-}
 
-int getstave(int lay, int ifee){
-	if(!lay) return 1;
-	int ntot = 0;
-	for(int ilay=0; ilay<lay; ilay++)
-		ntot+=ilay<3 ? 3*ns[ilay] : 2*ns[ilay];
-	return lay<3 ? ((ifee-1) % ntot) / 3 :  ((ifee-1) % ntot) / 2;
-}
 void SetCommonAxis(TH2D *hSummary){
 	//hSummary1[ilay]->GetXaxis()->SetNdivisions(530);
 	//hSummary1[ilay]->GetYaxis()->SetNdivisions(516);
