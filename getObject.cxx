@@ -1335,10 +1335,11 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
       h1s = dynamic_cast<TH1*>(obj->Clone(histname.c_str()));
       outputfile->cd();
       h1s->Write();
-		}
+    }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //LaneStatusFlag
+if(objname.find("LaneStatus") != string::npos){
     string histname = "";
     if(objname.find("LaneStatus/laneStatusFlagERROR")!=string::npos) histname = Form("h2_LSerror%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
     else if(objname.find("LaneStatus/laneStatusFlagFAULT")!=string::npos) histname = Form("h2_LSfault%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
@@ -1347,6 +1348,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
     h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
     outputfile->cd();
     h2s->Write();
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -1361,7 +1363,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
       h1s->Write();
     }
     //if(strstr(c,"TH2")!=nullptr){
-    if(c.find("TH2")!=string::npos && objname.find("AngularDistribution")==string::npos){
+    if(c.find("TH2")!=string::npos && objname.find("AngularDistribution")==string::npos && objname.find("LaneStatus")==string::npos){
       string histname = "";
       if(objname.find("Error")!=string::npos)
         histname = Form("h2_err%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
