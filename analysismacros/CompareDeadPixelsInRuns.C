@@ -1,4 +1,14 @@
 #include "inc/itsAnalysis.hh"
+#include "QualityControl/PostProcessingInterface.h"
+#include "QualityControl/Reductor.h"
+#include "QualityControl/DatabaseFactory.h"
+#include "QualityControl/RootClassFactory.h"
+#include "QualityControl/DatabaseInterface.h"
+#include "QualityControl/MonitorObject.h"
+#include "QualityControl/QcInfoLogger.h"
+#include "QualityControl/CcdbDatabase.h"
+#include "inc/ccdb.h"
+
 
 void SetStyle(TGraphErrors *ge, Color_t col){
   ge->SetMarkerStyle(0);
@@ -37,8 +47,27 @@ Int_t col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 
 // Main function
 void CompareDeadPixelsInRuns(){
-  itsAnalysis myAnalysis("Dead pixel Hits");
-  //itsAnalysis myAnalysis("Hits on Layer");
+
+bool ccdb_upload;
+string CCDB_up;
+
+cout<<"Would you like to upload the output to ccdb? [y/n] ";
+  cin>>CCDB_up;
+  cout<<endl;
+ if(CCDB_up =="y"||CCDB_up =="Y") ccdb_upload= true;
+  else ccdb_upload= false;
+
+if(ccdb_upload)SetTaskName(__func__);
+
+std::unique_ptr<DatabaseInterface> mydb = DatabaseFactory::create("CCDB");
+
+auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
+
+  ccdb->connect(ccdbport.c_str(), "", "", "");
+ 
+
+// itsAnalysis myAnalysis("Dead pixel Hits");
+  itsAnalysis myAnalysis("Hits on Layer");
 
   auto laynums      = myAnalysis.Layers();      //vec of layers
   auto runNumbers   = myAnalysis.Runs();        //vec of run numbers
@@ -196,7 +225,15 @@ void CompareDeadPixelsInRuns(){
     leg->AddEntry(ge_n2[0], "#splitline{#dead pix}{2nd run only}", "f");
     leg->AddEntry(ge_ncom1[0], "#splitline{#dead pix}{both}");
     leg->Draw("same");
-
+if(ccdb_upload){
+     string Runperiod = Form("from_run%s_to_run%s",runNumbers[0].c_str(),runNumbers[nRuns-1].c_str());
+//   string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str()); //This should be used for actual data 
+    canvas->SetName(Form("Layer%s_Dead_pixels_Correlation",layer.c_str()));
+    auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,1,Runperiod);
+    mo1->addMetadata("Reference Run number",refrun.c_str());
+    mo1->setIsOwner(false);
+    ccdb->storeMO(mo1);
+               }
     canvas->SaveAs(Form("../Plots/Layer%s_DeadPixComparison_run%s_compared_to_run%s_run%s.pdf", layer.c_str(),refrun.c_str(),runNumbers[0].c_str(),runNumbers[nRuns-1].c_str()));
     canvas->SaveAs(Form("../Plots/Layer%s_DeadPixComparison_run%s_compared_to_run%s_run%s.root", layer.c_str(),refrun.c_str(),runNumbers[0].c_str(),runNumbers[nRuns-1].c_str()));
 
@@ -204,5 +241,8 @@ void CompareDeadPixelsInRuns(){
     delete hfake;
     delete lineref;
   }//end loop on layers
+
+//Disconnencting from the database
+  ccdb->disconnect();
 
 } // end of analyseLayerThresholds()

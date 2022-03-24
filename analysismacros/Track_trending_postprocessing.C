@@ -42,8 +42,8 @@ TFile *file = TFile::Open(fpath.c_str());
    vector<double>phi_ave, phicounts, phicounts1, phicounts2, relative_phi1, relative_phi2; 
    vector<double>eta_ave, etacounts, relative_eta1, relative_eta2; 
    vector<double>cycle,cycle1,cycle2, cycle3, cycle4, cycle5, cycle_eta, cycle_phi;
-   vector<double>binlowedges, binlowedges1, binlowedges2, binlowedges3, binlowedges4, binlowedges5;
-   vector<double>binmaxedges, binmaxedges1, binmaxedges2, binmaxedges3, binmaxedges4, binmaxedges5;
+   vector<double>binminCenters, binminCenters1, binminCenters2, binminCenters3, binminCenters4, binminCenters5;
+   vector<double>binmaxCenters, binmaxCenters1, binmaxCenters2, binmaxCenters3, binmaxCenters4, binmaxCenters5;
    vector<double>means, means1, means2, means3, means4, means5;
    vector<double>aves, aves1, aves2, aves3;
    vector<double>rmss, rmss1, rmss2, rmss3;
@@ -389,7 +389,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
          //Find the bin with minimum content including 0 
          //hproj->GetMinimumBin();
          //hproj->GetBinContent(hproj->GetMinimumBin());
-         //double minlowedge=hproj->GetBinLowEdge(hproj->GetMinimumBin());
+         //double binmincenter=hproj->GetBinLowEdge(hproj->GetMinimumBin());
          
           int nbinsx=hproj->GetNbinsX();
          
@@ -412,13 +412,13 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
               minbin=i+1;
             }                
           }
-          double minlowedge=hproj->GetBinLowEdge(minbin);
-          binlowedges.push_back(minlowedge);
+          double binmincenter=hproj->GetBinCenter(minbin);
+          binminCenters.push_back(binmincenter);
           
           //Find the bin with maximum content
           int max=hproj->GetMaximumBin();
-          double binmaxedge=hproj->GetBinLowEdge(max);
-          binmaxedges.push_back(binmaxedge);
+          double binmaxcenter=hproj->GetBinCenter(max);
+          binmaxCenters.push_back(binmaxcenter);
           
 ////////////////Projection for -1.2 < eta < 1.2////////////////////////
           TH2D *hclon1 = (TH2D *)h->Clone();
@@ -446,13 +446,13 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
               minbin1=i+1;
             }                
           }
-          double minlowedge1=hproj1->GetBinLowEdge(minbin1);
-          binlowedges1.push_back(minlowedge1);
+          double binmincenter1=hproj1->GetBinCenter(minbin1);
+          binminCenters1.push_back(binmincenter1);
           
           //Find the bin with maximum content
           int max1=hproj1->GetMaximumBin();
-          double binmaxedge1=hproj1->GetBinLowEdge(max1);
-          binmaxedges1.push_back(binmaxedge1);
+          double binmaxcenter1=hproj1->GetBinCenter(max1);
+          binmaxCenters1.push_back(binmaxcenter1);
                    
 ///////////////Projection for -0.8 < eta < 0.8////////////////////////
           TH2D *hclon2 = (TH2D *)h->Clone();
@@ -480,13 +480,13 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
               minbin2=i+1;
             }                
           }
-          double minlowedge2=hproj2->GetBinLowEdge(minbin2);
-          binlowedges2.push_back(minlowedge2);
+          double binmincenter2=hproj2->GetBinCenter(minbin2);
+          binminCenters2.push_back(binmincenter2);
           
           //Find the bin with maximum content
           int max2=hproj2->GetMaximumBin();
-          double binmaxedge2=hproj2->GetBinLowEdge(max2);
-          binmaxedges2.push_back(binmaxedge2);
+          double binmaxcenter2=hproj2->GetBinCenter(max2);
+          binmaxCenters2.push_back(binmaxcenter2);
                     
 ///////////////Projection for -0.5 < eta < 0.5///////////////////////////////
           TH2D *hclon3 = (TH2D *)h->Clone();
@@ -514,13 +514,13 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
               minbin3=i+1;
             }                
           }
-          double minlowedge3=hproj3->GetBinLowEdge(minbin3);
-          binlowedges3.push_back(minlowedge3);
+          double binmincenter3=hproj3->GetBinCenter(minbin3);
+          binminCenters3.push_back(binmincenter3);
           
           //Find the bin with maximum content
           int max3=hproj3->GetMaximumBin();
-          double binmaxedge3=hproj3->GetBinLowEdge(max3);
-          binmaxedges3.push_back(binmaxedge3);
+          double binmaxcenter3=hproj3->GetBinCenter(max3);
+          binmaxCenters3.push_back(binmaxcenter3);
           
 ////////////////Projection for -0.4 < eta < 0.4///////////////////////////////
           TH2D *hclon4 = (TH2D *)h->Clone();
@@ -548,13 +548,13 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
               minbin4=i+1;
             }                
           }
-          double minlowedge4=hproj4->GetBinLowEdge(minbin4);
-          binlowedges4.push_back(minlowedge4);
+          double binmincenter4=hproj4->GetBinCenter(minbin4);
+          binminCenters4.push_back(binmincenter4);
           
           //Find the bin with maximum content
           int max4=hproj4->GetMaximumBin();
-          double binmaxedge4=hproj4->GetBinLowEdge(max4);
-          binmaxedges4.push_back(binmaxedge4);
+          double binmaxcenter4=hproj4->GetBinCenter(max4);
+          binmaxCenters4.push_back(binmaxcenter4);
           
 ////////////Projection for -0.2 < eta < 0.2/////////////////////////////////////
           TH2D *hclon5 = (TH2D *)h->Clone();
@@ -582,13 +582,13 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
              minbin5=i+1;     
             }                
           }
-          double minlowedge5=hproj5->GetBinLowEdge(minbin5);
-          binlowedges5.push_back(minlowedge5);
+          double binmincenter5=hproj5->GetBinCenter(minbin5);
+          binminCenters5.push_back(binmincenter5);
           
           //Find the bin with maximum content
           int max5=hproj5->GetMaximumBin();
-          double binmaxedge5=hproj5->GetBinLowEdge(max5);
-          binmaxedges5.push_back(binmaxedge5);
+          double binmaxcenter5=hproj5->GetBinCenter(max5);
+          binmaxCenters5.push_back(binmaxcenter5);
      }
                   
     }
@@ -632,7 +632,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   gr21->GetXaxis()->SetLabelSize(0.027);
   gr21->SetNameTitle("Relative number of tracks in Eta distributions", "Relative number of tracks in Eta distributions");
   gr21->GetXaxis()->SetTitle("Run");
-  gr21->GetYaxis()->SetTitle("Number of counts in subrange / Total counts (-#pi/2)-(#pi/2)");
+  gr21->GetYaxis()->SetTitle("Number of counts in subrange / Total counts");
   gr21->SetMarkerStyle(20);
   gr21->SetMarkerColor(kRed);
   gr21->SetLineColor(kRed);
@@ -646,8 +646,8 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   legend->SetNColumns(2);
   legend->SetFillColor(0);
   legend->SetHeader("Eta subrange","");
-  legend->AddEntry(gr21,"-#pi/2-0","lp");
-  legend->AddEntry(gr22,"0-#pi/2","lp");
+  legend->AddEntry(gr21,"-1.5-0","lp");
+  legend->AddEntry(gr22,"0-1.5","lp");
   legend->Draw();  
   
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -693,7 +693,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   gr31->GetXaxis()->SetLabelSize(0.027);
   gr31->SetNameTitle("Relative number of tracks in Phi distributions", "Relative number of tracks in Phi distributions");
   gr31->GetXaxis()->SetTitle("Run");
-  gr31->GetYaxis()->SetTitle("Number of counts in subrange / Total counts 0-2#pi");
+  gr31->GetYaxis()->SetTitle("Number of counts in subrange / Total counts");
   gr31->SetMarkerStyle(20);
   gr31->SetMarkerColor(kRed);
   gr31->SetLineColor(kRed);
@@ -783,7 +783,7 @@ gry->Draw("PL SAME");
 
 auto legend_xy=new TLegend(0.837272,0.746976,0.899033,0.900202);
 legend_xy->SetFillColor(0);
-legend_xy->SetHeader("Axes","");
+legend_xy->SetHeader("Vertex","");
 legend_xy->AddEntry(grx,"X","lp");
 legend_xy->AddEntry(gry,"Y","lp");
 legend_xy->Draw();
@@ -901,49 +901,49 @@ legend_->AddEntry(gr_4,"|#eta|<0.4","lp");
 legend_->AddEntry(gr_5,"|#eta|<0.2","lp");
 legend_->Draw();
 
-std::reverse(binlowedges.begin(),binlowedges.end()); 
-std::reverse(binlowedges1.begin(),binlowedges1.end()); 
-std::reverse(binlowedges2.begin(),binlowedges2.end());    
-std::reverse(binlowedges3.begin(),binlowedges3.end()); 
-std::reverse(binlowedges4.begin(),binlowedges4.end()); 
-std::reverse(binlowedges5.begin(),binlowedges5.end());                     
+std::reverse(binminCenters.begin(),binminCenters.end()); 
+std::reverse(binminCenters1.begin(),binminCenters1.end()); 
+std::reverse(binminCenters2.begin(),binminCenters2.end());    
+std::reverse(binminCenters3.begin(),binminCenters3.end()); 
+std::reverse(binminCenters4.begin(),binminCenters4.end()); 
+std::reverse(binminCenters5.begin(),binminCenters5.end());                     
 auto c = new TCanvas();
 c->SetGrid(0,1); 
-auto gr = new TGraph(cycle.size(),&cycle[0],&binlowedges[0]);
+auto gr = new TGraph(cycle.size(),&cycle[0],&binminCenters[0]);
 gr->GetXaxis()->SetNdivisions(cycle.size());
 for (int i=1;i<=cycle.size();i++) gr->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs[i-1].data());
 gr->GetXaxis()->SetLabelSize(0.027);
 gr->SetMarkerStyle(20);
-gr->SetTitle("Bins with less entries in hNClusters");
+gr->SetTitle("Less probable #clusters per track");
 gr->GetXaxis()->SetTitle("Runs");
-gr->GetYaxis()->SetTitle("Lower edge of the bins with less entries");
+gr->GetYaxis()->SetTitle("Less probable #clusters per track");
 gr->Draw("APL");
 
-auto gr1 = new TGraph(cycle.size(),&cycle[0],&binlowedges1[0]);
+auto gr1 = new TGraph(cycle.size(),&cycle[0],&binminCenters1[0]);
 gr1->SetMarkerStyle(20);
 gr1->SetMarkerColor(kRed);
 gr1->SetLineColor(kRed);
 gr1->Draw("PL SAME");
 
-auto gr20 = new TGraph(cycle.size(),&cycle[0],&binlowedges2[0]);
+auto gr20 = new TGraph(cycle.size(),&cycle[0],&binminCenters2[0]);
 gr20->SetMarkerStyle(20);
 gr20->SetMarkerColor(kBlue);
 gr20->SetLineColor(kBlue);
 gr20->Draw("PL SAME");
 
-auto gr30 = new TGraph(cycle.size(),&cycle[0],&binlowedges3[0]);
+auto gr30 = new TGraph(cycle.size(),&cycle[0],&binminCenters3[0]);
 gr30->SetMarkerStyle(20);
 gr30->SetMarkerColor(kGreen);
 gr30->SetLineColor(kGreen);
 gr30->Draw("PL SAME");
 
-auto gr4 = new TGraph(cycle.size(),&cycle[0],&binlowedges4[0]);
+auto gr4 = new TGraph(cycle.size(),&cycle[0],&binminCenters4[0]);
 gr4->SetMarkerStyle(20);
 gr4->SetMarkerColor(kOrange);
 gr4->SetLineColor(kOrange);
 gr4->Draw("PL SAME");
 
-auto gr5 = new TGraph(cycle.size(),&cycle[0],&binlowedges5[0]);
+auto gr5 = new TGraph(cycle.size(),&cycle[0],&binminCenters5[0]);
 gr5->SetMarkerStyle(20);
 gr5->SetMarkerColor(kMagenta);
 gr5->SetLineColor(kMagenta);
@@ -960,49 +960,49 @@ legend2->AddEntry(gr4,"|#eta|<0.4","lp");
 legend2->AddEntry(gr5,"|#eta|<0.2","lp");
 legend2->Draw();
 
-std::reverse(binmaxedges.begin(),binmaxedges.end());
-std::reverse(binmaxedges1.begin(),binmaxedges1.end());
-std::reverse(binmaxedges2.begin(),binmaxedges2.end());
-std::reverse(binmaxedges3.begin(),binmaxedges3.end());
-std::reverse(binmaxedges4.begin(),binmaxedges4.end());
-std::reverse(binmaxedges5.begin(),binmaxedges5.end());
+std::reverse(binmaxCenters.begin(),binmaxCenters.end());
+std::reverse(binmaxCenters1.begin(),binmaxCenters1.end());
+std::reverse(binmaxCenters2.begin(),binmaxCenters2.end());
+std::reverse(binmaxCenters3.begin(),binmaxCenters3.end());
+std::reverse(binmaxCenters4.begin(),binmaxCenters4.end());
+std::reverse(binmaxCenters5.begin(),binmaxCenters5.end());
 auto c1 = new TCanvas();
 c1->SetGrid(0,1); 
-auto gr0 = new TGraph(cycle.size(),&cycle[0],&binmaxedges[0]);
+auto gr0 = new TGraph(cycle.size(),&cycle[0],&binmaxCenters[0]);
 gr0->GetXaxis()->SetNdivisions(cycle.size());
 for (int i=1;i<=cycle.size();i++) gr0->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs[i-1].data());
 gr0->GetXaxis()->SetLabelSize(0.027);
 gr0->SetMarkerStyle(20);
-gr0->SetTitle("Bins with maximum entries in hNClusters");
+gr0->SetTitle("Most probable #clusters per track");
 gr0->GetXaxis()->SetTitle("Runs");
-gr0->GetYaxis()->SetTitle("Lower edge of the bins with more entries");
+gr0->GetYaxis()->SetTitle("Most probable #clusters per track");
 gr0->Draw("APL");
 
-auto gr01 = new TGraph(cycle.size(),&cycle[0],&binmaxedges1[0]);
+auto gr01 = new TGraph(cycle.size(),&cycle[0],&binmaxCenters1[0]);
 gr01->SetMarkerStyle(20);
 gr01->SetMarkerColor(kRed);
 gr01->SetLineColor(kRed);
 gr01->Draw("PL SAME");
 
-auto gr02 = new TGraph(cycle.size(),&cycle[0],&binmaxedges2[0]);
+auto gr02 = new TGraph(cycle.size(),&cycle[0],&binmaxCenters2[0]);
 gr02->SetMarkerStyle(20);
 gr02->SetMarkerColor(kBlue);
 gr02->SetLineColor(kBlue);
 gr02->Draw("PL SAME");
 
-auto gr03 = new TGraph(cycle.size(),&cycle[0],&binmaxedges3[0]);
+auto gr03 = new TGraph(cycle.size(),&cycle[0],&binmaxCenters3[0]);
 gr03->SetMarkerStyle(20);
 gr03->SetMarkerColor(kGreen);
 gr03->SetLineColor(kGreen);
 gr03->Draw("PL SAME");
 
-auto gr04 = new TGraph(cycle.size(),&cycle[0],&binmaxedges4[0]);
+auto gr04 = new TGraph(cycle.size(),&cycle[0],&binmaxCenters4[0]);
 gr04->SetMarkerStyle(20);
 gr04->SetMarkerColor(kOrange);
 gr04->SetLineColor(kOrange);
 gr04->Draw("PL SAME");
 
-auto gr05 = new TGraph(cycle.size(),&cycle[0],&binmaxedges5[0]);
+auto gr05 = new TGraph(cycle.size(),&cycle[0],&binmaxCenters5[0]);
 gr05->SetMarkerStyle(20);
 gr05->SetMarkerColor(kMagenta);
 gr05->SetLineColor(kMagenta);
@@ -1040,9 +1040,9 @@ c1->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf]", runs.front().c_str
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////	
 	
 if(ccdb_upload){
-string Runperiod = Form("run%s_to_run%s",runs_clusage.front().c_str(), runs_clusage.back().c_str());
+string Runperiod = Form("run%s_to_run%s",runs.front().c_str(), runs.back().c_str());
 
-	c1->SetName("MEAN_Used_Clusters_Fraction");
+	c1->SetName("MostProbable_Clusters_per_track_vs_eta");
 auto mo1 = std::make_shared<o2::quality_control::core::MonitorObject>(c1, TaskName, TaskClass, DetectorName,1,Runperiod);
         mo1->setIsOwner(false);
         ccdb->storeMO(mo1);
@@ -1067,25 +1067,51 @@ auto mo31 = std::make_shared<o2::quality_control::core::MonitorObject>(c31, Task
         mo31->setIsOwner(false);
         ccdb->storeMO(mo31);
 
-	c4->SetName("MEAN_NClustersDistribution");
-auto mo4 = std::make_shared<o2::quality_control::core::MonitorObject>(c4, TaskName, TaskClass, DetectorName,1,Runperiod);
-        mo4->setIsOwner(false);
-        ccdb->storeMO(mo4);
+	cz1->SetName("Mean_Zvertex_coordinate");
+auto moz1 = std::make_shared<o2::quality_control::core::MonitorObject>(cz1, TaskName, TaskClass, DetectorName,1,Runperiod);
+        moz1->setIsOwner(false);
+        ccdb->storeMO(moz1);
 
-	c41->SetName("RMS_NClustersDistribution");
-auto mo41 = std::make_shared<o2::quality_control::core::MonitorObject>(c41, TaskName, TaskClass, DetectorName,1,Runperiod);
-        mo41->setIsOwner(false);
-        ccdb->storeMO(mo41);
+	c_summary1->SetName("Summary_Distance_Primary_Vertex");
+auto mosummary1 = std::make_shared<o2::quality_control::core::MonitorObject>(c_summary1, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mosummary1->setIsOwner(false);
+        ccdb->storeMO(mosummary1);
 
-	c43->SetName("NClustersDistribution_min_max");
-auto mo43 = std::make_shared<o2::quality_control::core::MonitorObject>(c43, TaskName, TaskClass, DetectorName,1,Runperiod);
-        mo43->setIsOwner(false);
-        ccdb->storeMO(mo43);
+        c_summary->SetName("Summary_Track_Vertex_Coordinates");
+auto mosummary = std::make_shared<o2::quality_control::core::MonitorObject>(c_summary, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mosummary->setIsOwner(false);
+        ccdb->storeMO(mosummary);
 
-	c5->SetName("MEAN_Track_Occupancy_ROF");
-auto mo5= std::make_shared<o2::quality_control::core::MonitorObject>(c5, TaskName, TaskClass, DetectorName,1,Runperiod);
-        mo5->setIsOwner(false);
-        ccdb->storeMO(mo5);
+        cxy->SetName("Track_Vertex_Coordinates");
+auto moxy = std::make_shared<o2::quality_control::core::MonitorObject>(cxy, TaskName, TaskClass, DetectorName,1,Runperiod);
+        moxy->setIsOwner(false);
+        ccdb->storeMO(moxy);
+
+        ce->SetName("Mean_NVertexContributors");
+auto moe = std::make_shared<o2::quality_control::core::MonitorObject>(ce, TaskName, TaskClass, DetectorName,1,Runperiod);
+        moe->setIsOwner(false);
+        ccdb->storeMO(moe);
+
+        ct->SetName("Mean_NTracks_EbyE");
+auto mot = std::make_shared<o2::quality_control::core::MonitorObject>(ct, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mot->setIsOwner(false);
+        ccdb->storeMO(mot);
+
+        c0->SetName("Mean_Fraction_Clusters_Tracks");
+auto mo0 = std::make_shared<o2::quality_control::core::MonitorObject>(c0, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mo0->setIsOwner(false);
+        ccdb->storeMO(mo0);
+
+        c_->SetName("Mean_NumberCluster_per_Track");
+auto mo_ = std::make_shared<o2::quality_control::core::MonitorObject>(c_, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mo_->setIsOwner(false);
+        ccdb->storeMO(mo_);
+
+        c->SetName("LessProbable_Clusters_per_track_vs_eta");
+auto moc = std::make_shared<o2::quality_control::core::MonitorObject>(c, TaskName, TaskClass, DetectorName,1,Runperiod);
+        moc->setIsOwner(false);
+        ccdb->storeMO(moc);
+
 
 }     
 	

@@ -3,9 +3,37 @@
 #include <vector>
 #include <array>
 #include "inc/itsAnalysis.hh"
+#include "inc/constants.h"
+#include "QualityControl/PostProcessingInterface.h"
+#include "QualityControl/Reductor.h"
+#include "QualityControl/DatabaseFactory.h"
+#include "QualityControl/RootClassFactory.h"
+#include "QualityControl/DatabaseInterface.h"
+#include "QualityControl/MonitorObject.h"
+#include "QualityControl/QcInfoLogger.h"
+#include "QualityControl/CcdbDatabase.h"
+#include "inc/ccdb.h"
 
 void MakeDeadPixelMap(){
-  itsAnalysis myAnalysis("Dead pixel Hits"); // Change to "Hits on Layer" if using FHR as fake data
+
+bool ccdb_upload;
+string CCDB_up;
+
+ cout<<"Would you like to upload the output to ccdb? [y/n] ";
+  cin>>CCDB_up;
+  cout<<endl;
+ if(CCDB_up =="y"||CCDB_up =="Y") ccdb_upload= true;
+  else ccdb_upload= false;
+
+if(ccdb_upload)SetTaskName(__func__);
+
+std::unique_ptr<DatabaseInterface> mydb = DatabaseFactory::create("CCDB");
+
+auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
+
+  ccdb->connect(ccdbport.c_str(), "", "", "");
+
+  itsAnalysis myAnalysis("Hits on Layer"); // Change to "Hits on Layer" if using FHR as fake data
 
   auto nLayers      = myAnalysis.nLayers();     // int of number of layers
   auto laynums      = myAnalysis.Layers();      //vec of layers
@@ -87,6 +115,13 @@ void MakeDeadPixelMap(){
       }
       hHotMap->SetStats(0);
       hHotMap->DrawCopy("P X+");
+	if(ccdb_upload){
+	string Runperiod = Form("from_run%s_to_run%s",runNumbers.back().c_str(),runNumbers[0].c_str());
+	auto mo = std::make_shared<o2::quality_control::core::MonitorObject>(hHotMap, TaskName+Form("/Layer%d",ilay), TaskClass, DetectorName,1,Runperiod);
+       mo->setIsOwner(false);
+       ccdb->storeMO(mo);
+		}
+
 
       TLatex lat;
       lat.SetTextAngle(90);
@@ -115,4 +150,5 @@ void MakeDeadPixelMap(){
 
     } // End loop on staves
   } // End loop on layers
+ ccdb->disconnect();
 } // end of qMakeDeadPixelMap()

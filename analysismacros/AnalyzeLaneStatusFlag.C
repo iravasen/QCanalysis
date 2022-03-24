@@ -13,11 +13,20 @@
 #include <TSystem.h>
 #include <TGraph.h>
 #include <TKey.h>
+#include "QualityControl/PostProcessingInterface.h"
+#include "QualityControl/Reductor.h"
+#include "QualityControl/DatabaseFactory.h"
+#include "QualityControl/RootClassFactory.h"
+#include "QualityControl/DatabaseInterface.h"
+#include "QualityControl/MonitorObject.h"
+#include "QualityControl/QcInfoLogger.h"
+#include "QualityControl/CcdbDatabase.h"
+#include "inc/ccdb.h"
 
 using namespace std;
 void SetCommonAxis(TH2D *histo);
 void SetStyle(TGraph *h, Int_t col, Style_t mkr);
-void DoAnalysis(string filepath, const int nChips, string skipruns);
+void DoAnalysis(string filepath, const int nChips, string skipruns,bool ccdb_upload);
 TString SIBorOB[2]={"IB", "OB"};
 
 int ns[] = {12,16,20,24,30,42,48}; // n staves for each layer 
@@ -34,9 +43,9 @@ void AnalyzeLaneStatusFlag(){
   cout<<"\nCopy file name: ";
   cin>>fpath;
   cout<<endl;
-
+  bool ccdb_upload;
 	//Choose whether to skip runs
-	string skipans, skipruns;
+	string skipans, skipruns, CCDB_up;
 	cout<<endl;
 	cout<<"Would you like to skip some run(s)? [y/n] ";
 	cin>>skipans;
@@ -48,10 +57,17 @@ void AnalyzeLaneStatusFlag(){
 	}
 	else
 		skipruns=" ";
+cout<<"Would you like to upload the output to ccdb? [y/n] ";
+  cin>>CCDB_up;
+  cout<<endl;
+ if(CCDB_up =="y"||CCDB_up =="Y") ccdb_upload= true;
+  else ccdb_upload= false;
+
+if(ccdb_upload)SetTaskName(__func__);
 
 
 	//Call
-	DoAnalysis(fpath, nchips, skipruns);
+	DoAnalysis(fpath, nchips, skipruns,ccdb_upload);
 
 }
 
@@ -61,7 +77,7 @@ void AnalyzeLaneStatusFlag(){
 void SetStyle(TGraph *h, Int_t col, Style_t mkr){
 	h->SetLineColor(col);
 	h->SetMarkerStyle(mkr);
-	h->SetMarkerSize(1.2);
+	h->SetMarkerSize(1.5);
 	h->SetMarkerColor(col);
 	//h->SetFillStyle(0);
 	//h->SetFillColorAlpha(col,0.8);
@@ -70,7 +86,7 @@ void SetStyle(TGraph *h, Int_t col, Style_t mkr){
 //
 // Analyse data
 //
-void DoAnalysis(string filepath, const int nChips, string skipruns){
+void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_upload){
 
 	gStyle->SetOptStat(0000);
 
@@ -81,7 +97,14 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
 	std::vector<TH2*> hwarning;
 	//std::vector<string> timestamps, runnumbers;
 	std::vector<string> timestamps1, runnumbers1, timestamps2, runnumbers2, timestamps3, runnumbers3, timestamps4, runnumbers4;
-	Int_t col[] = {TColor::GetColor("#ff3300"), TColor::GetColor("#ec6e0a"), TColor::GetColor("#daaa14"), TColor::GetColor("#c7e51e"), TColor::GetColor("#85dd69"), TColor::GetColor("#42d6b4"), TColor::GetColor("#00ceff"), TColor::GetColor("#009adf"), TColor::GetColor("#0067c0"), TColor::GetColor("#0033a1")};
+	int col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602};
+//	Int_t col[] = {TColor::GetColor("#ff3300"), TColor::GetColor("#ec6e0a"), TColor::GetColor("#daaa14"), TColor::GetColor("#c7e51e"), TColor::GetColor("#85dd69"), TColor::GetColor("#42d6b4"), TColor::GetColor("#00ceff"), TColor::GetColor("#009adf"), TColor::GetColor("#0067c0"), TColor::GetColor("#0033a1")};
+
+	std::unique_ptr<DatabaseInterface> mydb = DatabaseFactory::create("CCDB");
+
+	auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
+
+  	ccdb->connect(ccdbport.c_str(), "", "", "");
 
 	//Read the file and the list of plots with entries
 	TFile *infile=new TFile(filepath.c_str());
@@ -175,6 +198,26 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
 	hSummary3->SetTitle(Form("Lane Status Flag WARNING, %s",filepath.substr(filepath.find("from"), filepath.find("_w_")-filepath.find("from")).c_str()));
 	hSummary3->Draw("colz");
 	SetCommonAxis(hSummary3);
+
+	if(ccdb_upload){
+	string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
+	canvas.SetName("Summary_Lane_Status_Flag_ERROR");
+	auto mo_err= std::make_shared<o2::quality_control::core::MonitorObject>(&canvas, TaskName, TaskClass, DetectorName,1,Runperiod);
+	mo_err->setIsOwner(false);
+	ccdb->storeMO(mo_err);
+
+	canvas12.SetName("Summary_Lane_Status_Flag_FAULT");
+        auto mo_fault= std::make_shared<o2::quality_control::core::MonitorObject>(&canvas12, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mo_fault->setIsOwner(false);
+        ccdb->storeMO(mo_fault);
+
+        canvas13.SetName("Summary_Lane_Status_Flag_WARNING");
+        auto mo_warn= std::make_shared<o2::quality_control::core::MonitorObject>(&canvas13, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mo_warn->setIsOwner(false);
+        ccdb->storeMO(mo_warn);
+			}
+
+
 
 	canvas.SaveAs(Form("../Plots/LaneStatusFlag_%s.pdf[", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 	canvas.SaveAs(Form("../Plots/LaneStatusFlag_%s.pdf", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
@@ -278,7 +321,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
 	for(int iLayer=0; iLayer<NLayer; iLayer++){
 		int tempstave = nstave[iLayer];
 		legLayer[iLayer] = new TLegend(0.904, 0.197,0.997,0.898);
-		legLayer[iLayer]->SetHeader(Form("Layer%d Stave",iLayer));
+	//	legLayer[iLayer]->SetHeader(Form("Layer%d Stave",iLayer));
+		legLayer[iLayer]->SetTextSize(0.05);
 		if(iLayer>3)legLayer[iLayer]->SetNColumns(2);
 		for(int iStave=0; iStave<tempstave; iStave++){
 			if(iLayer==0)legLayer[iLayer]->AddEntry(grt_L0[0][iStave], Form(" %d",iStave),"p");
@@ -298,7 +342,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
 				hblank[iStatus][iLayer]->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers1[runnumbers1.size()-1-ir])));//runnumbers1 is a descending order
 
 			//hblank[iStatus][iLayer]->GetYaxis()->SetRangeUser(1, 10*max7[iStatus][iLayer]);//for total number of errors
-			hblank[iStatus][iLayer]->GetYaxis()->SetRangeUser(1, 28);//for number of nonzero lanes in each FEEID
+			hblank[iStatus][iLayer]->GetYaxis()->SetRangeUser(0, 28);//for number of nonzero lanes in each FEEID
 			hblank[iStatus][iLayer]->GetXaxis()->SetTitleOffset(2.8);
 			ctrend2[iStatus][iLayer]= new TCanvas();
 			ctrend2[iStatus][iLayer]->cd();
@@ -309,20 +353,29 @@ void DoAnalysis(string filepath, const int nChips, string skipruns){
 			hblank[iStatus][iLayer]->Draw();
 			//gPad->SetLogy();//for total number of errors
 			gPad->SetGridx();
-			if(iLayer==0){for(int iStave=0; iStave<nstave[0]; iStave++)grt_L0[iStatus][iStave]->Draw("P");}
-			if(iLayer==1){for(int iStave=0; iStave<nstave[1]; iStave++)grt_L1[iStatus][iStave]->Draw("P");}
-			if(iLayer==2){for(int iStave=0; iStave<nstave[2]; iStave++)grt_L2[iStatus][iStave]->Draw("P");}
-			if(iLayer==3){for(int iStave=0; iStave<nstave[3]; iStave++)grt_L3[iStatus][iStave]->Draw("P");}
-			if(iLayer==4){for(int iStave=0; iStave<nstave[4]; iStave++)grt_L4[iStatus][iStave]->Draw("P");}
-			if(iLayer==5){for(int iStave=0; iStave<nstave[5]; iStave++)grt_L5[iStatus][iStave]->Draw("P");}
-			if(iLayer==6){for(int iStave=0; iStave<nstave[6]; iStave++)grt_L6[iStatus][iStave]->Draw("P");}
+			
+			if(iLayer==0){for(int iStave=0; iStave<nstave[0]; iStave++){grt_L0[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L0[iStatus][iStave]->Draw("P");}}
+			if(iLayer==1){for(int iStave=0; iStave<nstave[1]; iStave++){grt_L1[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L1[iStatus][iStave]->Draw("P");}}
+			if(iLayer==2){for(int iStave=0; iStave<nstave[2]; iStave++){grt_L2[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L2[iStatus][iStave]->Draw("P");}}
+			if(iLayer==3){for(int iStave=0; iStave<nstave[3]; iStave++){grt_L3[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L3[iStatus][iStave]->Draw("P");}}
+			if(iLayer==4){for(int iStave=0; iStave<nstave[4]; iStave++){grt_L4[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L4[iStatus][iStave]->Draw("P");}}
+			if(iLayer==5){for(int iStave=0; iStave<nstave[5]; iStave++){grt_L5[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L5[iStatus][iStave]->Draw("P");}}
+			if(iLayer==6){for(int iStave=0; iStave<nstave[6]; iStave++){grt_L6[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L6[iStatus][iStave]->Draw("P");}}
 			legLayer[iLayer]->Draw();
+	if(ccdb_upload){
+			string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
+			ctrend2[iStatus][iLayer]->SetName(Form("Layer%d_Status_%s",iLayer,StatusKind[iStatus].Data()));
+        		auto mo= std::make_shared<o2::quality_control::core::MonitorObject>(ctrend2[iStatus][iLayer], TaskName+Form("/Status_%s",StatusKind[iStatus].Data()), TaskClass, DetectorName,1,Runperiod);
+        		mo->setIsOwner(false);
+        		ccdb->storeMO(mo);	
+			}	
 			if(iStatus==0 && iLayer==0) ctrend2[iStatus][iLayer]->SaveAs(Form("../Plots/LaneStatusFlag_%s.pdf[", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 			ctrend2[iStatus][iLayer]->SaveAs(Form("../Plots/LaneStatusFlag_%s.pdf", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 			if(iStatus==NStatus-1&&iLayer==NLayer-1)ctrend2[iStatus][iLayer]->SaveAs(Form("../Plots/LaneStatusFlag_%s.pdf]", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 		}//iLayer
 	}//iStatus
-
+ 
+	ccdb->disconnect();
 }
 
 void SetCommonAxis(TH2D *hSummary){
