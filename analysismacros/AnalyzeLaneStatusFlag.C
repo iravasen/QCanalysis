@@ -353,13 +353,14 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
 			hblank[iStatus][iLayer]->Draw();
 			//gPad->SetLogy();//for total number of errors
 			gPad->SetGridx();
-			if(iLayer==0){for(int iStave=0; iStave<nstave[0]; iStave++)grt_L0[iStatus][iStave]->Draw("P");}
-			if(iLayer==1){for(int iStave=0; iStave<nstave[1]; iStave++)grt_L1[iStatus][iStave]->Draw("P");}
-			if(iLayer==2){for(int iStave=0; iStave<nstave[2]; iStave++)grt_L2[iStatus][iStave]->Draw("P");}
-			if(iLayer==3){for(int iStave=0; iStave<nstave[3]; iStave++)grt_L3[iStatus][iStave]->Draw("P");}
-			if(iLayer==4){for(int iStave=0; iStave<nstave[4]; iStave++)grt_L4[iStatus][iStave]->Draw("P");}
-			if(iLayer==5){for(int iStave=0; iStave<nstave[5]; iStave++)grt_L5[iStatus][iStave]->Draw("P");}
-			if(iLayer==6){for(int iStave=0; iStave<nstave[6]; iStave++)grt_L6[iStatus][iStave]->Draw("P");}
+			
+			if(iLayer==0){for(int iStave=0; iStave<nstave[0]; iStave++){grt_L0[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L0[iStatus][iStave]->Draw("P");}}
+			if(iLayer==1){for(int iStave=0; iStave<nstave[1]; iStave++){grt_L1[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L1[iStatus][iStave]->Draw("P");}}
+			if(iLayer==2){for(int iStave=0; iStave<nstave[2]; iStave++){grt_L2[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L2[iStatus][iStave]->Draw("P");}}
+			if(iLayer==3){for(int iStave=0; iStave<nstave[3]; iStave++){grt_L3[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L3[iStatus][iStave]->Draw("P");}}
+			if(iLayer==4){for(int iStave=0; iStave<nstave[4]; iStave++){grt_L4[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L4[iStatus][iStave]->Draw("P");}}
+			if(iLayer==5){for(int iStave=0; iStave<nstave[5]; iStave++){grt_L5[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L5[iStatus][iStave]->Draw("P");}}
+			if(iLayer==6){for(int iStave=0; iStave<nstave[6]; iStave++){grt_L6[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L6[iStatus][iStave]->Draw("P");}}
 			legLayer[iLayer]->Draw();
 	if(ccdb_upload){
 			string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
