@@ -46,7 +46,7 @@ todo(){
        root -l -b -q MakeDeadPixelMap.C++
        remove ;;
     13) echo -e "\n\e[32m=> Starting analysis of the lane status flags for all runs\e[39m"
-       root -l -b -q AnalyzeLaneStatusFlgFEEPost.C++
+       root -l -b -q AnalyzeLaneStatusFlag.C++
        remove ;;
     *) echo -e "Invalid option \n"
        echo -e "Retype an option \c"
