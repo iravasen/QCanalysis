@@ -77,7 +77,7 @@ if(ccdb_upload)SetTaskName(__func__);
 void SetStyle(TGraph *h, Int_t col, Style_t mkr){
 	h->SetLineColor(col);
 	h->SetMarkerStyle(mkr);
-	h->SetMarkerSize(1.5);
+	h->SetMarkerSize(1.4);
 	h->SetMarkerColor(col);
 	//h->SetFillStyle(0);
 	//h->SetFillColorAlpha(col,0.8);
@@ -280,10 +280,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
 	TGraph *grt_L4[NStatus][nstave[4]];
 	TGraph *grt_L5[NStatus][nstave[5]];
 	TGraph *grt_L6[NStatus][nstave[6]];
-	double max7[NStatus][NLayer];
 	for(int iStatus=0; iStatus<NStatus; iStatus++){
 		for(int iLayer=0; iLayer<NLayer; iLayer++){
-			max7[iStatus][iLayer] = 1;
 			for(int iStave=0; iStave<nstave[iLayer]; iStave++){
 				if(iLayer==0)grt_L0[iStatus][iStave] = new TGraph();
 				if(iLayer==1)grt_L1[iStatus][iStave] = new TGraph();
@@ -300,16 +298,16 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
 				if(iLayer==5)SetStyle(grt_L5[iStatus][iStave], col[iStave%10], 24+iStave/10); 
 				if(iLayer==6)SetStyle(grt_L6[iStatus][iStave], col[iStave%10], 24+iStave/10); 
 				for(int iRun=0; iRun<NRun; iRun++){
-					if(iLayer==0)grt_L0[iStatus][iStave]->SetPoint(iRun, iRun, hrebin[iStatus][iRun][iLayer]->GetBinContent(iStave+1));
-					if(iLayer==1)grt_L1[iStatus][iStave]->SetPoint(iRun, iRun, hrebin[iStatus][iRun][iLayer]->GetBinContent(iStave+1));
-					if(iLayer==2)grt_L2[iStatus][iStave]->SetPoint(iRun, iRun, hrebin[iStatus][iRun][iLayer]->GetBinContent(iStave+1));
-					if(iLayer==3)grt_L3[iStatus][iStave]->SetPoint(iRun, iRun, hrebin[iStatus][iRun][iLayer]->GetBinContent(iStave+1));
-					if(iLayer==4)grt_L4[iStatus][iStave]->SetPoint(iRun, iRun, hrebin[iStatus][iRun][iLayer]->GetBinContent(iStave+1));
-					if(iLayer==5)grt_L5[iStatus][iStave]->SetPoint(iRun, iRun, hrebin[iStatus][iRun][iLayer]->GetBinContent(iStave+1));
-					if(iLayer==6)grt_L6[iStatus][iStave]->SetPoint(iRun, iRun, hrebin[iStatus][iRun][iLayer]->GetBinContent(iStave+1));
-					double temp1 = hrebin[iStatus][iRun][iLayer]->GetBinContent(iStave+1);
-					if(temp1>0)cout<<"istatus"<<iStatus<<" irun"<<iRun<<" ilayer"<<iLayer<<" istave"<<iStave<<"  val="<<temp1<<endl;
-					if(temp1 > max7[iStatus][iLayer]) max7[iStatus][iLayer] = hrebin[iStatus][iRun][iLayer]->GetBinContent(iStave+1);
+                                        double binc = hrebin[iStatus][iRun][iLayer]->GetBinContent(iStave+1);
+ 					if(binc<1e-15) binc=-20.;
+					if(iLayer==0)grt_L0[iStatus][iStave]->SetPoint(iRun, iRun, binc);
+					if(iLayer==1)grt_L1[iStatus][iStave]->SetPoint(iRun, iRun, binc);
+					if(iLayer==2)grt_L2[iStatus][iStave]->SetPoint(iRun, iRun, binc);
+					if(iLayer==3)grt_L3[iStatus][iStave]->SetPoint(iRun, iRun, binc);
+					if(iLayer==4)grt_L4[iStatus][iStave]->SetPoint(iRun, iRun, binc);
+					if(iLayer==5)grt_L5[iStatus][iStave]->SetPoint(iRun, iRun, binc);
+					if(iLayer==6)grt_L6[iStatus][iStave]->SetPoint(iRun, iRun, binc);
+					cout<<"istatus"<<iStatus<<" irun"<<iRun<<" ilayer"<<iLayer<<" istave"<<iStave<<"  val="<<binc<<endl;
 				}
 			}
 		}
@@ -322,7 +320,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
 		int tempstave = nstave[iLayer];
 		legLayer[iLayer] = new TLegend(0.904, 0.197,0.997,0.898);
 	//	legLayer[iLayer]->SetHeader(Form("Layer%d Stave",iLayer));
-		legLayer[iLayer]->SetTextSize(0.05);
+		legLayer[iLayer]->SetTextSize(0.04);
 		if(iLayer>3)legLayer[iLayer]->SetNColumns(2);
 		for(int iStave=0; iStave<tempstave; iStave++){
 			if(iLayer==0)legLayer[iLayer]->AddEntry(grt_L0[0][iStave], Form(" %d",iStave),"p");
@@ -341,8 +339,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
 			for(int ir=0; ir<(int)runnumbers1.size(); ir++)
 				hblank[iStatus][iLayer]->GetXaxis()->SetBinLabel(ir+1, Form("run%06d", stoi(runnumbers1[runnumbers1.size()-1-ir])));//runnumbers1 is a descending order
 
-			//hblank[iStatus][iLayer]->GetYaxis()->SetRangeUser(1, 10*max7[iStatus][iLayer]);//for total number of errors
-			hblank[iStatus][iLayer]->GetYaxis()->SetRangeUser(0, 28);//for number of nonzero lanes in each FEEID
+			hblank[iStatus][iLayer]->GetYaxis()->SetRangeUser(0, 30);//for number of nonzero lanes in each FEEID
 			hblank[iStatus][iLayer]->GetXaxis()->SetTitleOffset(2.8);
 			ctrend2[iStatus][iLayer]= new TCanvas();
 			ctrend2[iStatus][iLayer]->cd();
@@ -369,7 +366,6 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
         		mo->setIsOwner(false);
         		ccdb->storeMO(mo);	
 			}	
-			if(iStatus==0 && iLayer==0) ctrend2[iStatus][iLayer]->SaveAs(Form("../Plots/LaneStatusFlag_%s.pdf[", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 			ctrend2[iStatus][iLayer]->SaveAs(Form("../Plots/LaneStatusFlag_%s.pdf", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 			if(iStatus==NStatus-1&&iLayer==NLayer-1)ctrend2[iStatus][iLayer]->SaveAs(Form("../Plots/LaneStatusFlag_%s.pdf]", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 		}//iLayer
