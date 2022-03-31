@@ -319,10 +319,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
   }
 
   Bool_t isFirstLayer =1;
-  for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){ //start from the bottom in order to start with the oldest run
-    //cout << "\nihist " << ihist << endl;    
+  for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){ //start from the bottom in order to start with the oldest run   
     if(runnumbers[ihist].find(std::to_string(refrun))!=string::npos){
-      //cout << "reference run " << endl;
       if(ihist>0){// in case ref run is the first into the list of runs
         if(stavenums[ihist-1]!=stavenums[ihist]){
           irun=0;
@@ -336,19 +334,13 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
     if (nLayersInput==1) ilayer = 0;
     istave = stoi(stavenums[ihist]);
 
-    //cout << "ilayer " << ilayer <<  " istave " << istave << " runnumber " << stoi(runnumbers[ihist]) << " irun " << irun << endl;
-    //    if(!hmaps[ihist]->GetEntries()) continue; // do not compare ref run with empty run (= empty maps)
-
     noisypix.push_back(CompareTwoRuns(hmaps[posrefrun[istave]], hmaps[ihist]));
     noisypix[noisypix.size()-1][3] = stol(stavenums[ihist]);
     noisypix[noisypix.size()-1][4] = stol(laynums[ihist]);
     first[ilayer][irun]+=noisypix[noisypix.size()-1][0];
     second[ilayer][irun]+=noisypix[noisypix.size()-1][1];
     both[ilayer][irun]+=noisypix[noisypix.size()-1][2];
-    //    cout <<  first[ilayer][irun] << " " <<  second[ilayer][irun] << " " << both[ilayer][irun] << endl;
     irun++;
-
-    //cout<<noisypix[noisypix.size()-1][0]<<"  "<<noisypix[noisypix.size()-1][1]<<"  "<<noisypix[noisypix.size()-1][2]<<"  "<<noisypix[noisypix.size()-1][3]<<endl;
 
     if(stavenums[ihist]=="0"){
       runlabel[stoi(laynums[ihist])].push_back(stoi(runnumbers[ihist]));
@@ -360,16 +352,6 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
       }
     }
   }//end loop on histograms
-
-  /*
-  cout << "Info on run label " << endl;
-  for (int l =0; l<7 ; l++){
-    cout << "Layer " << l << " " <<  (int)runlabel[l].size() << endl;
-    for (Int_t i=0; i<(int)runlabel[l].size(); i++){
-      cout << runlabel[l][i] << endl;
-    }
-  }
-  */
 
   //Make plot for each layer and for each stave in the root file
   TGraphErrors *ge_nref[nLayers];
@@ -383,12 +365,12 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
   double xshift = 3.;
   double max[nLayers];
   double min[nLayers];
+  double scalingFactor = 1e2;
 
   for(int ilay=0; ilay<nLayers; ilay++){
     if (nLayers==1) ilayEff = stoi(laynums[0]);
     else if (IBorOB==1) ilayEff = ilay + 3 ;
     else ilayEff = ilay;
-    //    cout << " ilay " << ilay << " ilayEff " << ilayEff << endl;
 
     ge_nref[ilay] = new TGraphErrors();
     ge_n2[ilay] = new TGraphErrors();
@@ -399,21 +381,20 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
 
     for(int ir=0; ir<nRunsB[ilayEff]-1; ir++){//first the older data and last the most recent
       //first couple of bar on the left
-      //int ipoint = (int)noisypix.size()-icomp-1;
       if(!ir) xshift=1.;
       else xshift = 3.;
-      ge_nref[ilay]->SetPoint(ir, ir*xshift, (double)both[ilay][ir]/2.+(double)first[ilay][ir]/2.);
-      ge_nref[ilay]->SetPointError(ir, 0.5, (double)first[ilay][ir]/2.);
+      ge_nref[ilay]->SetPoint(ir, ir*xshift, (double)both[ilay][ir]/2.+((double)first[ilay][ir]/2.) / scalingFactor);
+      ge_nref[ilay]->SetPointError(ir, 0.5, ((double)first[ilay][ir]/2.) / scalingFactor);
       ge_ncom1[ilay]->SetPoint(ir, ir*xshift, 0.);
       ge_ncom1[ilay]->SetPointError(ir, 0.5, (double)both[ilay][ir]/2.);
-      if((double)both[ilay][ir]/2.+(double)first[ilay][ir] > max[ilay]) max[ilay] = (double)both[ilay][ir]/2.+(double)first[ilay][ir];
+      if((double)both[ilay][ir]/2.+((double)first[ilay][ir]) / scalingFactor > max[ilay]) max[ilay] = (double)both[ilay][ir]/2.+((double)first[ilay][ir]) / scalingFactor;
 
       //second couple of bar on the right
-      ge_n2[ilay]->SetPoint(ir, ir*xshift+1, -(double)both[ilay][ir]/2.-(double)second[ilay][ir]/2.);
-      ge_n2[ilay]->SetPointError(ir, 0.5, (double)second[ilay][ir]/2.);
+      ge_n2[ilay]->SetPoint(ir, ir*xshift+1, -(double)both[ilay][ir]/2.-((double)second[ilay][ir]/2.) / scalingFactor);
+      ge_n2[ilay]->SetPointError(ir, 0.5, ((double)second[ilay][ir]/2.) / scalingFactor);
       ge_ncom2[ilay]->SetPoint(ir, ir*xshift+1, 0.);
       ge_ncom2[ilay]->SetPointError(ir, 0.5, (double)both[ilay][ir]/2.);
-      if(-(double)both[ilay][ir]/2.-(double)second[ilay][ir] < min[ilay]) min[ilay] = -(double)both[ilay][ir]/2.-(double)second[ilay][ir];
+      if(-(double)both[ilay][ir]/2.-((double)second[ilay][ir]) / scalingFactor < min[ilay]) min[ilay] = -(double)both[ilay][ir]/2.-((double)second[ilay][ir]) / scalingFactor;
     }//end first loop on runs
 
     //Style
@@ -432,7 +413,6 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
     if (nLayers==1) ilayEff = stoi(laynums[0]);
     else if (IBorOB==1) ilayEff = ilay + 3 ;
     else ilayEff = ilay;
-    //    cout << " ilay " << ilay << " ilayEff " << ilayEff << endl;
     for(int is=nStavesInLayAll[ilayEff]-1; is>=0; is--){
       maxs[ilay][is] = -1.;
       mins[ilay][is] = 1e35;
@@ -443,18 +423,18 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
       for(int ir=0; ir<nRunsB[ilayEff]-1; ir++){//first the older data and last the most recent
         if(!ir) xshift=1.;
         else xshift = 3.;
-        ge_nref_stave[ilay][is]->SetPoint(ir, ir*xshift, (double)noisypix[cnt][2]/2.+(double)noisypix[cnt][0]/2.);
-        ge_nref_stave[ilay][is]->SetPointError(ir, 0.5, (double)noisypix[cnt][0]/2.);
+        ge_nref_stave[ilay][is]->SetPoint(ir, ir*xshift, (double)noisypix[cnt][2]/2.+((double)noisypix[cnt][0]/2.) / scalingFactor);
+        ge_nref_stave[ilay][is]->SetPointError(ir, 0.5, ((double)noisypix[cnt][0]/2.) / scalingFactor);
         ge_ncom1_stave[ilay][is]->SetPoint(ir, ir*xshift, 0.);
         ge_ncom1_stave[ilay][is]->SetPointError(ir, 0.5, (double)noisypix[cnt][2]/2.);
-        if((double)noisypix[cnt][2]/2.+(double)noisypix[cnt][0] > maxs[ilay][is]) maxs[ilay][is] = (double)noisypix[cnt][2]/2.+(double)noisypix[cnt][0];
+        if((double)noisypix[cnt][2]/2.+((double)noisypix[cnt][0]) / scalingFactor > maxs[ilay][is]) maxs[ilay][is] = (double)noisypix[cnt][2]/2.+((double)noisypix[cnt][0]) / scalingFactor;
 
         //second couple of bar on the right
-        ge_n2_stave[ilay][is]->SetPoint(ir, ir*xshift+1, -(double)noisypix[cnt][2]/2.-(double)noisypix[cnt][1]/2.);
-        ge_n2_stave[ilay][is]->SetPointError(ir, 0.5, (double)noisypix[cnt][1]/2.);
+        ge_n2_stave[ilay][is]->SetPoint(ir, ir*xshift+1, -(double)noisypix[cnt][2]/2.-((double)noisypix[cnt][1]/2.) / scalingFactor);
+        ge_n2_stave[ilay][is]->SetPointError(ir, 0.5, ((double)noisypix[cnt][1]/2.) / scalingFactor);
         ge_ncom2_stave[ilay][is]->SetPoint(ir, ir*xshift+1, 0.);
         ge_ncom2_stave[ilay][is]->SetPointError(ir, 0.5, (double)noisypix[cnt][2]/2.);
-        if(-(double)noisypix[cnt][2]/2.-(double)noisypix[cnt][1] < mins[ilay][is]) mins[ilay][is] = -(double)noisypix[cnt][2]/2.-(double)noisypix[cnt][1];
+        if(-(double)noisypix[cnt][2]/2.-((double)noisypix[cnt][1]) / scalingFactor < mins[ilay][is]) mins[ilay][is] = -(double)noisypix[cnt][2]/2.-((double)noisypix[cnt][1]) / scalingFactor;
         cnt++;
       }
       SetStyle(ge_nref_stave[ilay][is], kBlue);
@@ -468,8 +448,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
   TLegend *leg = new TLegend(0.876,0.176, 0.994, 0.902);
   leg->SetLineColor(0);
   leg->SetTextFont(42);
-  leg->AddEntry(ge_nref[0], "#splitline{#noisy pix}{ref. run only}", "f");
-  leg->AddEntry(ge_n2[0], "#splitline{#noisy pix}{2nd run only}", "f");
+  leg->AddEntry(ge_nref[0], Form("#splitline{#noisy pix}{#splitline{ref. run only}{#divide %.2f}}", scalingFactor), "f");
+  leg->AddEntry(ge_n2[0], Form("#splitline{#noisy pix}{#splitline{2nd run only}{#divide %.2f}}",scalingFactor), "f");
   leg->AddEntry(ge_ncom1[0], "#splitline{#noisy pix}{both}");
 
   //Draw plot for each layer
@@ -477,7 +457,6 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
     if (nLayers==1) ilayEff = stoi(laynums[0]);
     else if (IBorOB==1) ilayEff = ilay + 3 ;
     else ilayEff = ilay;
-    //    cout << "ilay " << ilay << " i layEff " << ilayEff << endl;
     TCanvas *canvas = new TCanvas(Form("mycanvas_%d",ilayEff), Form("mycanvas_%d",ilayEff), 1300, 800);
     canvas->SetMargin(0.08, 0.1271, 0.1759, 0.0996);
     canvas->cd();
@@ -496,14 +475,12 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
     //canvas->SetLogy();
     hfake->SetTitle(Form("Layer-%i - %s%06ld compared to all",ilayEff, filepath.find("run")==string::npos? "":"run",refrun));
    
-    ge_nref[ilay]->Draw("P E2 same");
+    ge_nref[ilay]->Draw("E2 same");
     ge_ncom1[ilay]->Draw("E2 same");
     ge_ncom2[ilay]->Draw("E2 same");
     ge_n2[ilay]->Draw("E2 same");
     hfake->GetYaxis()->SetRangeUser(min[ilay]+0.1*min[ilay], max[ilay]+0.1*max[ilay]);
-    //hfake->GetYaxis()->SetLabelColor(kWhite);
     hfake->GetYaxis()->SetTickLength(0.005);
-    //    hfake->GetYaxis()->SetMaxDigits(4);
     TLine *lineref = new TLine(-0.5, 0, x2+0.5, 0);
     lineref->SetLineColor(kGray-1);
     lineref->SetLineStyle(2);
@@ -553,16 +530,13 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
         counter++;
       }
       hfake->Draw();
-      //canvas->SetLogy();
       hfake->SetTitle(Form("Layer-%i - Stave-%d - %s%06ld compared to all", ilayEff, is, filepath.find("run")==string::npos? "":"run",refrun));
-      ge_nref_stave[ilay][is]->Draw("P E2 same");
+      ge_nref_stave[ilay][is]->Draw("E2 same");
       ge_ncom1_stave[ilay][is]->Draw("E2 same");
       ge_ncom2_stave[ilay][is]->Draw("E2 same");
       ge_n2_stave[ilay][is]->Draw("E2 same");
       hfake->GetYaxis()->SetRangeUser(mins[ilay][is]+0.1*mins[ilay][is], maxs[ilay][is]+0.1*maxs[ilay][is]);
-      //hfake->GetYaxis()->SetLabelColor(kWhite);
       hfake->GetYaxis()->SetTickLength(0.005);
-      //      hfake->GetYaxis()->SetMaxDigits(4);
       TLine *lineref = new TLine(-0.5, 0, x2+0.5, 0);
       lineref->SetLineColor(kGray-1);
       lineref->SetLineStyle(2);
@@ -573,11 +547,10 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
       if (IBorOB==0) LayerTitle = "AllLayersIB_";
       else if (IBorOB==1) LayerTitle = "AllLayersOB_";
       else {
-	//	if (nLayers==1) LayerTitle = Form("Layer%s_",laynums[ilay*nRuns*nStavesInLayAll[ilay]].c_str());
 	if (nLayers==1) LayerTitle = Form("Layer%i_",ilayEff);
 	else LayerTitle = "AllLayers_";
       }
-      //      nLayers==1 ? Form("Layer%s_",laynums[ilay*nRuns*nStavesInLay[ilay]].c_str()) : "AllLayers_"
+      
       if(ccdb_upload){
 	canvas->SetName(Form("Layer%d-Stave%d_NoisyPixComparison",ilay,is));
 	auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%d",ilay),TaskClass, DetectorName,1,Runperiod);
@@ -585,8 +558,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
         mo2->setIsOwner(false);
         ccdb->storeMO(mo2);
 
-	}
-	if(!ilay && !is) canvas->SaveAs(Form("../Plots/%sAllStaves_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf[", LayerTitle.Data(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
+      }
+      if(!ilay && !is) canvas->SaveAs(Form("../Plots/%sAllStaves_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf[", LayerTitle.Data(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
       canvas->SaveAs(Form("../Plots/%sAllStaves_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf", LayerTitle.Data() ,filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
       if(ilay==nLayers-1 && is==nStavesInLayAll[ilayEff]-1) canvas->SaveAs(Form("../Plots/%sAllStaves_NoisyPixComparison_%s%ld_compared_to_run_%s.pdf]", LayerTitle.Data(),filepath.find("run")==string::npos? "":"run",refrun, filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 
@@ -643,11 +616,6 @@ std::array<long int,5> CompareTwoRuns(THnSparse *href, THnSparse *h2){
     if(!isfound && binc2>2)
       noisypix[1]++; //noisy only in second run
   }
-
-  /*cout<<"Stave/run: "<<h2->GetName()<<endl;
-  cout<<"Ref run:  "<<noisypix[0]<<endl;
-  cout<<"Sec run:  "<<noisypix[1]<<endl;
-  cout<<"Both run: "<<noisypix[2]<<endl;*/
 
   return noisypix;
 }
