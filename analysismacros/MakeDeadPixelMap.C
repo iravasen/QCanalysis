@@ -117,12 +117,17 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
       hHotMap->DrawCopy("P X+");
 	if(ccdb_upload){
 	string Runperiod = Form("from_run%s_to_run%s",runNumbers.back().c_str(),runNumbers[0].c_str());
+	hHotMap->SetTitle(Form("Dead pixel map of Layer%i Stave %i",ilay,istave));
+	hHotMap->GetXaxis()->SetLabelOffset(0.003);
+	hHotMap->SetTitleSize(0.05);		
+	hHotMap->GetYaxis()->SetLabelSize(0.11);
 	auto mo = std::make_shared<o2::quality_control::core::MonitorObject>(hHotMap, TaskName+Form("/Layer%d",ilay), TaskClass, DetectorName,1,Runperiod);
        mo->setIsOwner(false);
        ccdb->storeMO(mo);
 		}
 
-
+	hHotMap->SetTitle(" ");
+	hHotMap->GetXaxis()->SetLabelOffset(999);
       TLatex lat;
       lat.SetTextAngle(90);
       lat.SetNDC();

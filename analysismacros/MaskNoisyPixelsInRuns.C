@@ -683,11 +683,17 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
 	if(ccdb_upload){
 	  string Runperiod = Form("%s",filepath_hit.substr(filepath_hit.find("from"),27).c_str());
 	  hHotMap[ilay][istave]->SetName(Form("FHR_Hitmap_Layer%d_Stave_%d",ilay,istave));
+	  hHotMap[ilay][istave]->GetXaxis()->SetLabelOffset(0.003);
+          hHotMap[ilay][istave]->SetTitle(Form("Hitmap of Layer %d Stave %d",ilay,istave));
+	  hHotMap[ilay][istave]->SetTitleSize(0.05);
+	   hHotMap[ilay][istave]->GetYaxis()->SetLabelSize(0.11);
 	  auto mohp= std::make_shared<o2::quality_control::core::MonitorObject>(hHotMap[ilay][istave], TaskName+Form("/Layer%d",ilay),TaskClass, DetectorName,1,Runperiod);
 	  mohp->setIsOwner(false);
 	  ccdb->storeMO(mohp);
 
 	}
+	hHotMap[ilay][istave]->GetYaxis()->SetLabelSize(0.13);
+	hHotMap[ilay][istave]->SetTitle("");
 	TLatex lat;
 	lat.SetTextAngle(90);
 	lat.SetNDC();
@@ -806,7 +812,7 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
       double max = -1.;
       int x=0,y=0;
       long int binwithmax = 0;
-  
+  if(!hmapclonecontent.size()) continue;
       x = hmapclonecontent[iter][1];
       y = hmapclonecontent[iter][2];
       if (isHotPixelMapDrawn){
