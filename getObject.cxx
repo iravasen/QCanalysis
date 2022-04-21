@@ -1216,7 +1216,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
 
       //MonitorObject *monitor = ccdb->retrieve(taskname, objname, timestamps[i]);
 
-      auto monitor = ccdb->retrieveMO(Form("qc/ITS/MO/ITS%sTask2B",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw"), objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
+      auto monitor = ccdb->retrieveMO(Form("ITS/MO/ITS%sTask2B",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw"), objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
 
       if (monitor == nullptr) {
         cerr << myname << ": failed to get MonitorObject for timestamp: " << timestamps[i]<< endl;
@@ -1246,7 +1246,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
 
     //MonitorObject *monitor = ccdb->retrieve(taskname, objname, timestamps[i]);
 
-    auto monitor = ccdb->retrieveMO(taskname, objname, timestamps[i]);
+    auto monitor = ccdb->retrieveMO(taskname.substr(3), objname, timestamps[i]);
 
     if (monitor == nullptr) {
       cerr << myname << ": failed to get MonitorObject for timestamp: " << timestamps[i]<< endl;
@@ -1260,7 +1260,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
     TObject *obj2 = nullptr;
     if(/*objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos
        || */objname.find("Layer2/Threshold_Vs_Chip_and_Stave")!=string::npos || objname.find("Layer2/DeadPixel_Vs_Chip_and_Stave")!=string::npos){
-      auto monitor2 = ccdb->retrieveMO(Form("qc/ITS/MO/ITS%sTask2B",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw"), objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
+      auto monitor2 = ccdb->retrieveMO(Form("ITS/MO/ITS%sTask2B",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw"), objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
       obj2 = monitor2->getObject();
       monitor2->setIsOwner(false);
     }
