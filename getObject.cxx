@@ -450,8 +450,8 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   default: break;
   }
 
-  } 
-  
+  }
+
   //  cin>>layernum;
 
   //taskname
@@ -562,7 +562,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   string run1="0", run2="0";
   time_t ts_start=0, ts_end=0;
   vector<string> nums; //can contain selected run interval or timestamp interval
-  switch(choice){
+  switch(choice){ //@ Specify run numbers
     case 1: {
       cout<<"\n"<<"Run interval [just run number, NO ZEROs in front]"<<endl;
       cout<<"Enter first  run: ";
@@ -617,13 +617,13 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   }
 
   //Decide how many different elements are needed
-  int nListElements = 2;
+  int nListElements = 2; //@ No idea what it is
   switch(opt){
     case 1: nListElements = 2; break;
     case 2: nListElements = 3; break;
     default: nListElements = 2;
   }
-  if(adderrordata)
+  if(adderrordata) // @ if errors plots are attached
     nListElements+=2;
 
   //CCDB api initialization
@@ -632,7 +632,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
 
   //Output file
   string layername;
-  if(layernum==-1){
+  if(layernum==-1){ //@ layernum == -1 means all layers
     if(IBorOB==0)    layername = "_all-IB-layers";
     else if (IBorOB==1) layername = "_all-OB-layers";
     else layername = "_all-layers";
@@ -641,13 +641,13 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   else
     layername = Form("_Layer%d",layernum);
 
-  int layernumEff=layernum;
+  int layernumEff=layernum; //@
   if(IBorOB==1) layernumEff=layernum+1;
 
-  int ilayMin = 0;
+  int ilayMin = 0; // @ 3 layers of IB
   int ilayMax = 2;
   if (IBorOB==1) {
-    ilayMin = 3;
+    ilayMin = 3; // @ 3 layers of OB
     ilayMax =6;
   }
   else if (IBorOB==2) {
@@ -667,8 +667,8 @@ bool RunExpert(auto *ccdb, string myname, int opt){
 
   //Download depending on the option (opt)
   switch(opt){
-    case 1: {
-      if(layernum>=0){
+    case 1: {//@FHR
+      if(layernum>=0){ //@ if "layernum" is negative then it means "all layers". If it is positive then specific layers are chosen
         for(int il=0; il<nListElements; il++){//loop on lists
           switch(il){
             case 0: {
@@ -715,12 +715,13 @@ bool RunExpert(auto *ccdb, string myname, int opt){
         }//end loop on lists
       }//end if layernum>=0
 
-      else if(layernum==-1){
+      else if(layernum==-1){ //@ all layers
+        cout << "nListElements: " << nListElements << endl; //@ nListElements = 2
         for(int il=0; il<nListElements; il++){//loop on lists
           switch(il){
             case 0: {
-              for(int ilay=ilayMin; ilay<=ilayMax; ilay++){
-		int ilayEff=ilay;
+              for(int ilay=ilayMin; ilay<=ilayMax; ilay++){ // @ loop over all layers in specified part (IB or OB)
+                 int ilayEff=ilay;
 		if (IBorOB==1) ilayEff=ilay+1;
 		else if (IBorOB==2 && ilay>=3) ilayEff=ilay+1;
                 string objname = Form("Occupancy/Layer%d/Layer%dChipStave",ilay,ilay);
@@ -728,7 +729,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
                 Download(choice, ccdb, ccdbApi, myname, taskname[ilayEff], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay);
               }
               break;
-            }
+           } //@ end of case 0
 
             case 1: {
               for(int ilay=ilayMin; ilay<=ilayMax; ilay++){
@@ -893,12 +894,15 @@ case 4: { //FEE
       break;
     }//end of case 4
 
+    //@ Presumably here I should add the case 5 with clusters
+    //@ ./getObject expert Number -> run script with "myName = expert" and "opt = Number"
+
  }//end switch
   outputfile->Close();
   delete outputfile;
 
   return 1;
-}
+} //Function "Expert mode"
 
 //
 // Return run list of GOOD runs = runs in all CCDB paths for TH2
@@ -1270,7 +1274,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
     TH1 *h1s = 0x0;
     THnSparse *hSp = 0x0;
     TTree *tree;
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //AngularDistribution
     if(objname.find("AngularDistribution")!=string::npos){
       string histname = "";
@@ -1303,7 +1307,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
       outputfile->cd();
       h1s->Write();
     }
-    
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //PhiDistribution
     if(objname.find("PhiDistribution")!=string::npos){

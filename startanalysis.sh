@@ -48,6 +48,12 @@ todo(){
     13) echo -e "\n\e[32m=> Starting analysis of the lane status flags for all runs\e[39m"
        root -l -b -q AnalyzeLaneStatusFlag.C++
        remove ;;
+    14) echo -e "\n\e[32m=> Starting average cluster size analysis run by run\e[39m"
+       root -l -b -q AnalyzeLayerAverageClusterSize.C++
+       remove ;;
+    15) echo -e "\n\e[32m=> Starting cluster occupation analysis run by run\e[39m"
+       root -l -b -q AnalyzeLayerClusterOccupancy.C++
+       remove ;;
     *) echo -e "Invalid option \n"
        echo -e "Retype an option \c"
        todo ;;
@@ -74,6 +80,10 @@ analysismenu(){
   echo -e "\n"
 	echo "[Analyses on FEE]"
 	echo -e "\t 13. FEE Post Processing Offline: Lane Status Flags (ERROR,FAULT,WARNING)\e[39m"
+  echo -e "\n"
+  echo "[Analyses on Cluster runs]"
+  echo -e "\t 14.  Average cluster size run by run"
+  echo -e "\t 15.  Cluster occupation run by run"
   echo -e "\n"
   echo -e "Enter option \c"
   cd analysismacros
@@ -299,7 +309,8 @@ todooption(){
             echo -e "1. Fake-hit rate runs"
             echo -e "2. Threshold runs\e[39m"
             echo -e "3. TTtre (preliminary!)"
-						echo -e "4. FEE post processing offline: Lane Status Flag"
+				echo -e "4. FEE post processing offline: Lane Status Flag"
+				echo -e "5. Cluster runs"
             echo -e "Enter option \c"
             read downloadoption
             case "$downloadoption" in
@@ -314,9 +325,12 @@ todooption(){
               3) echo -e "\n\e[32m=> Downloading data (TTrees) with noisy pixels\e[39m"
                  ./getObject expert 3
                  echo -e "\n";;
-							4) echo -e "\n\e[32m=> Downloading data for FEE post processing offline (Lane Status Flag) to analyse\e[39m"
-							   ./getObject expert 4
-							   echo -e "\n";;
+				  4) echo -e "\n\e[32m=> Downloading data for FEE post processing offline (Lane Status Flag) to analyse\e[39m"
+					  ./getObject expert 4
+					  echo -e "\n";;
+              5) echo -e "\n\e[32m=> Downloading data for cluster runs to analyse\e[39m"
+      		     ./getObject expert 5
+      			  echo -e "\n";;
               *) echo -e "\n\e[32m=> Option not valid. Rerun the script. \e[39m" ;;
             esac
             ;;
