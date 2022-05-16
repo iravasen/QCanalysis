@@ -35,7 +35,7 @@ TFile *outputfile;
 
 //to which CCDB we have to connect
 // For P2 operations put: ali-qcdb.cern.ch:8083
-string ccdbport = "ali-qcdb.cern.ch:8083";
+string ccdbport = "ali-qcdb-gpn.cern.ch:8083";
 
 
 int main(int argc, char **argv)
@@ -209,7 +209,7 @@ bool RunShifter(auto *ccdb, string myname, int opt){
       cout<<"Timestamp interval selected: "<<runts1[0]<<"-"<<runts2[0]<<endl;
 
       //output file
-      outputfile = new TFile(Form("Data/Output_%s_%s_from_%s%s_to_%s%s%s.root",layername.c_str(), optname.c_str(), suffix.c_str(),runts1[1].c_str(), suffix.c_str(), runts2[1].c_str(), adderrordata? "_w_error_and_trig_data":""), "RECREATE");
+      outputfile = new TFile(Form("Data/Output_%s_%s_from_%s%s_to_%s%s%s.root", layername.c_str(), optname.c_str(), suffix.c_str(), runts1[1].c_str(), suffix.c_str(), runts2[1].c_str(), adderrordata? "_w_error_and_trig_data":""), "RECREATE");
       outputfile->cd();
 
       if(layernum>=0){
@@ -450,8 +450,8 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   default: break;
   }
 
-  } 
-  
+  }
+
   //  cin>>layernum;
 
   //taskname
@@ -892,8 +892,35 @@ case 4: { //FEE
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagWARNING", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
       break;
     }//end of case 4
+    //////////////////////////////////////////////////////////
+    case 5:{ //Clusters
+      if(layernum>=0){
 
+         //Cluster occupation
+         cout<<"\nAll data in "<< Form("qc/ITS/MO/ITSClusterTask/Layer%d/ClusterOccupation", layernum) << " between run" << run1 << " and run" << run2 << " are going to be downloaded." <<endl;
+         Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSClusterTask", Form("Layer%d/ClusterOccupation", layernum), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
+
+         //Average cluster size
+         cout<<"\nAll data in "<< Form("qc/ITS/MO/ITSClusterTask/Layer%d/AverageClusterSize", layernum) << " between run" << run1 << " and run" << run2 << " are going to be downloaded." <<endl;
+         Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSClusterTask", Form("Layer%d/AverageClusterSize", layernum), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
+
+      } else if (layernum == -1){
+
+         for(int ilay = ilayMin; ilay <= ilayMax; ilay++){ // "-1" option corresponds to ALL LAYERS in OB or IB, or even for whole ITS
+
+            //Cluster occupation
+            cout<<"\nAll data in "<< Form("qc/ITS/MO/ITSClusterTask/Layer%d/ClusterOccupation", ilay) << " between run" << run1 << " and run" << run2 << " are going to be downloaded." <<endl;
+            Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSClusterTask", Form("Layer%d/ClusterOccupation", ilay), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay);
+
+            //Average cluster size
+            cout<<"\nAll data in "<< Form("qc/ITS/MO/ITSClusterTask/Layer%d/AverageClusterSize", ilay) << " between run" << run1 << " and run" << run2 << " are going to be downloaded." <<endl;
+            Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSClusterTask", Form("Layer%d/AverageClusterSize", ilay), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay);
+         }
+      }
+      break;
+   }//end of case 5
  }//end switch
+
   outputfile->Close();
   delete outputfile;
 
@@ -1270,7 +1297,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
     TH1 *h1s = 0x0;
     THnSparse *hSp = 0x0;
     TTree *tree;
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //AngularDistribution
     if(objname.find("AngularDistribution")!=string::npos){
       string histname = "";
@@ -1303,7 +1330,7 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
       outputfile->cd();
       h1s->Write();
     }
-    
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //PhiDistribution
     if(objname.find("PhiDistribution")!=string::npos){
@@ -1437,12 +1464,13 @@ bool Download(int choice, auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, 
 //
 string GetOptName(int opt){
   switch(opt){
-    case 1: return "FHRMAPS_HITMAPS";
-    case 2: return "THRMAPS_DEADPIXMAPS";
-//    case 3: return "NOISYPIX_TREE";
-    case 3: return "TrackTask";
-		case 4: return "LaneStatusFlag";
-    default: return "0";
+     case 1: return "FHRMAPS_HITMAPS";
+     case 2: return "THRMAPS_DEADPIXMAPS";
+     // case 3: return "NOISYPIX_TREE";
+     case 3: return "TrackTask";
+     case 4: return "LaneStatusFlag";
+     case 5: return "ClusterTask";
+     default: return "0";
   }
 }
 
