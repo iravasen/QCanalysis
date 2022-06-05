@@ -54,6 +54,9 @@ todo(){
     15) echo -e "\n\e[32m=> Starting cluster occupation analysis run by run\e[39m"
        root -l -b -q AnalyzeLayerClusterOccupancy.C++
        remove ;;
+    16) echo -e "\n\e[32m=> Starting full analysis of track and vertex parameters\e39m"
+       root -l -b -q Track_trending_postprocessing.C++
+       remove ;;
     *) echo -e "Invalid option \n"
        echo -e "Retype an option \c"
        todo ;;
@@ -62,7 +65,7 @@ todo(){
 
 analysismenu(){
   echo -e "\n\e[32m=> Choose the analysis you want to perform \n"
-  echo "[Analyses on Fake-Hit Rate runs]"
+  echo "[Analyses on Fake-Hit Rate]"
   echo -e "\t 1.  Fake-hit rate run by run"
   echo -e "\t 2.  Compare number of noisy pixels between runs"
   echo -e "\t 3.  Fake-hit rate study with hot pixels masking"
@@ -76,14 +79,17 @@ analysismenu(){
   echo -e "\t 9.  Threshold correlation analysis (reference run to be chosen)"
   echo -e "\t 10. Dead-pixels correlation analysis (reference run to be chosen)"
   echo -e "\t 11. Compare number of dead-pixels between runs"
-  echo -e "\t 12. Make dead-pixels map for layer(s)\e[39m"
+  echo -e "\t 12. Make dead-pixels map for layer(s)"
   echo -e "\n"
-	echo "[Analyses on FEE]"
-	echo -e "\t 13. FEE Post Processing Offline: Lane Status Flags (ERROR,FAULT,WARNING)\e[39m"
+  echo "[Analyses on FEE]"
+  echo -e "\t 13. FEE Post Processing Offline: Lane Status Flags (ERROR,FAULT,WARNING)"
   echo -e "\n"
-  echo "[Analyses on Cluster runs]"
+  echo "[Analyses on Clusters]"
   echo -e "\t 14.  Average cluster size run by run"
   echo -e "\t 15.  Cluster occupation run by run"
+  echo -e "\n"
+  echo "[Analyses on Tracks]"
+  echo -e "\t 16.  Full trending of track and vertex parameters\e[39m"
   echo -e "\n"
   echo -e "Enter option \c"
   cd analysismacros
@@ -306,31 +312,34 @@ todooption(){
          1) echo -e "\n\e[32m=> Compiling the software for the database\e[39m"
             make
             echo -e "\n\e[32m=> Choose what to download\n"
-            echo -e "1. Fake-hit rate runs"
-            echo -e "2. Threshold runs\e[39m"
-            echo -e "3. TTtre (preliminary!)"
-				echo -e "4. FEE post processing offline: Lane Status Flag"
-				echo -e "5. Cluster runs"
+            echo -e "1. Fake-hit rate data"
+            echo -e "2. Threshold data"
+            echo -e "3. Track data"
+	    echo -e "4. FEE data"
+	    echo -e "5. Cluster data\e[39m"
             echo -e "Enter option \c"
             read downloadoption
             case "$downloadoption" in
-              1) echo -e "\n\e[32m=> Downloading data for fake-hit rate runs to analyse\e[39m"
+              1) echo -e "\n\e[32m=> Downloading data for fake-hit rate to analyse\e[39m"
                  ./getObject expert 1
                  echo -e "\n"
                  analysismenu ;;
-              2) echo -e "\n\e[32m=> Downloading data for threshold runs to analyse\e[39m"
+              2) echo -e "\n\e[32m=> Downloading data for thresholds to analyse\e[39m"
                  ./getObject expert 2
                  echo -e "\n"
                  analysismenu ;;
-              3) echo -e "\n\e[32m=> Downloading data (TTrees) with noisy pixels\e[39m"
+              3) echo -e "\n\e[32m=> Downloading data for tracks to analyse\e[39m"
                  ./getObject expert 3
-                 echo -e "\n";;
-				  4) echo -e "\n\e[32m=> Downloading data for FEE post processing offline (Lane Status Flag) to analyse\e[39m"
-					  ./getObject expert 4
-					  echo -e "\n";;
-              5) echo -e "\n\e[32m=> Downloading data for cluster runs to analyse\e[39m"
-      		     ./getObject expert 5
-      			  echo -e "\n";;
+                 echo -e "\n"
+                 analysismenu ;;
+	      4) echo -e "\n\e[32m=> Downloading data for FEE to analyse\e[39m"
+		 ./getObject expert 4
+		 echo -e "\n"
+                 analysismenu ;;
+              5) echo -e "\n\e[32m=> Downloading data for clusters to analyse\e[39m"
+      		 ./getObject expert 5
+      		 echo -e "\n"
+                 analysismenu;;
               *) echo -e "\n\e[32m=> Option not valid. Rerun the script. \e[39m" ;;
             esac
             ;;

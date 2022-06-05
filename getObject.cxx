@@ -35,7 +35,7 @@ TFile *outputfile;
 
 //to which CCDB we have to connect
 // For P2 operations put: ali-qcdb.cern.ch:8083
-string ccdbport = "ali-qcdb-gpn.cern.ch:8083";
+string ccdbport = "ali-qcdb.cern.ch:8083";
 
 
 int main(int argc, char **argv)

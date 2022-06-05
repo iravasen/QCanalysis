@@ -43,23 +43,26 @@ CXXFLAGS     += -DUSENCURSES
 SYSLIBS       = -lmenu -lncurses
 endif
 
-QCINC      = -I$(HOME)/alice/sw/ubuntu1804_x86-64/QualityControl/latest/include
-COMO2INC   = -I$(HOME)/alice/sw/ubuntu1804_x86-64/Common-O2/latest/include
-O2INC      = -I$(HOME)/alice/sw/ubuntu1804_x86-64/O2/latest/include
-BOOSTINC   = -I$(HOME)/alice/sw/ubuntu1804_x86-64/boost/latest/include
-FAIRLOGINC = -I$(HOME)/alice/sw/ubuntu1804_x86-64/FairLogger/latest/include
-FAIRMQINC  = -I$(HOME)/alice/sw/ubuntu1804_x86-64/FairMQ/latest/include/fairmq
-FAIRMQINC2 = -I$(HOME)/alice/sw/ubuntu1804_x86-64/FairMQ/latest/include/
-JALIENINC  = -I$(HOME)/alice/sw/ubuntu1804_x86-64/JAliEn-ROOT/latest/include
-FMTINC     = -I$(HOME)/alice/sw/ubuntu1804_x86-64/fmt/latest/include/
+QCINC      = -I$(HOME)/iravasen/sw/slc7_x86-64/QualityControl/latest/include
+COMO2INC   = -I$(HOME)/iravasen/sw/slc7_x86-64/Common-O2/latest/include
+O2INC      = -I$(HOME)/iravasen/sw/slc7_x86-64/O2/latest/include
+BOOSTINC   = -I$(HOME)/iravasen/sw/slc7_x86-64/boost/latest/include
+FAIRLOGINC = -I$(HOME)/iravasen/sw/slc7_x86-64/FairLogger/latest/include
+FAIRMQINC  = -I$(HOME)/iravasen/sw/slc7_x86-64/FairMQ/latest/include/fairmq
+FAIRMQINC2 = -I$(HOME)/iravasen/sw/slc7_x86-64/FairMQ/latest/include/
+JALIENINC  = -I$(HOME)/iravasen/sw/slc7_x86-64/JAliEn-ROOT/latest/include
+FMTINC     = -I$(HOME)/iravasen/sw/slc7_x86-64/fmt/latest/include/
+GPUINC     = -I$(HOME)/iravasen/sw/slc7_x86-64/O2/latest/include/GPU
 
 ROOTINC    = -I$(ROOTSYS)/include
 #INCLUDES   = $(QCINC) $(COMO2INC) $(O2INC) $(FAIRMQINC) $(FAIRLOGINC) $(MSGSLINC) $(BOOSTINC) $(ARROWINC) $(INFOLOGINC) $(ROOTINC)
-INCLUDES   =  $(BOOSTINC) $(QCINC) $(COMO2INC) $(O2INC) $(ROOTINC) $(FAIRLOGINC) $(FAIRMQINC) $(FAIRMQINC2) $(FMTINC) $(JALIENINC)
+INCLUDES   =  $(BOOSTINC) $(QCINC) $(COMO2INC) $(O2INC) $(ROOTINC) $(FAIRLOGINC) $(FAIRMQINC) $(FAIRMQINC2) $(FMTINC) $(JALIENINC) $(GPUINC)
 CXXFLAGS   += $(ROOTCFLAGS) $(INCLUDES)
-QCLIBS     = -L$(HOME)/alice/sw/ubuntu1804_x86-64/QualityControl/latest/lib -lO2QualityControl
-O2LIBS     = -L$(HOME)/alice/sw/ubuntu1804_x86-64/O2/latest/lib -lO2CCDB
-LIBS       = $(QCLIBS) $(O2LIBS) $(ROOTLIBS) $(SYSLIBS)
+QCLIBS     = -L$(HOME)/iravasen/sw/slc7_x86-64/QualityControl/latest/lib -lO2QualityControl
+QCLIBST     = -L$(HOME)/iravasen/sw/slc7_x86-64/QualityControl/latest/lib -lO2QualityControlTypes
+O2LIBS     = -L$(HOME)/iravasen/sw/slc7_x86-64/O2/latest/lib -lO2CCDB
+#GCCLIBS    = -L$(HOME)/iravasen/sw/slc7_x86-64/GCC-Toolchain/v10.2.0-alice2-local1/lib/gcc/x86_64-unknown-linux-gnu/10.2.0/plugin -lcc1plugin
+LIBS       = $(O2LIBS) $(QCLIBST) $(QCLIBS) $(ROOTLIBS) $(SYSLIBS)
 
 #------------------------------------------------------------------------------
 THISPROG     := getObject
