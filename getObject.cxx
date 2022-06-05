@@ -35,7 +35,7 @@ TFile *outputfile;
 
 //to which CCDB we have to connect
 // For P2 operations put: ali-qcdb.cern.ch:8083
-string ccdbport = "ali-qcdb.cern.ch:8083";
+string ccdbport = "localhost:8083";
 
 
 int main(int argc, char **argv)
@@ -1065,36 +1065,13 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
   cout<<endl;
   cout<<endl;
   cout<<"Ready to get files from "<<taskname<<"/"<<objname<<endl;
-  /* alt*
-  if(tasknamealternative!=taskname){
-    cout<<"... And eventually from (alternative path for backward compatibility): "<< tasknamealternative<<"/"<<objname<<endl;
-  }
-  */
+ 
   stringstream ss(objectlist);
-  //alt*  stringstream ss2(objectlist2);
   stringstream ss3(objectlistL2B);
   string word;
   vector<string> alltimestamps, timestamps, runs;
-  //alt*  vector<string> alltimestampsALT, timestampsALT, runsALT;//for alternative path
   vector<string> alltimestampsL2B, timestampsL2B, runsL2B;//for L2B
-
-  //filter string from alternative path (at the moment: only L1 from before run 300134)
-  /*
-  while(ss2>>word){
-    if(word=="Created:"){// take the one related to file creation
-      ss2>>word;
-      alltimestampsALT.push_back(word);
-    }
-    if(word=="RunNumber"){
-      ss2>>word;
-      ss2>>word;
-      runsALT.push_back(word);
-      timestampsALT.push_back(alltimestampsALT[alltimestampsALT.size()-1]);//this keep only the timestamps connected to a run number
-      if(stoi(word)==stoi(run1)) break;
-    }
-  }
-  */
-
+  
   //filter normal path but correct timestamps with the one from alternative path (if needed)
   while(ss>>word){
     if(word=="Created:"){// take the one related to file creation
@@ -1104,25 +1081,7 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
     if(word=="RunNumber"){
       ss>>word;
       ss>>word;
-      /* alt*
-      if(tasknamealternative!=taskname && stol(word)<300134){//for L1 backward compatibility
-        for(int it=0; it<(int)runsALT.size(); it++){
-          if(stol(runsALT[it])<300134){
-            runs.push_back(runsALT[it]);
-            timestamps.push_back(timestampsALT[it]);
-          }
-        }
-        break;
-      }
-      else if(tasknamealternative!=taskname && stol(word)>=300134){
-        runs.push_back(word);
-        timestamps.push_back(alltimestamps[alltimestamps.size()-1]);//this keep only the timestamps connected to a run number
-      }
-      else if(tasknamealternative==taskname){
-        runs.push_back(word);
-        timestamps.push_back(alltimestamps[alltimestamps.size()-1]);//this keep only the timestamps connected to a run number
-      }
-      */
+      if(word.size()==3) continue; //protection for fee task in particular: skip runs with 3 digits. 
       runs.push_back(word);
       timestamps.push_back(alltimestamps[alltimestamps.size()-1]);//this keep only the timestamps connected to a run number
       if(stoi(word)==stoi(run1)) break;
@@ -1139,6 +1098,7 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
     if(word=="RunNumber"){
       ss3>>word;
       ss3>>word;
+      if(word.size()==3) continue; //protection for fee task in particular: skip runs with 3 digits.
       runsL2B.push_back(word);
       timestampsL2B.push_back(alltimestampsL2B[alltimestampsL2B.size()-1]);//this keep only the timestamps connected to a run number
       if(stoi(word)==stoi(run1)) break;
