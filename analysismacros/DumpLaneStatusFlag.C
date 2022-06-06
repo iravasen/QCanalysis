@@ -35,7 +35,7 @@ int getstave(int lay, int ifee){
 //
 // MAIN
 //
-void AnalyzeLaneStatusFlag(){
+void DumpLaneStatusFlag(){
 
   string fpath;
   int nchips=9;

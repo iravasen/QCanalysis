@@ -48,13 +48,16 @@ todo(){
     13) echo -e "\n\e[32m=> Starting analysis of the lane status flags for all runs\e[39m"
        root -l -b -q AnalyzeLaneStatusFlag.C++
        remove ;;
-    14) echo -e "\n\e[32m=> Starting average cluster size analysis run by run\e[39m"
+    14) echo -e "\n\e[32m=> Starting dump of lanes into error, fault, warning\e[39m"
+       root -l -b -q DumpLaneStatusFlag.C++
+       remove ;;
+    15) echo -e "\n\e[32m=> Starting average cluster size analysis run by run\e[39m"
        root -l -b -q AnalyzeLayerAverageClusterSize.C++
        remove ;;
-    15) echo -e "\n\e[32m=> Starting cluster occupation analysis run by run\e[39m"
+    16) echo -e "\n\e[32m=> Starting cluster occupation analysis run by run\e[39m"
        root -l -b -q AnalyzeLayerClusterOccupancy.C++
        remove ;;
-    16) echo -e "\n\e[32m=> Starting full analysis of track and vertex parameters\e39m"
+    17) echo -e "\n\e[32m=> Starting full analysis of track and vertex parameters\e39m"
        root -l -b -q Track_trending_postprocessing.C++
        remove ;;
     *) echo -e "Invalid option \n"
@@ -83,13 +86,14 @@ analysismenu(){
   echo -e "\n"
   echo "[Analyses on FEE]"
   echo -e "\t 13. FEE Post Processing Offline: Lane Status Flags (ERROR,FAULT,WARNING)"
+  echo -e "\t 14. Dump in txt file of lanes into ERROR, FAULT, WARNING"
   echo -e "\n"
   echo "[Analyses on Clusters]"
-  echo -e "\t 14.  Average cluster size run by run"
-  echo -e "\t 15.  Cluster occupation run by run"
+  echo -e "\t 15.  Average cluster size run by run"
+  echo -e "\t 16.  Cluster occupation run by run"
   echo -e "\n"
   echo "[Analyses on Tracks]"
-  echo -e "\t 16.  Full trending of track and vertex parameters\e[39m"
+  echo -e "\t 17.  Full trending of track and vertex parameters\e[39m"
   echo -e "\n"
   echo -e "Enter option \c"
   cd analysismacros
