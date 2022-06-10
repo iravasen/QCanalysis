@@ -13,6 +13,7 @@
 #include <TSystem.h>
 #include <TGraph.h>
 #include <TKey.h>
+#include <TGraphErrors.h>
 #include "QualityControl/PostProcessingInterface.h"
 #include "QualityControl/Reductor.h"
 #include "QualityControl/DatabaseFactory.h"
@@ -398,7 +399,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
           means.push_back(x_mean);
           
           //Find the bin with minimum content != 0
-          int minbin;
+          int minbin = 0;
           double contarray[hproj->GetNbinsX()];
           vector<double> contents;
           for (int b=1; b<=hproj->GetNbinsX(); b++){
@@ -432,7 +433,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
           means1.push_back(x_mean1);
           
           //Find the bin with minimum content != 0
-          int minbin1;
+          int minbin1 = 0;
           double contarray1[hproj1->GetNbinsX()];
           vector<double> contents1;
           for (int b=1; b<=hproj1->GetNbinsX(); b++){
@@ -466,7 +467,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
           means2.push_back(x_mean2);
           
           //Find the bin with minimum content != 0
-          int minbin2;
+          int minbin2 = 0;
           double contarray2[hproj2->GetNbinsX()];
           vector<double> contents2;
           for (int b=1; b<=hproj2->GetNbinsX(); b++){
@@ -500,7 +501,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
           means3.push_back(x_mean3);
           
           //Find the bin with minimum content != 0
-          int minbin3;
+          int minbin3 = 0;
           double contarray3[hproj3->GetNbinsX()];
           vector<double> contents3;
           for (int b=1; b<=hproj3->GetNbinsX(); b++){
@@ -534,7 +535,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
           means4.push_back(x_mean4);
           
           //Find the bin with minimum content != 0
-          int minbin4;
+          int minbin4 = 0;
           double contarray4[hproj4->GetNbinsX()];
           vector<double> contents4;
           for (int b=1; b<=hproj4->GetNbinsX(); b++){
@@ -568,7 +569,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
          means5.push_back(x_mean5);
           
           //Find the bin with minimum content != 0
-          int minbin5;
+          int minbin5 = 0;
           double contarray5[hproj5->GetNbinsX()];
           vector<double> contents5;
           for (int b=1; b<=hproj5->GetNbinsX(); b++){
@@ -604,7 +605,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   double b2=0;
   
   gr2->GetXaxis()->SetNdivisions(cycle_eta.size());
-  for (int i=1;i<=cycle_eta.size();i++) gr2->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs_eta[i-1].data());
+  for (int i=1;i<=(int)cycle_eta.size();i++) gr2->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs_eta[i-1].data());
   
   gr2->GetXaxis()->SetLabelSize(0.027);
   gr2->SetNameTitle("Average of Eta distributions", "Average of Eta distributions");
@@ -626,7 +627,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   double b21=0;
   
   gr21->GetXaxis()->SetNdivisions(cycle_eta.size());
-  for (int i=1;i<=cycle_eta.size();i++) gr21->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs_eta[i-1].data());
+  for (int i=1;i<=(int)cycle_eta.size();i++) gr21->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs_eta[i-1].data());
   
   gr21->GetYaxis()->SetRangeUser(0,1.085);
   gr21->GetXaxis()->SetLabelSize(0.027);
@@ -663,7 +664,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   double b3=0;
   
   gr3->GetXaxis()->SetNdivisions(cycle_phi.size());
-  for (int i=1;i<=cycle_phi.size();i++) gr3->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs_phi[i-1].data());
+  for (int i=1;i<=(int)cycle_phi.size();i++) gr3->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs_phi[i-1].data());
 
   gr3->GetXaxis()->SetLabelSize(0.027);
   gr3->SetNameTitle("Average of Phi distributions (0 < Phi < 2#pi)", "Average of Phi distributions (0 < Phi < 2#pi)");
@@ -687,7 +688,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   double b31=0;
   
   gr31->GetXaxis()->SetNdivisions(cycle_phi.size());
-  for (int i=1;i<=cycle_phi.size();i++) gr31->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs_phi[i-1].data());
+  for (int i=1;i<=(int)cycle_phi.size();i++) gr31->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs_phi[i-1].data());
   
   gr31->GetYaxis()->SetRangeUser(0,1);
   gr31->GetXaxis()->SetLabelSize(0.027);
@@ -720,7 +721,7 @@ auto cz1 = new TCanvas();
 cz1->SetGrid(0,1); 
 auto gerr3 = new TGraphErrors(cycle5.size(),&cycle5[0],&aves3[0],0,&rmss3[0]);
 gerr3->GetXaxis()->SetNdivisions(cycle5.size());
-for (int i=1;i<=cycle5.size();i++) gerr3->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs5[i-1].data());
+for (int i=1;i<=(int)cycle5.size();i++) gerr3->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs5[i-1].data());
 gerr3->GetXaxis()->SetLabelSize(0.027);
 gerr3->SetMarkerStyle(20);
 gerr3->SetTitle("Mean Z coordinate of vertex");
@@ -767,7 +768,7 @@ cxy->SetGrid(0,1);
 //gPad->SetLogy();
 auto grx = new TGraph(cycle4.size(),&cycle4[0],&xpoints[0]);
 grx->GetXaxis()->SetNdivisions(cycle4.size());
-for (int i=1;i<=cycle4.size();i++) grx->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs4[i-1].data());
+for (int i=1;i<=(int)cycle4.size();i++) grx->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs4[i-1].data());
 grx->GetXaxis()->SetLabelSize(0.027);
 grx->SetMarkerStyle(20);
 grx->SetTitle("Coordinates of track vertex");
@@ -797,7 +798,7 @@ auto ce = new TCanvas();
 ce->SetGrid(0,1); 
 auto gerr2 = new TGraphErrors(cycle3.size(),&cycle3[0],&aves2[0],0,&rmss2[0]);
 gerr2->GetXaxis()->SetNdivisions(cycle3.size());
-for (int i=1;i<=cycle3.size();i++) gerr2->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs3[i-1].data());
+for (int i=1;i<=(int)cycle3.size();i++) gerr2->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs3[i-1].data());
 gerr2->GetXaxis()->SetLabelSize(0.027);
 gerr2->SetMarkerStyle(20);
 gerr2->SetTitle("Mean NVertexContributors");
@@ -814,7 +815,7 @@ auto ct = new TCanvas();
 ct->SetGrid(0,1); 
 auto gerr1 = new TGraphErrors(cycle2.size(),&cycle2[0],&aves1[0],0,&rmss1[0]);
 gerr1->GetXaxis()->SetNdivisions(cycle2.size());
-for (int i=1;i<=cycle2.size();i++) gerr1->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs2[i-1].data());
+for (int i=1;i<=(int)cycle2.size();i++) gerr1->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs2[i-1].data());
 gerr1->GetXaxis()->SetLabelSize(0.027);
 gerr1->SetMarkerStyle(20);
 gerr1->SetTitle("Mean number of tracks event by event");
@@ -831,7 +832,7 @@ auto c0 = new TCanvas();
 c0->SetGrid(0,1); 
 auto gerr = new TGraphErrors(cycle1.size(),&cycle1[0],&aves[0],0,&rmss[0]);
 gerr->GetXaxis()->SetNdivisions(cycle1.size());
-for (int i=1;i<=cycle1.size();i++) gerr->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs1[i-1].data());
+for (int i=1;i<=(int)cycle1.size();i++) gerr->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs1[i-1].data());
 gerr->GetXaxis()->SetLabelSize(0.027);
 gerr->SetMarkerStyle(20);
 gerr->SetTitle("Mean of fraction of clusters into tracks event by event");
@@ -852,7 +853,7 @@ auto c_ = new TCanvas();
 c_->SetGrid(0,1); 
 auto gr_ = new TGraph(cycle.size(),&cycle[0],&means[0]);
 gr_->GetXaxis()->SetNdivisions(cycle.size());
-for (int i=1;i<=cycle.size();i++) gr_->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs[i-1].data());
+for (int i=1;i<=(int)cycle.size();i++) gr_->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs[i-1].data());
 gr_->GetXaxis()->SetLabelSize(0.027);
 gr_->SetMarkerStyle(20);
 gr_->SetTitle("Mean number of clusters per track");
@@ -911,7 +912,7 @@ auto c = new TCanvas();
 c->SetGrid(0,1); 
 auto gr = new TGraph(cycle.size(),&cycle[0],&binminCenters[0]);
 gr->GetXaxis()->SetNdivisions(cycle.size());
-for (int i=1;i<=cycle.size();i++) gr->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs[i-1].data());
+for (int i=1;i<=(int)cycle.size();i++) gr->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs[i-1].data());
 gr->GetXaxis()->SetLabelSize(0.027);
 gr->SetMarkerStyle(20);
 gr->SetTitle("Less probable #clusters per track");
@@ -970,7 +971,7 @@ auto c1 = new TCanvas();
 c1->SetGrid(0,1); 
 auto gr0 = new TGraph(cycle.size(),&cycle[0],&binmaxCenters[0]);
 gr0->GetXaxis()->SetNdivisions(cycle.size());
-for (int i=1;i<=cycle.size();i++) gr0->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs[i-1].data());
+for (int i=1;i<=(int)cycle.size();i++) gr0->GetXaxis()->ChangeLabel(i,60,-1,30,-1,-1,runs[i-1].data());
 gr0->GetXaxis()->SetLabelSize(0.027);
 gr0->SetMarkerStyle(20);
 gr0->SetTitle("Most probable #clusters per track");
