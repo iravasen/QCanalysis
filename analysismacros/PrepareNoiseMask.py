@@ -41,16 +41,17 @@ def main():
                     42:254, 43:253, 44:252, 45:251, 46:250, 47:249, 48:248}
 
     rowselector = {0: coltochipid0l, 1: coltochipid8l, 2: coltochipid0u, 3: coltochipid8u}
-
+    '''
     noisyrowstave = {"L4_16":[0, 2, 177], "L6_04":[1,313,201], "L6_06":[2,250,252], "L6_20":[3,111,211],
     "L4_03":[4,360,160], "L5_26":[5,319,25],"L5_09":[6,473,196],"L5_13":[7,198,148],"L5_32":[8,251,18], "L5_38":[9,227,19],
     "L5_04":[10,189,169], "L5_07":[11,169,166]}# "stave": {id, row, chipid}
-
+    '''
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--file", required=True, help="Input file to be analysed")
     parser.add_argument("-m", "--merge", default=False, choices=('True','False'), help="Merge with existing noise mask")
     args = parser.parse_args()
     print(f"Analysing file: {args.file}")
+    print(f"Merging set to: {args.merge}")
     runnum = args.file[50:56]
     #open file
     infl = ROOT.TFile.Open(args.file, "READ")
@@ -59,7 +60,9 @@ def main():
 
     file1 = open(f"../yaml/noise_masks/number_of_noisy_pix_{runnum}.txt","a")
     #Loop over all THnSparse and prepare yaml file with noisy pixels
-    NOISECUT = 2e-6
+    NOISECUT_IB = 1e-2
+    NOISECUT_OB = 2e-6
+
     for key in infl.GetListOfKeys():
         obj=key.ReadObj()
         if obj.InheritsFrom("THnSparse"):
@@ -73,6 +76,7 @@ def main():
                 coord = np.array([0,0], dtype=np.int32)
                 pixelhits = obj.GetBinContent(ibin, np.asarray(coord))
                 fhr = pixelhits/ntriggers #fhr of the pixel
+                NOISECUT = NOISECUT_IB if int(layer) < 3 else NOISECUT_OB
                 if fhr < NOISECUT: ##noise cut
                     continue
                 npix = npix+1
@@ -86,10 +90,6 @@ def main():
                 else: #ob
                     rowidx = int(int(coord[1]-1) / 512)
                     colidx = int(int(coord[0]-1) / 1024)
-                    #if rowidx==1 or rowidx==3:
-                    #    colidx = int(int(coord[0]) / 1024)
-                    #if colidx==49: ##bug??
-                    #    colidx = colidx-1
                     chipid = rowselector[rowidx][colidx]
                     colfinal = 0
                     rowfinal = 0
@@ -123,7 +123,8 @@ def main():
                         dict.update({noisyrowstave[staveid][2]:[[icol,noisyrowstave[staveid][1],1.0]]})
             '''
 
-            #Add stuck pix
+            #Add stuck pix in IB and OB (NOTE: VERY IMPORTANT IN IB BECAUSE WE GET MORE PIXELS FUNCTIONING)
+            #OB
             if layer=="4" and stavenum=="3":
                 if 198 not in dict:
                     dict.update({198:[[988,2,1.0]]})
@@ -139,6 +140,34 @@ def main():
                     dict.update({65:[[631,69,1.0]]})
                 else:
                     dict[65].append([631,69,1.0]) ## this is a stuck pixel found during data taking (fhr is random)
+            #IB
+            if layer=="1" and stavenum=="15":
+                if 4 not in dict:
+                    dict.update({4:[[732,14,1.0]]})
+                else:
+                    dict[4].append([732,14,1.0]) ## this is a stuck pixel found during surf comm (fhr is random)
+            if layer=="2" and stavenum=="9":
+                if 3 not in dict:
+                    dict.update({3:[[637,3,1.0]]})
+                else:
+                    dict[3].append([637,3,1.0]) ## this is a stuck pixel found during surf comm (fhr is random)
+            if layer=="2" and stavenum=="18":
+                if 6 not in dict:
+                    dict.update({6:[[526,290,1.0]]})
+                else:
+                    dict[6].append([526,290,1.0]) ## this is a stuck pixel found during surf comm (fhr is random)
+            if layer=="1" and stavenum=="3":
+                if 4 not in dict:
+                    dict.update({4:[[422,433,1.0],[423,433,1.0]]})
+                else:
+                    dict[4].append([422,433,1.0]) ## this is a stuck pixel found during surf comm (fhr is random)
+                    dict[4].append([423,433,1.0])
+            if layer=="2" and stavenum=="14":
+                if 0 not in dict:
+                    dict.update({0:[[362,173,1.0]]})
+                else:
+                    dict[0].append([362,173,1.0]) ## this is a stuck pixel found during surf comm (fhr is random)
+
             print(f"L{layer}_{int(stavenum):02d}: {npix} hot pixels above cut")
 
             #Merge with existing mask (if specified in the option)
