@@ -230,7 +230,7 @@ if(ccdb_upload){
 //   string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str()); //This should be used for actual data 
     canvas->SetName(Form("Layer%s_Dead_pixels_Correlation",layer.c_str()));
     auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,1,Runperiod);
-    mo1->addMetadata("Reference Run number",refrun.c_str());
+    mo1->addMetadata("ReferenceRunNumber",refrun.c_str());
     mo1->setIsOwner(false);
     ccdb->storeMO(mo1);
                }

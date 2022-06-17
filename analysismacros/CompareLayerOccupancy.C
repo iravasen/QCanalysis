@@ -323,7 +323,7 @@ if(ccdb_upload){
 
     canvas->SetName(canvas_name.c_str());
         auto mo= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()),TaskClass, DetectorName,1,Runperiod);
-        mo->addMetadata("RefRun",Reference_run.c_str());
+        mo->addMetadata("ReferenceRunNumber",Reference_run.c_str());
 	mo->setIsOwner(false);
         ccdb->storeMO(mo);
 	}
