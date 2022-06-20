@@ -1379,20 +1379,9 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
      //NClusters
-    if(objname.find("NClusters")!=string::npos){
+    if(objname == "NClusters"){
       string histname = "";
       histname = Form("NClusters_h1_%s%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("run%d",runnumbers[i]) : "", timestamps[i]);
-
-      h1s = dynamic_cast<TH1*>(obj->Clone(histname.c_str()));
-      outputfile->cd();
-      h1s->Write();
-    }
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-     //OccupancyROF
-    if(objname.find("OccupancyROF")!=string::npos){
-      string histname = "";
-      histname = Form("OccupancyROF_h1_%s%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("run%d",runnumbers[i]) : "", timestamps[i]);
 
       h1s = dynamic_cast<TH1*>(obj->Clone(histname.c_str()));
       outputfile->cd();
@@ -1416,7 +1405,7 @@ if(objname.find("LaneStatus") != string::npos){
 
 
     //if(strstr(c,"TH1")!=nullptr){
-    if(c.find("TH1")!=string::npos && objname.find("ClusterUsage")==string::npos && objname.find("EtaDistribution")==string::npos && objname.find("PhiDistribution")==string::npos && objname.find("NClusters")==string::npos && objname.find("OccupancyROF")==string::npos){
+    if(c.find("TH1")!=string::npos && taskname.find("Track")==string::npos){
       string histname = "";
       histname = Form("h1_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
 
