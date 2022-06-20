@@ -29,7 +29,7 @@ void SetStyle(TGraph *h, Int_t col, Style_t mkr);
 void DoAnalysis(string filepath, const int nChips, string skipruns,bool ccdb_upload);
 TString SIBorOB[2]={"IB", "OB"};
 
-int ns[] = {12,16,20,24,30,42,48}; // n staves for each layer 
+int ns[] = {12,16,20,24,30,42,48}; // n staves for each layer
 
 //
 // MAIN
@@ -226,7 +226,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
 
 	// Draw trend plots 3status x 7Layer
 	const int NRun = (int)herr.size();
-	const int NStatus = 3; 
+	const int NStatus = 3;
 	const int NLayer = 7;
 	TString StatusKind[NStatus] = {"ERROR","FAULT","WARNING"};
 	double binedge_L0[13]={0,3,6,9,12,15,18,21,24,27,30,33,36};
@@ -290,23 +290,23 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
 				if(iLayer==4)grt_L4[iStatus][iStave] = new TGraph();
 				if(iLayer==5)grt_L5[iStatus][iStave] = new TGraph();
 				if(iLayer==6)grt_L6[iStatus][iStave] = new TGraph();
-				if(iLayer==0)SetStyle(grt_L0[iStatus][iStave], col[iStave%10], 24+iStave/10); 
-				if(iLayer==1)SetStyle(grt_L1[iStatus][iStave], col[iStave%10], 24+iStave/10); 
-				if(iLayer==2)SetStyle(grt_L2[iStatus][iStave], col[iStave%10], 24+iStave/10); 
-				if(iLayer==3)SetStyle(grt_L3[iStatus][iStave], col[iStave%10], 24+iStave/10); 
-				if(iLayer==4)SetStyle(grt_L4[iStatus][iStave], col[iStave%10], 24+iStave/10); 
-				if(iLayer==5)SetStyle(grt_L5[iStatus][iStave], col[iStave%10], 24+iStave/10); 
-				if(iLayer==6)SetStyle(grt_L6[iStatus][iStave], col[iStave%10], 24+iStave/10); 
+				if(iLayer==0)SetStyle(grt_L0[iStatus][iStave], col[iStave%10], 24+iStave/10);
+				if(iLayer==1)SetStyle(grt_L1[iStatus][iStave], col[iStave%10], 24+iStave/10);
+				if(iLayer==2)SetStyle(grt_L2[iStatus][iStave], col[iStave%10], 24+iStave/10);
+				if(iLayer==3)SetStyle(grt_L3[iStatus][iStave], col[iStave%10], 24+iStave/10);
+				if(iLayer==4)SetStyle(grt_L4[iStatus][iStave], col[iStave%10], 24+iStave/10);
+				if(iLayer==5)SetStyle(grt_L5[iStatus][iStave], col[iStave%10], 24+iStave/10);
+				if(iLayer==6)SetStyle(grt_L6[iStatus][iStave], col[iStave%10], 24+iStave/10);
 				for(int iRun=0; iRun<NRun; iRun++){
-                                        double binc = hrebin[iStatus][iRun][iLayer]->GetBinContent(iStave+1);
+          double binc = hrebin[iStatus][iRun][iLayer]->GetBinContent(iStave+1);
  					if(binc<1e-15) binc=-20.;
-					if(iLayer==0)grt_L0[iStatus][iStave]->SetPoint(iRun, iRun, binc);
-					if(iLayer==1)grt_L1[iStatus][iStave]->SetPoint(iRun, iRun, binc);
-					if(iLayer==2)grt_L2[iStatus][iStave]->SetPoint(iRun, iRun, binc);
-					if(iLayer==3)grt_L3[iStatus][iStave]->SetPoint(iRun, iRun, binc);
-					if(iLayer==4)grt_L4[iStatus][iStave]->SetPoint(iRun, iRun, binc);
-					if(iLayer==5)grt_L5[iStatus][iStave]->SetPoint(iRun, iRun, binc);
-					if(iLayer==6)grt_L6[iStatus][iStave]->SetPoint(iRun, iRun, binc);
+					if(iLayer==0)grt_L0[iStatus][iStave]->SetPoint(iRun, iRun, binc>9 ? 9 : binc);
+					if(iLayer==1)grt_L1[iStatus][iStave]->SetPoint(iRun, iRun, binc>9 ? 9 : binc);
+					if(iLayer==2)grt_L2[iStatus][iStave]->SetPoint(iRun, iRun, binc>9 ? 9 : binc);
+					if(iLayer==3)grt_L3[iStatus][iStave]->SetPoint(iRun, iRun, binc>16 ? 16 : binc);
+					if(iLayer==4)grt_L4[iStatus][iStave]->SetPoint(iRun, iRun, binc>16 ? 16 : binc);
+					if(iLayer==5)grt_L5[iStatus][iStave]->SetPoint(iRun, iRun, binc>28 ? 28 : binc);
+					if(iLayer==6)grt_L6[iStatus][iStave]->SetPoint(iRun, iRun, binc>28 ? 28 : binc);
 					cout<<"istatus"<<iStatus<<" irun"<<iRun<<" ilayer"<<iLayer<<" istave"<<iStave<<"  val="<<binc<<endl;
 				}
 			}
@@ -330,9 +330,9 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
 			if(iLayer==4)legLayer[iLayer]->AddEntry(grt_L4[0][iStave], Form(" %d",iStave),"p");
 			if(iLayer==5)legLayer[iLayer]->AddEntry(grt_L5[0][iStave], Form(" %d",iStave),"p");
 			if(iLayer==6)legLayer[iLayer]->AddEntry(grt_L6[0][iStave], Form(" %d",iStave),"p");
-		} 
+		}
 	}
-	TH1F *hblank[NStatus][NLayer]; 
+	TH1F *hblank[NStatus][NLayer];
 	for(int iStatus=0; iStatus<NStatus; iStatus++){
 		for(int iLayer=0; iLayer<NLayer; iLayer++){
 			hblank[iStatus][iLayer] = new TH1F(Form("hblank_%d_%d",iStatus,iLayer), Form("Layer %d - lanes into %s; Run; #Lanes into %s", iLayer, StatusKind[iStatus].Data(), StatusKind[iStatus].Data()), NRun, -0.5, (double)NRun-0.5);
@@ -350,7 +350,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
 			hblank[iStatus][iLayer]->Draw();
 			//gPad->SetLogy();//for total number of errors
 			gPad->SetGridx();
-			
+
 			if(iLayer==0){for(int iStave=0; iStave<nstave[0]; iStave++){grt_L0[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L0[iStatus][iStave]->Draw("P");}}
 			if(iLayer==1){for(int iStave=0; iStave<nstave[1]; iStave++){grt_L1[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L1[iStatus][iStave]->Draw("P");}}
 			if(iLayer==2){for(int iStave=0; iStave<nstave[2]; iStave++){grt_L2[iStatus][iStave]->SetName(Form("L%d_St%d_F%s",iLayer,iStave,StatusKind[iStatus].Data()));grt_L2[iStatus][iStave]->Draw("P");}}
@@ -364,13 +364,13 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
 			ctrend2[iStatus][iLayer]->SetName(Form("Layer%d_Status_%s",iLayer,StatusKind[iStatus].Data()));
         		auto mo= std::make_shared<o2::quality_control::core::MonitorObject>(ctrend2[iStatus][iLayer], TaskName+Form("/Status_%s",StatusKind[iStatus].Data()), TaskClass, DetectorName,1,Runperiod);
         		mo->setIsOwner(false);
-        		ccdb->storeMO(mo);	
-			}	
+        		ccdb->storeMO(mo);
+			}
 			ctrend2[iStatus][iLayer]->SaveAs(Form("../Plots/LaneStatusFlag_%s.pdf", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 			if(iStatus==NStatus-1&&iLayer==NLayer-1)ctrend2[iStatus][iLayer]->SaveAs(Form("../Plots/LaneStatusFlag_%s.pdf]", filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
 		}//iLayer
 	}//iStatus
- 
+
 	ccdb->disconnect();
 }
 
