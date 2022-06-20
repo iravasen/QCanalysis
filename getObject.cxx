@@ -875,11 +875,16 @@ bool RunExpert(auto *ccdb, string myname, int opt){
 
 case 3: { //tracks
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "AngularDistribution", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
-      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "ClusterUsage", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "EtaDistribution", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "PhiDistribution", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "NClusters", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
-      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "OccupancyROF", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "VertexZ", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "VertexRvsZ", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "VertexCoordinates", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "NVertexContributors", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "Ntracks", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "AssociatedClusterFraction", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSTrackTask", "NClustersPerTrackEta", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
 
       break;
     }//end of case 3
@@ -1065,13 +1070,13 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
   cout<<endl;
   cout<<endl;
   cout<<"Ready to get files from "<<taskname<<"/"<<objname<<endl;
- 
+
   stringstream ss(objectlist);
   stringstream ss3(objectlistL2B);
   string word;
   vector<string> alltimestamps, timestamps, runs;
   vector<string> alltimestampsL2B, timestampsL2B, runsL2B;//for L2B
-  
+
   //filter normal path but correct timestamps with the one from alternative path (if needed)
   while(ss>>word){
     if(word=="Created:"){// take the one related to file creation
@@ -1081,7 +1086,7 @@ void DownloadRuns(auto* ccdb, o2::ccdb::CcdbApi ccdbApi, string myname, string t
     if(word=="RunNumber"){
       ss>>word;
       ss>>word;
-      if(word.size()==3) continue; //protection for fee task in particular: skip runs with 3 digits. 
+      if(word.size()==3) continue; //protection for fee task in particular: skip runs with 3 digits.
       runs.push_back(word);
       timestamps.push_back(alltimestamps[alltimestamps.size()-1]);//this keep only the timestamps connected to a run number
       if(stoi(word)==stoi(run1)) break;
@@ -1257,6 +1262,76 @@ bool GetListOfHisto(auto* ccdb, string myname, string taskname, string objname, 
     TH1 *h1s = 0x0;
     THnSparse *hSp = 0x0;
     TTree *tree;
+    //////////////////////////////////
+    //Cluster per tracks vs eta
+    if(objname.find("NClustersPerTrackEta")!=string::npos){
+      string histname = "";
+      histname = Form("NClustersPerTrackEta_h2_%s%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("run%d",runnumbers[i]) : "", timestamps[i]);
+
+      h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
+      outputfile->cd();
+      h2s->Write();
+    }
+    //////////////////////////////////
+    //Cluster fraction
+    if(objname.find("AssociatedClusterFraction")!=string::npos){
+      string histname = "";
+      histname = Form("AssociatedClusterFraction_h1_%s%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("run%d",runnumbers[i]) : "", timestamps[i]);
+
+      h1s = dynamic_cast<TH1*>(obj->Clone(histname.c_str()));
+      outputfile->cd();
+      h1s->Write();
+    }
+    //////////////////////////////////
+    //Ntracks per event
+    if(objname.find("Ntracks")!=string::npos){
+      string histname = "";
+      histname = Form("Ntracks_h1_%s%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("run%d",runnumbers[i]) : "", timestamps[i]);
+
+      h1s = dynamic_cast<TH1*>(obj->Clone(histname.c_str()));
+      outputfile->cd();
+      h1s->Write();
+    }
+    //////////////////////////////////
+    //Vertex Contributors
+    if(objname.find("NVertexContributors")!=string::npos){
+      string histname = "";
+      histname = Form("NVertexContributors_h1_%s%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("run%d",runnumbers[i]) : "", timestamps[i]);
+
+      h1s = dynamic_cast<TH1*>(obj->Clone(histname.c_str()));
+      outputfile->cd();
+      h1s->Write();
+    }
+    //////////////////////////////////
+    //VertexCoordinates (XvsY)
+    if(objname.find("VertexCoordinates")!=string::npos){
+      string histname = "";
+      histname = Form("VertexCoordinates_h2_%s%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("run%d",runnumbers[i]) : "", timestamps[i]);
+
+      h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
+      outputfile->cd();
+      h2s->Write();
+    }
+    //////////////////////////////////
+    //VertexRvsZ
+    if(objname.find("VertexRvsZ")!=string::npos){
+      string histname = "";
+      histname = Form("VertexRvsZ_h2_%s%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("run%d",runnumbers[i]) : "", timestamps[i]);
+
+      h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
+      outputfile->cd();
+      h2s->Write();
+    }
+  //////////////////////////////////
+  //VertexZ
+    if(objname.find("VertexZ")!=string::npos){
+      string histname = "";
+      histname = Form("VertexZ_h1_%s%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("run%d",runnumbers[i]) : "", timestamps[i]);
+
+      h1s = dynamic_cast<TH1*>(obj->Clone(histname.c_str()));
+      outputfile->cd();
+      h1s->Write();
+    }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //AngularDistribution
     if(objname.find("AngularDistribution")!=string::npos){
