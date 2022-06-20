@@ -1414,7 +1414,7 @@ if(objname.find("LaneStatus") != string::npos){
       h1s->Write();
     }
     //if(strstr(c,"TH2")!=nullptr){
-    if(c.find("TH2")!=string::npos && objname.find("AngularDistribution")==string::npos && objname.find("LaneStatus")==string::npos){
+    if(c.find("TH2")!=string::npos && taskname.find("Track")==string::npos && objname.find("LaneStatus")==string::npos){
       string histname = "";
       if(objname.find("Error")!=string::npos)
         histname = Form("h2_err%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
