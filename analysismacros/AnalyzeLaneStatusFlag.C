@@ -123,6 +123,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
 			 ) {
 			cout<<"<W> Object "<<obj->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;
 		}
+    if(objname.find("trg")!=string::npos) continue; //skip trigger flags plot here 
 		string objname = (string)obj->GetName();
 		cout<<"objname = "<<objname<<endl;
 		//if(objname.find("trg")==string::npos) continue;

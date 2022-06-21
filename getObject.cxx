@@ -543,7 +543,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
   string erranswer = "n";
   if(opt==1){//only is user selects to download FHR
     cout<<endl;
-    cout<<"Error and trigger plots needed? [y/n]"<<endl;
+    cout<<"Error-flag plots needed? [y/n]"<<endl;
     cin>>erranswer;
     if(erranswer=="y")
       adderrordata = true;
@@ -624,7 +624,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
     default: nListElements = 2;
   }
   if(adderrordata)
-    nListElements+=2;
+    nListElements+=1;
 
   //CCDB api initialization
   o2::ccdb::CcdbApi ccdbApi;
@@ -662,7 +662,7 @@ bool RunExpert(auto *ccdb, string myname, int opt){
     default: suffix="";
   }
   string optname = GetOptName(opt);
-  outputfile = new TFile(Form("Data/Output%s_%s_from_%s%s_to_%s%s%s.root",layername.c_str(), optname.c_str(), suffix.c_str(),nums[0].c_str(), suffix.c_str(), nums[1].c_str(), adderrordata? "_w_error_and_trig_data":""), "RECREATE");
+  outputfile = new TFile(Form("Data/Output%s_%s_from_%s%s_to_%s%s%s.root",layername.c_str(), optname.c_str(), suffix.c_str(),nums[0].c_str(), suffix.c_str(), nums[1].c_str(), adderrordata? "_w_error_data":""), "RECREATE");
   outputfile->cd();
 
   //Download depending on the option (opt)
@@ -697,13 +697,6 @@ bool RunExpert(auto *ccdb, string myname, int opt){
 
             case 2: {//error files
               string objname = "General/ErrorVsFeeid";
-              cout<<"\nAll data in "<<taskname[layernumEff]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-              Download(choice, ccdb, ccdbApi, myname, taskname[layernumEff], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
-              break;
-            }
-
-            case 3: {//error files
-              string objname = "General/TriggerVsFeeid";
               cout<<"\nAll data in "<<taskname[layernumEff]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
               Download(choice, ccdb, ccdbApi, myname, taskname[layernumEff], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum);
               break;
@@ -754,13 +747,6 @@ bool RunExpert(auto *ccdb, string myname, int opt){
 
             case 2: {//error files
               string objname = "General/ErrorVsFeeid";
-              cout<<"\nAll data in "<<taskname[0]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-              Download(1, ccdb, ccdbApi, myname, taskname[0], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
-              break;
-            }
-
-            case 3: {//trigger files
-              string objname = "General/TriggerVsFeeid";
               cout<<"\nAll data in "<<taskname[0]+"/"+objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
               Download(1, ccdb, ccdbApi, myname, taskname[0], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
               break;
@@ -895,6 +881,9 @@ case 4: { //FEE
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagERROR", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagFAULT", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagWARNING", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
+      string objname = "General/TriggerVsFeeid";
+      cout<<"\nAll data in qc/ITS/MO/ITSFEE/"<<objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSFEE", objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0);
       break;
     }//end of case 4
     //////////////////////////////////////////////////////////

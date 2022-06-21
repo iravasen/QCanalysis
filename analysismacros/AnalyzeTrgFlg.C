@@ -34,13 +34,13 @@ TString SIBorOB[2]={"IB", "OB"};
 //
 // MAIN
 //
-void AnalyzeTrgFlgFHR(){
+void AnalyzeTrgFlg(){
   string fpath;
   int nchips=9;
   bool ccdb_upload;
 
   cout<<"\n\n=> Available file(s) for the analysis (the last should be the file you want!): \n"<<endl;
-  gSystem->Exec("ls ../Data/*w_error_and_trig* -Art | tail -n 500");
+  gSystem->Exec("ls ../Data/*LaneStatus* -Art | tail -n 500");
   cout<<"\nCopy file name: ";
   cin>>fpath;
   cout<<endl;
@@ -97,7 +97,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
 
 //Setting up the connection to the ccdb database
 //      CcdbDatabase* ccdb;
-//      if(ccdb_upload) ccdb = SetupConnection();       ~To-Do- Currently not working  
+//      if(ccdb_upload) ccdb = SetupConnection();       ~To-Do- Currently not working
 
   std::unique_ptr<DatabaseInterface> mydb = DatabaseFactory::create("CCDB");
 
@@ -148,17 +148,17 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
   int ibinMax=1;
   int IBorOBindex = 0;
   int IBorOB = 0;
-  if (hSummary->GetNbinsX() == 144) {  //for backward compatibility (plots for IB only)                        
+  if (hSummary->GetNbinsX() == 144) {  //for backward compatibility (plots for IB only)
     ibinMax = hSummary->GetNbinsX();
     IBorOB = 0;
     IBorOBindex = 0;
   }
-  else if (hSummary->GetNbinsX() == 288) { //for backward compatibility (plots for OB only)                    
+  else if (hSummary->GetNbinsX() == 288) { //for backward compatibility (plots for OB only)
     IBorOB = 1;
     IBorOBindex = 1;
     ibinMax = hSummary->GetNbinsX();
   }
-  else IBorOB=2; //plots for IB + OB     
+  else IBorOB=2; //plots for IB + OB
 
   int ir = 0;
   double max[2] = {-1., -1.};
@@ -167,9 +167,9 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
     for (Int_t i=0; i<=1; i++){
       if (IBorOB==2){
         IBorOBindex = i;
-	if (i==0) {ibinMin =1; ibinMax = 144;} //IB                                                        
-	else  {ibinMin =144+1; ibinMax = herr[iplot]->GetNbinsX();} //OB                               
-      }   
+	if (i==0) {ibinMin =1; ibinMax = 144;} //IB
+	else  {ibinMin =144+1; ibinMax = herr[iplot]->GetNbinsX();} //OB
+      }
       hproj = (TH1D*)herr[iplot]->ProjectionY(Form("herr_%d",iplot), ibinMin, ibinMax);
       for(int ibin=1; ibin<=hSummary->GetNbinsY(); ibin++){
 	if(ir==0){

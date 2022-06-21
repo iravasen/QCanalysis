@@ -24,32 +24,32 @@ todo(){
     5) echo -e "\n\e[32m=> Starting analysis of the errors for all runs\e[39m"
        root -l -b -q AnalyzeErrorsFHR.C++
        remove ;;
-    6) echo -e "\n\e[32m=> Starting analysis of the trigger&flags for all runs\e[39m"
-       root -l -b -q AnalyzeTrgFlgFHR.C++
-       remove ;;
-    7) echo -e "\n\e[32m=> Starting threshold analysis run by run\e[39m"
+    6) echo -e "\n\e[32m=> Starting threshold analysis run by run\e[39m"
        root -l -b -q AnalyzeLayerThresholds.C++
        remove ;;
-    8) echo -e "\n\e[32m=> Starting dead pixel analysis run by run\e[39m"
+    7) echo -e "\n\e[32m=> Starting dead pixel analysis run by run\e[39m"
        root -l -b -q AnalyzeLayerDeadPixels.C++
        remove ;;
-    9) echo -e "\n\e[32m=> Starting threshold correlation analysis\e[39m"
+    8) echo -e "\n\e[32m=> Starting threshold correlation analysis\e[39m"
        root -l -b -q CompareLayerThresholds.C++
        remove ;;
-    10) echo -e "\n\e[32m=> Starting dead-pixels correlation analysis\e[39m"
+    9) echo -e "\n\e[32m=> Starting dead-pixels correlation analysis\e[39m"
        root -l -b -q CompareLayerDeadPixels.C++
        remove ;;
-    11) echo -e "\n\e[32m=> Starting comparison of dead-pixels between runs\e[39m"
+    10) echo -e "\n\e[32m=> Starting comparison of dead-pixels between runs\e[39m"
        root -l -b -q CompareDeadPixelsInRuns.C++
        remove ;;
-    12) echo -e "\n\e[32m=> Starting preparation of dead-pixel map\e[39m"
+    11) echo -e "\n\e[32m=> Starting preparation of dead-pixel map\e[39m"
        root -l -b -q MakeDeadPixelMap.C++
        remove ;;
-    13) echo -e "\n\e[32m=> Starting analysis of the lane status flags for all runs\e[39m"
+    12) echo -e "\n\e[32m=> Starting analysis of the lane status flags for all runs\e[39m"
        root -l -b -q AnalyzeLaneStatusFlag.C++
        remove ;;
-    14) echo -e "\n\e[32m=> Starting dump of lanes into error, fault, warning\e[39m"
+    13) echo -e "\n\e[32m=> Starting dump of lanes into error, fault, warning\e[39m"
        root -l -b -q DumpLaneStatusFlag.C++
+       remove ;;
+    14) echo -e "\n\e[32m=> Starting analysis of the trigger&flags for all runs\e[39m"
+       root -l -b -q AnalyzeTrgFlg.C++
        remove ;;
     15) echo -e "\n\e[32m=> Starting average cluster size analysis run by run\e[39m"
        root -l -b -q AnalyzeLayerAverageClusterSize.C++
@@ -74,19 +74,19 @@ analysismenu(){
   echo -e "\t 3.  Fake-hit rate study with hot pixels masking"
   echo -e "\t 4.  Fake-hit rate correlation analysis (reference run to be chosen)"
   echo -e "\t 5.  Error analysis for all runs"
-  echo -e "\t 6.  Trigger&Flag analysis for all runs"
   echo -e "\n"
   echo "[Analyses on Threshold runs]"
-  echo -e "\t 7.  Average threshold run by run"
-  echo -e "\t 8.  Total dead pixels run by run"
-  echo -e "\t 9.  Threshold correlation analysis (reference run to be chosen)"
-  echo -e "\t 10. Dead-pixels correlation analysis (reference run to be chosen)"
-  echo -e "\t 11. Compare number of dead-pixels between runs"
-  echo -e "\t 12. Make dead-pixels map for layer(s)"
+  echo -e "\t 6.  Average threshold run by run"
+  echo -e "\t 7.  Total dead pixels run by run"
+  echo -e "\t 8.  Threshold correlation analysis (reference run to be chosen)"
+  echo -e "\t 9. Dead-pixels correlation analysis (reference run to be chosen)"
+  echo -e "\t 10. Compare number of dead-pixels between runs"
+  echo -e "\t 11. Make dead-pixels map for layer(s)"
   echo -e "\n"
   echo "[Analyses on FEE]"
-  echo -e "\t 13. FEE Post Processing Offline: Lane Status Flags (ERROR,FAULT,WARNING)"
-  echo -e "\t 14. Dump in txt file of lanes into ERROR, FAULT, WARNING"
+  echo -e "\t 12. FEE Post Processing Offline: Lane Status Flags (ERROR,FAULT,WARNING)"
+  echo -e "\t 13. Dump in txt file of lanes into ERROR, FAULT, WARNING"
+  echo -e "\t 14. Trigger Flags analysis for all runs"
   echo -e "\n"
   echo "[Analyses on Clusters]"
   echo -e "\t 15.  Average cluster size run by run"
