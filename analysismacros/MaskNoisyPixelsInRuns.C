@@ -2,6 +2,8 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <stdlib.h>
+#include <time.h>
 #include <array>
 #include <TH2.h>
 #include <TH3.h>
@@ -144,7 +146,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
   }
   //Setting up the connection to the ccdb database
 
-  
+
   //      CcdbDatabase* ccdb;
   //      if(ccdb_upload) ccdb = SetupConnection();       ~To-Do- Currently not working
 
@@ -154,7 +156,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
 
   ccdb->connect(ccdbport.c_str(), "", "", "");
 
-  
+
   //Read the file and the list of plots with entries (hitmaps!)
   TFile *infile=new TFile(filepath_hit.c_str());
   TList *list = (TList*)infile->GetListOfKeys();
@@ -534,8 +536,8 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
 	cnv.SetTickx();
 	cnv.SetTicky();
 	cnv.SetMargin(0.0988,0.1,0.1,0.0993);
-        canvas = &cnv;    
-    
+        canvas = &cnv;
+
 	TH1F *hframe = cnv.DrawFrame(0.1,7e-15,3*(nMasked),1e-3, Form("Layer %i %s - Average FHR %s; # Hot Pixels masked ; FHR (/event/pixel)",ilayEff, SStavePart[StavePart].Data(), filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str()));
 	hframe->SetBins(nMasked+1,binsmasked);
 
@@ -582,7 +584,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
 	string Runperiod = Form("%s",filepath_hit.substr(filepath_hit.find("from"),27).c_str());
 	if (StavePart==0){
 	  if (numStavePart==1){ NameCnv = Form("../Plots/Layer%i_FHRpixmask_%s", ilayEff,filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
-	    if(ccdb_upload){        
+	    if(ccdb_upload){
 	      canvas->SetName(Form("Layer%i_FHRpixmask",ilayEff));
 	      auto mo1 = std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%i",ilayEff),TaskClass, DetectorName,1,Runperiod);
 	      mo1->setIsOwner(false);
@@ -592,10 +594,10 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isHotPixe
 	  else {NameCnv = Form("../Plots/Layer%i_HSLower_FHRpixmask_%s", ilayEff, filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
 	    if(ccdb_upload){
 	      canvas->SetName(Form("Layer%i_HSLower_FHRpixmask",ilayEff));
-	      auto mo2 = std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%i",ilayEff),TaskClass, DetectorName,1,Runperiod); 
+	      auto mo2 = std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%i",ilayEff),TaskClass, DetectorName,1,Runperiod);
 	      mo2->setIsOwner(false);
 	      ccdb->storeMO(mo2);}
-	  } 
+	  }
 	}
 	else{ NameCnv = Form("../Plots/Layer%i_HSUpper_FHRpixmask_%s", ilayEff, filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
 	  if(ccdb_upload){
@@ -782,7 +784,7 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
   }
   hmapclone->GetAxis(1)->SetRange(iyMin, iyMax);
 
-  vector<array<int,3>> hmapclonecontent; 
+  vector<array<int,3>> hmapclonecontent;
   array<int,3> mapclonecontent;
   int coord[2];
   long int totalhits =0;
@@ -798,12 +800,16 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
   }
   sort(hmapclonecontent.begin(), hmapclonecontent.end(), greater<>());
 
+  srand ( time(NULL) ); //initialize the random seed
+
   if (!isOnlyHotPixelMap){
     for(int iter=0; iter<nMasked+1; iter++){
-      
+
+      int vidx = rand() % ((int)hmapclonecontent.size()); //random index
+
       if (iter ==0)      totalhits = Fulltotalhits;
       else if (iter>0 && iter<=(int)hmapclonecontent.size())      totalhits = totalhits - hmapclonecontent[iter-1][0];
-      
+
       float fhr = nchips==0 ? 0. : (float)totalhits / (512.*1024.*nchips*ntrig);
 
       if(ntrig<0) fhr=0.;
@@ -812,35 +818,36 @@ std::array<float,nMasked+1> GetFHRwithMasking(THnSparse *hmap, const int nchips,
       double max = -1.;
       int x=0,y=0;
       long int binwithmax = 0;
-  if(!hmapclonecontent.size()) continue;
-      x = hmapclonecontent[iter][1];
-      y = hmapclonecontent[iter][2];
+      if(!hmapclonecontent.size()) continue;
+      x = hmapclonecontent[vidx][1];//use vdix so to take random pixels for the hotmap
+      y = hmapclonecontent[vidx][2];
       if (isHotPixelMapDrawn){
-	if(totalhits!=0 && iter < 100) {
-	  hhotmap->SetBinContent(((x-1)/4)+1, ((y-1)/4)+1, 1); // to avoid a marker in 0,0 for empty histos
-	}
+      	if(totalhits!=0 && iter < 100) {
+      	  hhotmap->SetBinContent(((x-1)/4)+1, ((y-1)/4)+1, 1); // to avoid a marker in 0,0 for empty histos
+      	}
       }
     }
   }
   else {
     for(int iter=0; iter<nMasked+1; iter++){
+      int vidx = rand() % ((int)hmapclonecontent.size()); //random index
       totalhits =0;
       for (int i=iter; i< (int)hmapclonecontent.size(); i++){
-	totalhits += hmapclonecontent[i][0];
+	      totalhits += hmapclonecontent[i][0];
       }
       int x=0,y=0;
-      x = hmapclonecontent[iter][1];
-      y = hmapclonecontent[iter][2];
+      x = hmapclonecontent[vidx][1];
+      y = hmapclonecontent[vidx][2];
       if (isHotPixelMapDrawn){
-	if(totalhits!=0 && iter < 100) {
-	  hhotmap->SetBinContent(((x-1)/4)+1, ((y-1)/4)+1, 1); // to avoid a marker in 0,0 for empty histos
-	} else if(iter>=100) {
-          break;
+      	if(totalhits!=0 && iter < 100) {
+      	  hhotmap->SetBinContent(((x-1)/4)+1, ((y-1)/4)+1, 1); // to avoid a marker in 0,0 for empty histos
+      	} else if(iter>=100) {
+            break;
         }
       }
     }
   }
- 
+
   delete hmapclone;
 
   return fhrstave;
