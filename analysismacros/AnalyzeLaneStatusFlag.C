@@ -123,8 +123,9 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
 			 ) {
 			cout<<"<W> Object "<<obj->GetName()<<" is not 1D or 2D histogram : will not be converted"<<endl;
 		}
-    if(objname.find("trg")!=string::npos) continue; //skip trigger flags plot here 
+     
 		string objname = (string)obj->GetName();
+		if(objname.find("trg")!=string::npos) continue; //skip trigger flags plot here
 		cout<<"objname = "<<objname<<endl;
 		//if(objname.find("trg")==string::npos) continue;
 		string timestamp = objname.find("run")==string::npos ? objname.substr(objname.find("_",2)+1, 13) : objname.substr(objname.find("_",6)+1, 13);
