@@ -554,7 +554,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
       if(ccdb_upload){
 	canvas->SetName(Form("Layer%d-Stave%d_NoisyPixComparison",ilay,is));
 	auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%d",ilay),TaskClass, DetectorName,1,Runperiod);
-        mo2->addMetadata("Reference Run number",Reference_run.c_str());
+        mo2->addMetadata("ReferenceRunNumber",Reference_run.c_str());
         mo2->setIsOwner(false);
         ccdb->storeMO(mo2);
 
