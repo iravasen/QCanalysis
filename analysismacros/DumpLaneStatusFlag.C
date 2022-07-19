@@ -25,10 +25,10 @@ int getlayer(int ifee){
 
 int getstave(int lay, int ifee){
   if(!lay) return ((ifee-1) % (3*ns[lay])) / 3;
-  int ntot = 0;
+  int ntot = ifee-1;
   for(int ilay=0; ilay<lay; ilay++)
-    ntot+=ilay<3 ? 3*ns[ilay] : 2*ns[ilay];
-  return lay<3 ? ((ifee-1) % ntot) / 3 :  ((ifee-1) % ntot) / 2;
+    ntot-=ilay<3 ? 3*ns[ilay] : 2*ns[ilay];
+ return lay<3 ? ntot / 3 :  ntot / 2;
 }
 
 
@@ -106,14 +106,13 @@ void DoAnalysis(string filepath){
 		}
 		if(objname.find("LSwarning")!=string::npos){
 			h2warning = (TH2*)obj;
-			cout<<"... Reading "<<obj->GetName()<<endl;
+                        cout<<"... Reading "<<obj->GetName()<<endl;
 			h2warning->ClearUnderflowAndOverflow();
 			hwarning.push_back(h2warning);
 			timestamps4.push_back(timestamp);
 			runnumbers4.push_back(runnum);
 		}
 	}
-
 	//dump lanes in error 
 	std::ofstream flerr(Form("../Plots/lane_dump_error_run%s_to_run%s.txt", runnumbers1[runnumbers1.size()-1].c_str(), runnumbers1[0].c_str()));
 	for(int i=0; i<(int)herr.size(); i++){
@@ -129,7 +128,6 @@ void DoAnalysis(string filepath){
 		}
 	}
 	flerr.close();
-
 
 	//dump lanes in fault 
 	std::ofstream flfault(Form("../Plots/lane_dump_fault_run%s_to_run%s.txt", runnumbers2[runnumbers1.size()-1].c_str(), runnumbers2[0].c_str()));
@@ -147,7 +145,6 @@ void DoAnalysis(string filepath){
 	}
 	flfault.close();
 
-        
 	//dump lanes in warning
 	std::ofstream flwarn(Form("../Plots/lane_dump_warning_run%s_to_run%s.txt", runnumbers4[runnumbers1.size()-1].c_str(), runnumbers4[0].c_str()));
 	for(int i=0; i<(int)hwarning.size(); i++){
@@ -157,9 +154,10 @@ void DoAnalysis(string filepath){
      			        if(binc>0){
         				int layer = getlayer(ifee);
         				int stave = getstave(layer,ifee);
-        				flerr<<"RUN"<<runnumbers4[i]<<" "<<"FEEID"<<ifee<<" --> "<< "L"<<layer<<"_"<<stave<<" lane "<<ilane<<"\n";
+        				flwarn<<"RUN"<<runnumbers4[i]<<" "<<"FEEID"<<ifee<<" --> "<< "L"<<layer<<"_"<<stave<<" lane "<<ilane<<"\n";
       				}
 			}
 		}
 	}
+        flwarn.close();
 } 
