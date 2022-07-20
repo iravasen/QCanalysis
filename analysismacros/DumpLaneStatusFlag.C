@@ -24,8 +24,8 @@ int getlayer(int ifee){
 }
 
 int getstave(int lay, int ifee){
-  if(!lay) return ((ifee-1) % (3*ns[lay])) / 3;
-  int ntot = ifee-1;
+  if(!lay) return (ifee % (3*ns[lay])) / 3;
+  int ntot = ifee;
   for(int ilay=0; ilay<lay; ilay++)
     ntot-=ilay<3 ? 3*ns[ilay] : 2*ns[ilay];
  return lay<3 ? ntot / 3 :  ntot / 2;
