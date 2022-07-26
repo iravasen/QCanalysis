@@ -46,11 +46,10 @@ TFile *file = TFile::Open(fpath.c_str());
    vector<double>binminCenters, binminCenters1, binminCenters2, binminCenters3, binminCenters4, binminCenters5;
    vector<double>binmaxCenters, binmaxCenters1, binmaxCenters2, binmaxCenters3, binmaxCenters4, binmaxCenters5;
    vector<double>means, means1, means2, means3, means4, means5;
-   vector<double>aves, aves_nozero, aves1, aves1_nozero, aves2, aves3;
-   vector<double>rmss, rmss_nozero, rmss1, rmss1_nozero, rmss2, rmss3;
-   vector<double>xpoints, ypoints;
+   vector<double>aves, aves_err, aves_nozero, aves_nozero_err, aves1, aves1_err, aves1_nozero, aves1_nozero_err, aves2, aves2_err, aves3, aves3_err;
+   vector<double>rmss, rmss_err, rmss_nozero, rmss_nozero_err, rmss1, rmss1_err, rmss1_nozero, rmss1_nozero_err, rmss2, rmss2_err, rmss3, rmss3_err;
+   vector<double>xpoints, xpoints_err, ypoints, ypoints_err, rmsx_vertex, rmsy_vertex, rmsx_vertex_err, rmsy_vertex_err;
    vector<TH2*>histos, histos1;
-   vector<double>bx,by,xmaxs,xmins,ymaxs,ymins;
    vector<double>bx1,by1,xmaxs1,xmins1,ymaxs1,ymins1;
    double a,b,d,e,f,z,j,k=0;
    bool ccdb_upload;
@@ -250,10 +249,12 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
          //Mean value in x axis
          double ave3 = hz1->GetMean(1);
          aves3.push_back(ave3);
+         aves3_err.push_back(hz1->GetMeanError());
          
          //Extract RMS of the distribution
          double rms3 = hz1->GetRMS();
          rmss3.push_back(rms3);
+         rmss3_err.push_back(hz1->GetRMSError());
       }      
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -290,28 +291,17 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
 
          TH2D *hf= (TH2D *) key->ReadObj();
          histos.push_back(hf);
+         //x 
+         xpoints.push_back(hf->GetMean(1));
+         xpoints_err.push_back(hf->GetMeanError(1));
+         rmsx_vertex.push_back(hf->GetRMS(1));
+         rmsx_vertex_err.push_back(hf->GetRMSError(1));
+         //y
+         ypoints.push_back(hf->GetMean(2));
+         ypoints_err.push_back(hf->GetMeanError(2));
+         rmsy_vertex.push_back(hf->GetRMS(2));
+         rmsy_vertex_err.push_back(hf->GetRMSError(2));
          
-         int binsx = hf->GetNbinsX();
-         bx.push_back(binsx);
-         int binsy = hf->GetNbinsY();
-         by.push_back(binsy);
-         double xmax=hf->GetXaxis()->GetXmax();
-         xmaxs.push_back(xmax);
-         double xmin=hf->GetXaxis()->GetXmin();
-         xmins.push_back(xmin);        
-         double ymax = hf->GetYaxis()->GetBinLowEdge(hf->GetNbinsY()) + hf->GetYaxis()->GetBinWidth(hf->GetNbinsY());
-         ymaxs.push_back(ymax);
-         double ymin = hf->GetYaxis()->GetBinLowEdge(1);
-         ymins.push_back(ymin);
-                                   
-         //Find the bin with maximum entries and store x and y coordinates
-         int MaxBin = hf->GetMaximumBin();
-         int x,y,z;
-         hf->GetBinXYZ(MaxBin, x, y, z);
-         double bcx = ((TAxis*)hf->GetXaxis())->GetBinCenter(x);
-         double bcy = ((TAxis*)hf->GetYaxis())->GetBinCenter(y);
-         xpoints.push_back(bcx);
-         ypoints.push_back(bcy);         
       } 
       
 //////////////////////////////////////////////////////////////////////////////////  
@@ -326,12 +316,12 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
          TH1D *he= (TH1D *) key->ReadObj();
          
          //Mean value in x axis
-         double ave2 = he->GetMean(1);
-         aves2.push_back(ave2);
+         aves2.push_back(he->GetMean());
+         aves2_err.push_back(he->GetMeanError());
          
          //Extract RMS of the distribution
-         double rms2 = he->GetRMS();
-         rmss2.push_back(rms2);
+         rmss2.push_back(he->GetRMS());
+         rmss2_err.push_back(he->GetRMSError());
       }           
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -347,12 +337,16 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
          
          //Mean value in x axis
          aves1.push_back(ht->GetMean(1));
+         aves1_err.push_back(ht->GetMeanError(1));
          //Extract RMS of the distribution
-         rmss1.push_back(ht->GetRMS());
+         rmss1.push_back(ht->GetRMS(1));
+         rmss1_err.push_back(ht->GetRMSError(1));
          //Mean value removing first bin with x = 0
          ht->SetBinContent(1,0);
          aves1_nozero.push_back(ht->GetMean(1));
+         aves1_nozero_err.push_back(ht->GetMeanError(1));
          rmss1_nozero.push_back(ht->GetRMS());
+         rmss1_nozero_err.push_back(ht->GetRMSError(1));
          
       }   
 //////////////////////////////////////////////////////////////////////////////////          
@@ -368,13 +362,17 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
           
           //Mean value in x axis
           aves.push_back(hh->GetMean(1));
+          aves_err.push_back(hh->GetMeanError(1));
           rmss.push_back(hh->GetRMS());
+          rmss_err.push_back(hh->GetRMSError());
           
           //remove entries at x = 0
           hh->SetBinContent(1,0);
 
           aves_nozero.push_back(hh->GetMean());
+          aves_nozero_err.push_back(hh->GetMeanError());
           rmss_nozero.push_back(hh->GetRMS());
+          rmss_nozero_err.push_back(hh->GetRMSError());
       } 
       
 //////////////////////////////////////////////////////////////////////////////////
@@ -696,28 +694,47 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   legend1->AddEntry(gr32,"#pi-2#pi","lp");
   legend1->Draw();
 
-////////////////////////////////VertexZ//////////////////////////////////////////////////
+////////////////////////////////VertexZ Avg//////////////////////////////////////////////////
 
 std::reverse(runs5.begin(),runs5.end());
 std::reverse(aves3.begin(),aves3.end());
+std::reverse(aves3_err.begin(),aves3_err.end());
 std::reverse(rmss3.begin(),rmss3.end());
+std::reverse(rmss3_err.begin(),rmss3_err.end());
 auto cz1 = new TCanvas();
 cz1->SetGrid(0,1); 
-auto gerr3 = new TGraphErrors(cycle5.size(),&cycle5[0],&aves3[0],0,&rmss3[0]);
+auto gerr3 = new TGraphErrors(cycle5.size(),&cycle5[0],&aves3[0],0,&aves3_err[0]);
 gerr3->GetXaxis()->SetNdivisions(cycle5.size());
 TH1F hfake5("hfake5","hfake5", gerr3->GetN(),-0.5,(double)gerr3->GetN()-0.5);
 hfake5.SetStats(0);
 for (int i=1;i<=(int)cycle5.size();i++) hfake5.GetXaxis()->SetBinLabel(i,runs5[i-1].data());
 hfake5.GetXaxis()->SetLabelSize(0.027);
 gerr3->SetMarkerStyle(20);
-hfake5.GetYaxis()->SetRangeUser(-8,8);
+hfake5.GetYaxis()->SetRangeUser(-5,5);
 hfake5.SetTitle("Mean Z coordinate of vertices");
 hfake5.GetXaxis()->SetTitle("Runs");
 hfake5.GetYaxis()->SetTitle("<Z coordinates> (cm)");
 hfake5.Draw();
 gerr3->Draw("PL same");
 
-///////////////////////////////VertexRvsZ///////////////////////////////////////////////////
+////////////////////////////////VertexZ RMS//////////////////////////////////////////////////
+auto cz11 = new TCanvas();
+cz11->SetGrid(0,1);
+auto gerr31 = new TGraphErrors(cycle5.size(),&cycle5[0],&rmss3[0],0,&rmss3_err[0]);
+gerr31->GetXaxis()->SetNdivisions(cycle5.size());
+TH1F hfake51("hfake51","hfake51", gerr31->GetN(),-0.5,(double)gerr31->GetN()-0.5);
+hfake51.SetStats(0);
+for (int i=1;i<=(int)cycle5.size();i++) hfake51.GetXaxis()->SetBinLabel(i,runs5[i-1].data());
+hfake51.GetXaxis()->SetLabelSize(0.027);
+gerr31->SetMarkerStyle(20);
+hfake51.GetYaxis()->SetRangeUser(0,10);
+hfake51.SetTitle("RMS of Z coordinate of vertices");
+hfake51.GetXaxis()->SetTitle("Runs");
+hfake51.GetYaxis()->SetTitle("RMS (cm)");
+hfake51.Draw();
+gerr31->Draw("PL same");
+
+///////////////////////////// VertexRvsZ //////////////////////////////////////////////////////////
 
 std::reverse(runsZ.begin(),runsZ.end());
 auto c_summary1 = new TCanvas();
@@ -730,11 +747,18 @@ c_summary1->SetLogz();
 hSummary1->SetTitle("Distance in transverse plane vs Z. Summary plot for all runs");
 hSummary1->Draw("colz");   
 
-///////////////////////////VertexCoordinates///////////////////////////////////////////////////
+
+///////////////////////////VertexCoordinates AVG///////////////////////////////////////////////////
 
 std::reverse(runs4.begin(),runs4.end());
 std::reverse(xpoints.begin(),xpoints.end());
 std::reverse(ypoints.begin(),ypoints.end());
+std::reverse(xpoints_err.begin(),xpoints_err.end());
+std::reverse(ypoints_err.begin(),ypoints_err.end());
+std::reverse(rmsx_vertex.begin(), rmsx_vertex.end());
+std::reverse(rmsx_vertex_err.begin(), rmsx_vertex_err.end());
+std::reverse(rmsy_vertex.begin(), rmsy_vertex.end());
+std::reverse(rmsy_vertex_err.begin(), rmsy_vertex_err.end());
 auto c_summary = new TCanvas();
 TH2D *hSummary =  (TH2D*)histos[0]->Clone("hSummary");
 for(int iplot=1; iplot<(int)histos.size(); iplot++){  
@@ -747,22 +771,21 @@ hSummary->Draw("colz");
 
 auto cxy = new TCanvas();
 cxy->SetGrid(0,1); 
-//gPad->SetLogy();
-auto grx = new TGraph(cycle4.size(),&cycle4[0],&xpoints[0]);
+auto grx = new TGraphErrors(cycle4.size(),&cycle4[0],&xpoints[0], NULL, &xpoints_err[0]);
 grx->GetXaxis()->SetNdivisions(cycle4.size());
 TH1F hfake6("hfake6","hfake6", grx->GetN(),-0.5,(double)grx->GetN()-0.5);
 hfake6.SetStats(0);
 for (int i=1;i<=(int)cycle4.size();i++) hfake6.GetXaxis()->SetBinLabel(i,runs4[i-1].data());
 hfake6.GetXaxis()->SetLabelSize(0.027);
 grx->SetMarkerStyle(20);
-hfake6.SetTitle("Coordinates of of most probable vertex");
+hfake6.SetTitle("Vertex X-Y average positions");
 hfake6.GetXaxis()->SetTitle("Runs");
-hfake6.GetYaxis()->SetTitle("Coordinates of the bin with maximum entries (cm)");
-hfake6.GetYaxis()->SetRangeUser(-0.5,0.5);
+hfake6.GetYaxis()->SetTitle("Average (cm)");
+hfake6.GetYaxis()->SetRangeUser(-0.3,0.3);
 hfake6.Draw();
 grx->Draw("PL same");
 
-auto gry = new TGraph(cycle4.size(),&cycle4[0],&ypoints[0]);
+auto gry = new TGraphErrors(cycle4.size(),&cycle4[0],&ypoints[0], NULL, &ypoints_err[0]);
 gry->SetMarkerStyle(20);
 gry->SetMarkerColor(kRed);
 gry->SetLineColor(kRed);
@@ -775,14 +798,42 @@ legend_xy->AddEntry(grx,"X","lp");
 legend_xy->AddEntry(gry,"Y","lp");
 legend_xy->Draw();
 
-///////////////////////NVertexContributors//////////////////////////////////////////
+
+///////////////////////VertexCoordinates RMS////////////////////////////////////////
+auto cxyrms = new TCanvas();
+cxyrms->SetGrid(0,1);
+auto grxrms = new TGraphErrors(cycle4.size(),&cycle4[0],&rmsx_vertex[0], NULL, &rmsx_vertex_err[0]);
+grxrms->GetXaxis()->SetNdivisions(cycle4.size());
+TH1F hfake6rms("hfake6rms","hfake6rms", grxrms->GetN(),-0.5,(double)grxrms->GetN()-0.5);
+hfake6rms.SetStats(0);
+for (int i=1;i<=(int)cycle4.size();i++) hfake6rms.GetXaxis()->SetBinLabel(i,runs4[i-1].data());
+hfake6rms.GetXaxis()->SetLabelSize(0.027);
+grxrms->SetMarkerStyle(20);
+hfake6rms.SetTitle("Vertex X-Y RMS");
+hfake6rms.GetXaxis()->SetTitle("Runs");
+hfake6rms.GetYaxis()->SetTitle("RMS (cm)");
+hfake6rms.GetYaxis()->SetRangeUser(0,0.3);
+hfake6rms.Draw();
+grxrms->Draw("PL same");
+
+auto gryrms = new TGraphErrors(cycle4.size(),&cycle4[0],&rmsy_vertex[0], NULL, &rmsy_vertex_err[0]);
+gryrms->SetMarkerStyle(20);
+gryrms->SetMarkerColor(kRed);
+gryrms->SetLineColor(kRed);
+gryrms->Draw("PL SAME");
+
+legend_xy->Draw();
+
+///////////////////////NVertexContributors AVG//////////////////////////////////////////
 
 std::reverse(runs3.begin(),runs3.end());
 std::reverse(aves2.begin(),aves2.end());
 std::reverse(rmss2.begin(),rmss2.end());
+std::reverse(aves2_err.begin(),aves2_err.end());
+std::reverse(rmss2_err.begin(),rmss2_err.end());
 auto ce = new TCanvas();
 ce->SetGrid(0,1); 
-auto gerr2 = new TGraphErrors(cycle3.size(),&cycle3[0],&aves2[0],0,&rmss2[0]);
+auto gerr2 = new TGraphErrors(cycle3.size(),&cycle3[0],&aves2[0],0,&aves2_err[0]);
 gerr2->GetXaxis()->SetNdivisions(cycle3.size());
 TH1F hfake7("hfake7","hfake7", gerr2->GetN(),-0.5,(double)gerr2->GetN()-0.5);
 hfake7.SetStats(0);
@@ -792,21 +843,44 @@ gerr2->SetMarkerStyle(20);
 hfake7.SetTitle("Mean NVertexContributors");
 hfake7.GetXaxis()->SetTitle("Runs");
 hfake7.GetYaxis()->SetTitle("<# of contributors for vertex>");
-hfake7.GetYaxis()->SetRangeUser(0,20);
+hfake7.GetYaxis()->SetRangeUser(0,40);
 hfake7.Draw();
 gerr2->Draw("PL same");
 
-///////////////////////////Ntracks/////////////////////////////////////////////////////// 
+/////////////////// NVertexContributors RMS /////////////////////////////////////////////
+auto cerms = new TCanvas();
+cerms->SetGrid(0,1);
+auto gerr2rms = new TGraphErrors(cycle3.size(),&cycle3[0],&rmss2[0],0,&rmss2_err[0]);
+gerr2rms->GetXaxis()->SetNdivisions(cycle3.size());
+TH1F hfake7rms("hfake7rms","hfake7rms", gerr2rms->GetN(),-0.5,(double)gerr2rms->GetN()-0.5);
+hfake7rms.SetStats(0);
+for (int i=1;i<=(int)cycle3.size();i++) hfake7rms.GetXaxis()->SetBinLabel(i,runs3[i-1].data());
+hfake7rms.GetXaxis()->SetLabelSize(0.027);
+gerr2rms->SetMarkerStyle(20);
+hfake7rms.SetTitle("RMS of NVertexContributors");
+hfake7rms.GetXaxis()->SetTitle("Runs");
+hfake7rms.GetYaxis()->SetTitle("Contributors RMS");
+hfake7rms.GetYaxis()->SetRangeUser(0,40);
+hfake7rms.Draw();
+gerr2rms->Draw("PL same");
+
+
+///////////////////////////Ntracks averages///////////////////////////////////////////// 
 
 std::reverse(runs2.begin(),runs2.end());
 std::reverse(aves1.begin(),aves1.end());
+std::reverse(aves1_err.begin(),aves1_err.end());
 std::reverse(aves1_nozero.begin(),aves1_nozero.end());
+std::reverse(aves1_nozero_err.begin(),aves1_nozero_err.end());
 std::reverse(rmss1.begin(),rmss1.end());
+std::reverse(rmss1_err.begin(),rmss1_err.end());
 std::reverse(rmss1_nozero.begin(),rmss1_nozero.end());
+std::reverse(rmss1_nozero_err.begin(),rmss1_nozero_err.end());
+
 auto ct = new TCanvas();
 ct->SetGrid(0,1); 
-auto gerr1 = new TGraphErrors(cycle2.size(),&cycle2[0],&aves1[0],0,&rmss1[0]);
-auto gerr1_nozero = new TGraphErrors(cycle2.size(),&cycle2[0],&aves1_nozero[0],0,&rmss1_nozero[0]);
+auto gerr1 = new TGraphErrors(cycle2.size(),&cycle2[0],&aves1[0],0,&aves1_err[0]);
+auto gerr1_nozero = new TGraphErrors(cycle2.size(),&cycle2[0],&aves1_nozero[0],0,&aves1_nozero_err[0]);
 gerr1->GetXaxis()->SetNdivisions(cycle2.size());
 gerr1_nozero->GetXaxis()->SetNdivisions(cycle2.size());
 TH1F hfake8("hfake8","hfake8", gerr1->GetN(),-0.5,(double)gerr1->GetN()-0.5);
@@ -815,27 +889,59 @@ for (int i=1;i<=(int)cycle2.size();i++) hfake8.GetXaxis()->SetBinLabel(i,runs2[i
 hfake8.GetXaxis()->SetLabelSize(0.027);
 gerr1->SetMarkerStyle(20);
 gerr1->SetMarkerColor(kRed);
+gerr1->SetLineColor(kRed);
 gerr1_nozero->SetMarkerStyle(20);
 gerr1_nozero->SetMarkerColor(kBlue);
+gerr1_nozero->SetLineColor(kBlue);
 hfake8.SetTitle("Mean number of tracks event by event (blue: removed bin at n_tracks = 0)");
 hfake8.GetXaxis()->SetTitle("Runs");
 hfake8.GetYaxis()->SetTitle("<# tracks>");
-hfake8.GetYaxis()->SetRangeUser(0, 30);
+hfake8.GetYaxis()->SetRangeUser(0, 100);
 hfake8.Draw();
 gerr1->Draw("PL same");
 gerr1_nozero->Draw("PL same");
 
-////////////////////////AssociatedClusterFraction/////////////////////////////////////
+//////////////////////// Ntracks RMS /////////////////////////////////////////////////
+auto ctrms = new TCanvas();
+ctrms->SetGrid(0,1);
+auto gerr1rms = new TGraphErrors(cycle2.size(),&cycle2[0],&rmss1[0],0,&rmss1_err[0]);
+auto gerr1rms_nozero = new TGraphErrors(cycle2.size(),&cycle2[0],&rmss1_nozero[0],0,&rmss1_nozero_err[0]);
+gerr1rms->GetXaxis()->SetNdivisions(cycle2.size());
+gerr1rms_nozero->GetXaxis()->SetNdivisions(cycle2.size());
+TH1F hfake8rms("hfake8rms","hfake8rms", gerr1rms->GetN(),-0.5,(double)gerr1rms->GetN()-0.5);
+hfake8rms.SetStats(0);
+for (int i=1;i<=(int)cycle2.size();i++) hfake8rms.GetXaxis()->SetBinLabel(i,runs2[i-1].data());
+hfake8rms.GetXaxis()->SetLabelSize(0.027);
+gerr1rms->SetMarkerStyle(20);
+gerr1rms->SetMarkerColor(kRed);
+gerr1rms->SetLineColor(kRed);
+gerr1rms_nozero->SetMarkerStyle(20);
+gerr1rms_nozero->SetMarkerColor(kBlue);
+gerr1rms_nozero->SetLineColor(kBlue);
+hfake8rms.SetTitle("Rms of number of tracks event by event (blue: removed bin at n_tracks = 0)");
+hfake8rms.GetXaxis()->SetTitle("Runs");
+hfake8rms.GetYaxis()->SetTitle("# tracks RMS");
+hfake8rms.GetYaxis()->SetRangeUser(0, 100);
+hfake8rms.Draw();
+gerr1rms->Draw("PL same");
+gerr1rms_nozero->Draw("PL same");
+
+
+////////////////////////AssociatedClusterFraction Avg/////////////////////////////////////
 
 std::reverse(runs1.begin(),runs1.end());
 std::reverse(aves.begin(),aves.end());
+std::reverse(aves_err.begin(),aves_err.end());
 std::reverse(rmss.begin(),rmss.end());
+std::reverse(rmss_err.begin(),rmss_err.end());
 std::reverse(aves_nozero.begin(),aves_nozero.end());
+std::reverse(aves_nozero_err.begin(),aves_nozero_err.end());
 std::reverse(rmss_nozero.begin(),rmss_nozero.end());
+std::reverse(rmss_nozero_err.begin(),rmss_nozero_err.end());
 auto c0 = new TCanvas();
 c0->SetGrid(0,1); 
-auto gerr = new TGraphErrors(cycle1.size(),&cycle1[0],&aves[0],0,&rmss[0]);
-auto gerr_nozero = new TGraphErrors(cycle1.size(),&cycle1[0],&aves_nozero[0],0,&rmss_nozero[0]);
+auto gerr = new TGraphErrors(cycle1.size(),&cycle1[0],&aves[0],0,&aves_err[0]);
+auto gerr_nozero = new TGraphErrors(cycle1.size(),&cycle1[0],&aves_nozero[0],0,&aves_nozero_err[0]);
 gerr->GetXaxis()->SetNdivisions(cycle1.size());
 gerr_nozero->GetXaxis()->SetNdivisions(cycle1.size());
 TH1F hfake9("hfake9","hfake9", gerr->GetN(),-0.5,(double)gerr->GetN()-0.5);
@@ -844,8 +950,10 @@ for (int i=1;i<=(int)cycle1.size();i++) hfake9.GetXaxis()->SetBinLabel(i,runs1[i
 hfake9.GetXaxis()->SetLabelSize(0.027);
 gerr->SetMarkerStyle(20);
 gerr->SetMarkerColor(kRed);
+gerr->SetLineColor(kRed);
 gerr_nozero->SetMarkerStyle(20);
 gerr_nozero->SetMarkerColor(kBlue);
+gerr_nozero->SetLineColor(kBlue);
 hfake9.SetTitle("Mean of fraction of clusters into tracks event by event (blue: w/o entries at fraction = 0)");
 hfake9.GetXaxis()->SetTitle("Runs");
 hfake9.GetYaxis()->SetTitle("<Clusters in tracks/All clusters>");
@@ -854,7 +962,32 @@ hfake9.Draw();
 gerr->Draw("PL same");
 gerr_nozero->Draw("PL same");
 
-/////////////////////////NClustersPerTrackEta//////////////////////////////////////
+/////////////////////////AssociatedClusterFraction RMS////////////////////////////////
+auto c0rms = new TCanvas();
+c0rms->SetGrid(0,1);
+auto gerrrms = new TGraphErrors(cycle1.size(),&cycle1[0],&rmss[0],0,&rmss_err[0]);
+auto gerrrms_nozero = new TGraphErrors(cycle1.size(),&cycle1[0],&rmss_nozero[0],0,&rmss_nozero_err[0]);
+gerrrms->GetXaxis()->SetNdivisions(cycle1.size());
+gerrrms_nozero->GetXaxis()->SetNdivisions(cycle1.size());
+TH1F hfake9rms("hfake9rms","hfake9rms", gerrrms->GetN(),-0.5,(double)gerrrms->GetN()-0.5);
+hfake9rms.SetStats(0);
+for (int i=1;i<=(int)cycle1.size();i++) hfake9rms.GetXaxis()->SetBinLabel(i,runs1[i-1].data());
+hfake9rms.GetXaxis()->SetLabelSize(0.027);
+gerrrms->SetMarkerStyle(20);
+gerrrms->SetMarkerColor(kRed);
+gerrrms->SetLineColor(kRed);
+gerrrms_nozero->SetMarkerStyle(20);
+gerrrms_nozero->SetMarkerColor(kBlue);
+gerrrms_nozero->SetLineColor(kBlue);
+hfake9rms.SetTitle("Rms of fraction of clusters into tracks event by event (blue: w/o entries at fraction = 0)");
+hfake9rms.GetXaxis()->SetTitle("Runs");
+hfake9rms.GetYaxis()->SetTitle("RMS");
+hfake9rms.GetYaxis()->SetRangeUser(0,2);
+hfake9rms.Draw();
+gerrrms->Draw("PL same");
+gerrrms_nozero->Draw("PL same");
+
+/////////////////////////NClustersPerTrackEta/////////////////////////////////////////
 std::reverse(runs.begin(),runs.end());
 std::reverse(means.begin(),means.end());
 std::reverse(means1.begin(),means1.end());
@@ -1053,12 +1186,17 @@ c21->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str
 c3->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str())); 
 c31->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));   
 cz1->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
+cz11->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
 c_summary1->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));  
 c_summary->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));  
 cxy->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
+cxyrms->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
 ce->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
+cerms->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
 ct->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
+ctrms->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
 c0->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
+c0rms->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
 c_->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
 c->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str())); 
 c1->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
@@ -1099,6 +1237,11 @@ auto moz1 = std::make_shared<o2::quality_control::core::MonitorObject>(cz1, Task
         moz1->setIsOwner(false);
         ccdb->storeMO(moz1);
 
+        cz11->SetName("Rms_Zvertex_coordinate");
+auto moz11 = std::make_shared<o2::quality_control::core::MonitorObject>(cz11, TaskName, TaskClass, DetectorName,1,Runperiod);
+        moz11->setIsOwner(false);
+        ccdb->storeMO(moz11);
+
 	c_summary1->SetName("Summary_Distance_Primary_Vertex");
 auto mosummary1 = std::make_shared<o2::quality_control::core::MonitorObject>(c_summary1, TaskName, TaskClass, DetectorName,1,Runperiod);
         mosummary1->setIsOwner(false);
@@ -1114,20 +1257,41 @@ auto moxy = std::make_shared<o2::quality_control::core::MonitorObject>(cxy, Task
         moxy->setIsOwner(false);
         ccdb->storeMO(moxy);
 
+cxyrms->SetName("Track_Vertex_Coordinates_Rms");
+auto moxyrms = std::make_shared<o2::quality_control::core::MonitorObject>(cxyrms, TaskName, TaskClass, DetectorName,1,Runperiod);
+        moxyrms->setIsOwner(false);
+        ccdb->storeMO(moxyrms);
+
         ce->SetName("Mean_NVertexContributors");
 auto moe = std::make_shared<o2::quality_control::core::MonitorObject>(ce, TaskName, TaskClass, DetectorName,1,Runperiod);
         moe->setIsOwner(false);
         ccdb->storeMO(moe);
+
+        cerms->SetName("Rms_NVertexContributors");
+auto moerms = std::make_shared<o2::quality_control::core::MonitorObject>(cerms, TaskName, TaskClass, DetectorName,1,Runperiod);
+        moerms->setIsOwner(false);
+        ccdb->storeMO(moerms);
 
         ct->SetName("Mean_NTracks_EbyE");
 auto mot = std::make_shared<o2::quality_control::core::MonitorObject>(ct, TaskName, TaskClass, DetectorName,1,Runperiod);
         mot->setIsOwner(false);
         ccdb->storeMO(mot);
 
+        ctrms->SetName("Rms_NTracks_EbyE");
+auto motrms = std::make_shared<o2::quality_control::core::MonitorObject>(ctrms, TaskName, TaskClass, DetectorName,1,Runperiod);
+        motrms->setIsOwner(false);
+        ccdb->storeMO(motrms);
+
         c0->SetName("Mean_Fraction_Clusters_Tracks");
 auto mo0 = std::make_shared<o2::quality_control::core::MonitorObject>(c0, TaskName, TaskClass, DetectorName,1,Runperiod);
         mo0->setIsOwner(false);
         ccdb->storeMO(mo0);
+
+        c0rms->SetName("Rms_Fraction_Clusters_Tracks");
+auto mo0rms = std::make_shared<o2::quality_control::core::MonitorObject>(c0rms, TaskName, TaskClass, DetectorName,1,Runperiod);
+        mo0rms->setIsOwner(false);
+        ccdb->storeMO(mo0rms);
+
 
         c_->SetName("Mean_NumberCluster_per_Track");
 auto mo_ = std::make_shared<o2::quality_control::core::MonitorObject>(c_, TaskName, TaskClass, DetectorName,1,Runperiod);
@@ -1144,19 +1308,24 @@ auto moc = std::make_shared<o2::quality_control::core::MonitorObject>(c, TaskNam
 	
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-TFile *f1 = new TFile("../Plots/TrackTask_Result_trends.root", "RECREATE");
+TFile *f1 = new TFile(Form("../Plots/TrackTask_Result_trends_from_run%s_to_run%s.root", runs.front().c_str(), runs.back().c_str()), "RECREATE");
 f1->cd();    
 c2->Write();
 c21->Write();
 c3->Write();
 c31->Write();
 cz1->Write();
+cz11->Write();
 c_summary1->Write();
 c_summary->Write();
 cxy->Write();
+cxyrms->Write();
 ce->Write();
+cerms->Write();
 ct->Write();
+ctrms->Write();
 c0->Write();
+c0rms->Write();
 c_->Write();
 c->Write();
 c1->Write();    
@@ -1164,13 +1333,13 @@ f1->Close();
   
 delete gr2; delete gr21; delete gr22; delete legend; delete c2; delete c21;
 delete gr3; delete gr31; delete gr32; delete legend1; delete c3; delete c31;
-delete gerr3; delete cz1;
+delete gerr3; delete cz1; delete cz11;
 delete hSummary1; delete c_summary1;
 delete hSummary; delete c_summary;
-delete grx; delete gry; delete legend_xy; delete cxy;
-delete gerr2; delete ce;
-delete gerr1; delete ct;
-delete gerr; delete c0;
+delete grx; delete gry; delete legend_xy; delete cxy; delete cxyrms;
+delete gerr2; delete ce; delete cerms;
+delete gerr1; delete ct; delete ctrms;
+delete gerr; delete c0; delete c0rms;
 delete gr_; delete gr_1; delete gr_2; delete gr_3; delete gr_4; delete gr_5; delete legend_; delete c_;
 delete gr; delete gr1; delete gr20; delete gr30; delete gr4; delete gr5; delete legend2; delete c;
 delete gr0; delete gr01; delete gr02; delete gr03; delete gr04; delete gr05; delete legend0; delete c1;
