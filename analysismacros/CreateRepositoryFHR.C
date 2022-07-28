@@ -111,26 +111,33 @@ void terminal_output(Int_t layer, Int_t n_stave, Int_t n_events, vector<string> 
 	//definition of counters to help the division
 	Int_t counter_inactive = 0;
 	Int_t counter_less8 = 0; //counter for FHR < 10^-8
-	Int_t counter_less6 = 0; //counter for 10^-8 < FHR < 10^-6 
-	Int_t counter_less4 = 0; //counter for 10^-6 < FHR < 10^-4 
+	Int_t counter_less4 = 0; //counter for 10^-8 < FHR < 10^-4 
 	Int_t counter_less3 = 0; //counter for 10^-4 < FHR < 10^-3
 	Int_t counter_more3 = 0; //counter for FHR > 10^-3
+	Int_t counter_emulated_pp = 0; //counter for emulated pp
+	Int_t counter_emulated_PbPb = 0; //counter for emulated PbPb
 	
 	//definition of vector<int> to store the different behaviour extended
 	vector<Int_t> staves_inactive;
 	vector<Int_t> staves_less8;
-	vector<Int_t> staves_less6;
 	vector<Int_t> staves_less4;
 	vector<Int_t> staves_less3;
 	vector<Int_t> staves_more3;
+	vector<Int_t> staves_emulated_pp;
+	vector<Int_t> staves_no_emulated_pp;
+	vector<Int_t> staves_emulated_PbPb;
+	vector<Int_t> staves_no_emulated_PbPb;
 	
 	//definition of vector<int> to store the different behaviour reduced
 	vector<Int_t> reduced_staves_inactive;
 	vector<Int_t> reduced_staves_less8;
-	vector<Int_t> reduced_staves_less6;
 	vector<Int_t> reduced_staves_less4;
 	vector<Int_t> reduced_staves_less3;
 	vector<Int_t> reduced_staves_more3;
+	vector<Int_t> reduced_staves_emulated_pp;
+	vector<Int_t> reduced_staves_no_emulated_pp;
+	vector<Int_t> reduced_staves_emulated_PbPb;
+	vector<Int_t> reduced_staves_no_emulated_PbPb;
 		
 	//definition of factor to determine threshold of majority of staves, i.e. fixing half of the staves
 	Int_t threshold = 2;
@@ -159,61 +166,149 @@ void terminal_output(Int_t layer, Int_t n_stave, Int_t n_events, vector<string> 
 					staves_inactive.push_back(k);
 					counter_inactive++;
 				}
-			}
-			for(Int_t k=0; k < n_stave; k++)
-			{
-				content = staves[k]->GetPointY(j-NA_counter); 
 				if (content >=1.0e-3) 
 				{
 					staves_more3.push_back(k);
 					counter_more3++;
 				}
-			}
-			for(Int_t k=0; k < n_stave; k++)
-			{
-				content = staves[k]->GetPointY(j-NA_counter); 
 				if (content >=1.0e-4 && content < 1.0e-3) 
 				{
 					staves_less3.push_back(k);
 					counter_less3++;
 				}
-			}
-			for(Int_t k=0; k < n_stave; k++)
-			{
-				content = staves[k]->GetPointY(j-NA_counter); 
-				if (content >=1.0e-6 && content < 1.0e-4) 
+				if (content >=1.0e-8 && content < 1.0e-4) 
 				{
 					staves_less4.push_back(k);
 					counter_less4++;
 				}
-			}
-			for(Int_t k = 0; k < n_stave; k++)
-			{
-				content = staves[k]->GetPointY(j-NA_counter);
-				if (content >= 1.0e-8 && content < 1.0e-6) 
-				{
-					staves_less6.push_back(k);
-					counter_less6++;
-				}
-			}
-			for(Int_t k=0; k < n_stave; k++)
-			{
-				content = staves[k]->GetPointY(j-NA_counter);
 				if (content < 1.0e-8 && content!=0) 
 				{
 					staves_less8.push_back(k);
 					counter_less8++; 
 				}
+				if(layer == 0)
+				{
+				    if(content >= 1.9e-5 && content <= 2.1e-5)
+				    {
+				        staves_emulated_pp.push_back(k);
+				        counter_emulated_pp++;
+				    }
+				    else staves_no_emulated_pp.push_back(k);
+				    
+				    if(content >= 6.6e-4 && content <= 7.2e-4)
+				    {
+				        staves_emulated_PbPb.push_back(k);
+				        counter_emulated_PbPb++;
+				    }
+				    else staves_no_emulated_PbPb.push_back(k);
+				}
+				if(layer == 1)
+				{
+				    if(content >= 1.1e-5 && content <= 1.3e-5)
+				    {
+				        staves_emulated_pp.push_back(k);
+				        counter_emulated_pp++;
+				    }
+				    else staves_no_emulated_pp.push_back(k);
+				    
+				    if(content >= 4.3e-4 && content <= 4.7e-4)
+				    {
+				        staves_emulated_PbPb.push_back(k);
+				        counter_emulated_PbPb++;
+				    }
+				    else staves_no_emulated_PbPb.push_back(k);
+				}
+			    if(layer == 2)
+				{
+				    if(content >= 8.4e-6 && content <= 8.6e-6)
+				    {
+				        staves_emulated_pp.push_back(k);
+				        counter_emulated_pp++;
+				    }
+				    else staves_no_emulated_pp.push_back(k);
+				    
+				    if(content >= 2.7e-4 && content <= 3.1e-4)
+				    {
+				        staves_emulated_PbPb.push_back(k);
+				        counter_emulated_PbPb++;
+				    }
+				    else staves_no_emulated_PbPb.push_back(k);
+				}
+				if(layer == 3)
+				{
+				    if(content >= 5.2e-7 && content <= 5.4e-7)
+				    {
+				        staves_emulated_pp.push_back(k);
+				        counter_emulated_pp++;
+				    }
+				    else staves_no_emulated_pp.push_back(k);
+				    
+				    if(content >= 8.7e-6 && content <= 9.6e-6)
+				    {
+				        staves_emulated_PbPb.push_back(k);
+				        counter_emulated_PbPb++;
+				    }
+				    else staves_no_emulated_PbPb.push_back(k);
+				}
+				if(layer == 4)
+				{
+				    if(content >= 3.9e-7 && content <= 4.1e-7)
+				    {
+				        staves_emulated_pp.push_back(k);
+				        counter_emulated_pp++;
+				    }
+				    else staves_no_emulated_pp.push_back(k);
+				    
+				    if(content >= 5.9e-6 && content <= 6.8e-6)
+				    {
+				        staves_emulated_PbPb.push_back(k);
+				        counter_emulated_PbPb++;
+				    }
+				    else staves_no_emulated_PbPb.push_back(k);
+				}
+				if(layer == 5)
+				{
+				    if(content >= 2.5e-7 && content <= 2.7e-7)
+				    {
+				        staves_emulated_pp.push_back(k);
+				        counter_emulated_pp++;
+				    }
+				    else staves_no_emulated_pp.push_back(k);
+				    
+				    if(content >= 3.3e-6 && content <= 3.8e-6)
+				    {
+				        staves_emulated_PbPb.push_back(k);
+				        counter_emulated_PbPb++;
+				    }
+				    else staves_no_emulated_PbPb.push_back(k);
+				}
+				if(layer == 6)
+				{
+				    if(content >= 2.1e-7 && content <= 2.3e-7)
+				    {
+				        staves_emulated_pp.push_back(k);
+				        counter_emulated_pp++;
+				    }
+				    else staves_no_emulated_pp.push_back(k);
+				    
+				    if(content >= 2.7e-6 && content <= 3.2e-6)
+				    {
+				        staves_emulated_PbPb.push_back(k);
+				        counter_emulated_PbPb++;
+				    }
+				    else staves_no_emulated_PbPb.push_back(k);
+				}
 			}
-			
+								
 			//cout on terminal about the analysis 
 			//first check: if all the staves have FHR in the same range - cout a phrase
 			if(counter_inactive==n_stave) { cout << "\e[31mrun " << cumulative_label[j] << "\t expert \t bad \t "<< layer_name << ", all stave: no response; \e[39m" << endl;}
 			if(counter_less8==n_stave) {cout << "\e[32mrun " << cumulative_label[j] << "\t cosmic \t good \t " << layer_name << ", all staves: FHR < 10^-8; \e[39m" << endl;}		
-			if(counter_less6==n_stave) {cout << "\e[33mrun " << cumulative_label[j] << "\t cosmic \t warn \t " << layer_name << ", all staves: 10^-8 < FHR < 10^-6; \e[39m" << endl;}
-			if(counter_less4==n_stave) {cout << "\e[34mrun " << cumulative_label[j] << "\t pp can \t good \t " << layer_name << ", all staves: 10^-6 < FHR < 10^-4; \e[39m" <<endl;}
-			if(counter_less3==n_stave) {cout << "\e[36mrun " << cumulative_label[j] << "\t Pb-Pb can \t good \t " << layer_name << ", all staves: 10^-4 < FHR < 10^-3; \e[39m" << endl;}
-			if(counter_more3==n_stave) {cout << "\e[30mrun " << cumulative_label[j] << "\t Pb-Pb can \t bad \t " << layer_name << ", all staves: FHR > 10^-3; \e[39m" << endl;}
+			if(counter_less4==n_stave && counter_emulated_pp < n_stave/threshold && counter_emulated_PbPb < n_stave/threshold) {cout << "\e[34mrun " << cumulative_label[j] << "\t pp coll \t good \t " << layer_name << ", all staves: 10^-8 < FHR < 10^-4; \e[39m" <<endl;}
+			if(counter_less3==n_stave && counter_emulated_pp < n_stave/threshold && counter_emulated_PbPb < n_stave/threshold) {cout << "\e[36mrun " << cumulative_label[j] << "\t Pb-Pb coll \t good \t " << layer_name << ", all staves: 10^-4 < FHR < 10^-3; \e[39m" << endl;}
+			if(counter_more3==n_stave) {cout << "\e[30mrun " << cumulative_label[j] << "\t Pb-Pb coll \t bad \t " << layer_name << ", all staves: FHR > 10^-3; \e[39m" << endl;}
+			if(counter_emulated_pp==n_stave) {cout << "\e[44mrun " << cumulative_label[j] << "\t pp emul \t good \t " << layer_name << ", all staves: in layer value; \e[0m" << endl;}
+			if(counter_emulated_PbPb==n_stave) {cout << "\e[46mrun " << cumulative_label[j] << "\t Pb-Pb emul \t good \t " << layer_name << ", all staves: in layer value; \e[0m" << endl;}
 			
 			//second check: if the majority of the staves have a FHR value - cout a phrase with the staves with different behaviour
 			//majority: inactive
@@ -241,20 +336,20 @@ void terminal_output(Int_t layer, Int_t n_stave, Int_t n_events, vector<string> 
 				{
 					cout << ", stave ";
 					extended_to_reduced_terminal(staves_less4, reduced_staves_less4);
-					cout << ": 10^-6 < FHR < 10^-4";
+					cout << ": 10^-8 < FHR < 10^-4";
 				}
-				if(staves_less6.size()!=0)
+				if(staves_less8.size()!=0)
 				{
-					cout << ", stave ";
-					extended_to_reduced_terminal(staves_less6, reduced_staves_less6);
-					cout << ": 10^-8 < FHR < 10^-6";
+				    cout << ", stave ";
+				    extended_to_reduced_terminal(staves_less8, reduced_staves_less8);
+				    cout << ": FHR < 10^-8";
 				}
 				cout << "; \e[39m " << endl;
 			}
 			//majority: more3
 			if(counter_more3>=n_stave/threshold && counter_more3!=n_stave && counter_inactive<n_stave/threshold) 
 			{
-				cout << "\e[30mrun " << cumulative_label[j] << " \t Pb-Pb can \t bad \t " << layer_name << ", stave ";
+				cout << "\e[30mrun " << cumulative_label[j] << " \t Pb-Pb col \t bad \t " << layer_name << ", stave ";
 				if(staves_more3.size()!=0)
 				{
 					extended_to_reduced_terminal(staves_more3, reduced_staves_more3);
@@ -276,21 +371,21 @@ void terminal_output(Int_t layer, Int_t n_stave, Int_t n_events, vector<string> 
 				{
 					cout << ", stave ";
 					extended_to_reduced_terminal(staves_less4, reduced_staves_less4);
-					cout << ": 10^-6 < FHR < 10^-4";
+					cout << ": 10^-8 < FHR < 10^-4";
 				}
-				if(staves_less6.size()!=0)
+				if(staves_less8.size()!=0)
 				{
-					cout << ", stave ";
-					extended_to_reduced_terminal(staves_less6, reduced_staves_less6);
-					cout << ": 10^-8 < FHR < 10^-6";
+				    cout << ", stave ";
+				    extended_to_reduced_terminal(staves_less8, reduced_staves_less8);
+				    cout << ": FHR < 10^-8";
 				}
 				cout << "; \e[39m " << endl;
 			}
 					
 			//majority: less3 - Pb-Pb candidate
-			if(counter_less3>=n_stave/threshold && counter_less3!=n_stave && counter_inactive<n_stave/threshold && counter_more3<n_stave/threshold) 
+			if(counter_less3>=n_stave/threshold && counter_less3!=n_stave && counter_inactive<n_stave/threshold && counter_more3<n_stave/threshold && counter_emulated_pp == 0 && counter_emulated_PbPb == 0) 
 			{
-				cout << "\e[36mrun " << cumulative_label[j] << "\t Pb-Pb can \t good \t " << layer_name << ", stave ";
+				cout << "\e[36mrun " << cumulative_label[j] << "\t Pb-Pb col \t good \t " << layer_name << ", stave ";
 				if(staves_less3.size()!=0)
 				{
 					extended_to_reduced_terminal(staves_less3, reduced_staves_less3);
@@ -312,25 +407,25 @@ void terminal_output(Int_t layer, Int_t n_stave, Int_t n_events, vector<string> 
 				{
 					cout << ", stave ";
 					extended_to_reduced_terminal(staves_less4, reduced_staves_less4);
-					cout << ": 10^-6 < FHR < 10^-4";
+					cout << ": 10^-8 < FHR < 10^-4";
 				}
-				if(staves_less6.size()!=0)
+				if(staves_less8.size()!=0)
 				{
-					cout << ", stave ";
-					extended_to_reduced_terminal(staves_less6, reduced_staves_less6);
-					cout << ": 10^-8 < FHR < 10^-6";
+				    cout << ", stave ";
+				    extended_to_reduced_terminal(staves_less8, reduced_staves_less8);
+				    cout << ": FHR < 10^-8";
 				}
 				cout << "; \e[39m " << endl;
 			}
 			
 			//majority: less4, pp candidate
-			if(counter_less4>=n_stave/threshold && counter_less4!=n_stave && counter_inactive<n_stave/threshold && counter_more3<n_stave/threshold && counter_less3<n_stave/threshold) 
+			if(counter_less4>=n_stave/threshold && counter_less4!=n_stave && counter_inactive<n_stave/threshold && counter_more3<n_stave/threshold && counter_less3<n_stave/threshold && counter_emulated_pp == 0 && counter_emulated_PbPb == 0) 
 			{
-				cout << "\e[34mrun " << cumulative_label[j] << "\t pp can \t good \t " << layer_name << ", stave ";
+				cout << "\e[34mrun " << cumulative_label[j] << "\t pp col \t good \t " << layer_name << ", stave ";
 				if(staves_less4.size()!=0)
 				{
 					extended_to_reduced_terminal(staves_less4, reduced_staves_less4);
-					cout << ": 10^-6 < FHR < 10^-4";
+					cout << ": 10^-8 < FHR < 10^-4";
 				}
 				if(staves_inactive.size()!=0)
 				{
@@ -350,23 +445,23 @@ void terminal_output(Int_t layer, Int_t n_stave, Int_t n_events, vector<string> 
 					extended_to_reduced_terminal(staves_less3, reduced_staves_less3);
 					cout << ": 10^-4 < FHR < 10^-3";
 				}
-				if(staves_less6.size()!=0)
+				if(staves_less8.size()!=0)
 				{
-					cout << ", stave ";
-					extended_to_reduced_terminal(staves_less6, reduced_staves_less6);
-					cout << ": 10^-8 < FHR < 10^-6";
+				    cout << ", stave ";
+				    extended_to_reduced_terminal(staves_less8, reduced_staves_less8);
+				    cout << ": FHR < 10^-8";
 				}
 				cout << "; \e[39m " << endl;
 			}
 			
-			//majority: less6, cosmic warn 
-			if(counter_less6>=n_stave/threshold && counter_less6!=n_stave && counter_inactive<n_stave/threshold &&  counter_more3<n_stave/threshold && counter_less3<n_stave/threshold && counter_less4<n_stave/threshold) 
+			//majority: less8, cosmic good
+			if(counter_less8>=n_stave/threshold && counter_less8!=n_stave && counter_inactive<n_stave/threshold &&  counter_more3<n_stave/threshold && counter_less3<n_stave/threshold && counter_less4<n_stave/threshold)  
 			{
-				cout << "\e[33mrun " << cumulative_label[j] << " \t cosmic \t warn \t " << layer_name << ", stave ";
-				if(staves_less6.size()!=0)
+				cout << "\e[32mrun " << cumulative_label[j] << "\t cosmic \t good \t " << layer_name << ", stave ";
+				if(staves_less8.size()!=0)
 				{
-					extended_to_reduced_terminal(staves_less6, reduced_staves_less6);
-					cout << ": 10^-8 < FHR < 10^-6";
+				    extended_to_reduced_terminal(staves_less8, reduced_staves_less8);
+				    cout << ": FHR < 10^-8";
 				}
 				if(staves_inactive.size()!=0)
 				{
@@ -390,48 +485,48 @@ void terminal_output(Int_t layer, Int_t n_stave, Int_t n_events, vector<string> 
 				{
 					cout << ", stave ";
 					extended_to_reduced_terminal(staves_less4, reduced_staves_less4);
-					cout << ": 10^-6 < FHR < 10^-4";
+					cout << ": 10^-8 < FHR < 10^-4";
 				}
 				cout << "; \e[39m " << endl;
 			}
-			//majority: less8, cosmic good
-			if(counter_less8>=n_stave/threshold && counter_less8!=n_stave && counter_inactive<n_stave/threshold &&  counter_more3<n_stave/threshold && counter_less3<n_stave/threshold && counter_less4<n_stave/threshold && counter_less6<n_stave/threshold)  
+			//majority of the staves: emulated pp
+			if(counter_emulated_pp >= n_stave/threshold && counter_emulated_pp != n_stave)
 			{
-				cout << "\e[32mrun " << cumulative_label[j] << "\t cosmic \t good \t " << layer_name;
-				if(staves_inactive.size()!=0)
-				{
-					cout << ", stave ";
-					extended_to_reduced_terminal(staves_inactive, reduced_staves_inactive);
-					cout << ": no response";
-				}
-				if(staves_more3.size()!=0)
-				{
-					cout << ", stave ";
-					extended_to_reduced_terminal(staves_more3, reduced_staves_more3);
-					cout << ": FHR > 10^-3";
-				}
-				if(staves_less3.size()!=0)
-				{
-					cout << ", stave ";
-					extended_to_reduced_terminal(staves_less3, reduced_staves_less3);
-					cout << ": 10^-4 < FHR < 10^-3";
-				}
-				if(staves_less4.size()!=0)
-				{
-					cout << ", stave ";
-					extended_to_reduced_terminal(staves_less4, reduced_staves_less4);
-					cout << ": 10^-6 < FHR < 10^-4";
-				}
-				if(staves_less6.size()!=0)
-				{
-					cout << ", stave ";
-					extended_to_reduced_terminal(staves_less6, reduced_staves_less6);
-					cout << ": 10^-8 < FHR < 10^-6";
-				}
-				cout << "; \e[39m " << endl;
+			    cout << "\e[44mrun " << cumulative_label[j] << "\t pp emul \t good \t " << layer_name;
+			    if(staves_emulated_pp.size()!=0)
+			    {
+			        cout << ", stave ";
+			        extended_to_reduced_terminal(staves_emulated_pp, reduced_staves_emulated_pp);
+			        cout << ": in layer values";
+			    }
+			    if(staves_no_emulated_pp.size()!=0)
+			    {
+			        cout << ", stave ";
+			        extended_to_reduced_terminal(staves_no_emulated_pp, reduced_staves_no_emulated_pp);
+			        cout << ": outside layer values";
+			    }
+			    cout << "; \e[0m " << endl;
+			}
+			//majority of staves: emulated PbPb
+			if(counter_emulated_PbPb >= n_stave/threshold && counter_emulated_PbPb != n_stave)
+			{
+			    cout << "\e[46mrun " << cumulative_label[j] << "\t Pb-Pb emul \t good \t " << layer_name;
+			    if(staves_emulated_PbPb.size()!=0)
+			    {
+			        cout << ", stave ";
+			        extended_to_reduced_terminal(staves_emulated_PbPb, reduced_staves_emulated_PbPb);
+			        cout << ": in layer values";
+			    }
+			    if(staves_no_emulated_PbPb.size()!=0)
+			    {
+			        cout << ", stave ";
+			        extended_to_reduced_terminal(staves_no_emulated_PbPb, reduced_staves_no_emulated_PbPb);
+			        cout << ": outside layer values";
+			    }
+			    cout << "; \e[0m " << endl;
 			}
 			//other cases
-			if(counter_inactive < n_stave/threshold && counter_more3 < n_stave/threshold && counter_less3 < n_stave/threshold && counter_less4 < n_stave/threshold && counter_less6 < n_stave/threshold && counter_less8 < n_stave/threshold)
+			if(counter_inactive < n_stave/threshold && counter_more3 < n_stave/threshold && counter_less3 < n_stave/threshold && counter_less4 < n_stave/threshold && counter_less8 < n_stave/threshold)
 			{
 				cout << "\e[30mrun " << cumulative_label[j] << " \t expert \t exp \t " << layer_name;
 				if(staves_inactive.size()!=0)
@@ -456,13 +551,7 @@ void terminal_output(Int_t layer, Int_t n_stave, Int_t n_events, vector<string> 
 				{
 					cout << ", stave ";
 					extended_to_reduced_terminal(staves_less4, reduced_staves_less4);
-					cout << ": 10^-6 < FHR < 10^-4";
-				}
-				if(staves_less6.size()!=0)
-				{
-					cout << ", stave ";
-					extended_to_reduced_terminal(staves_less6, reduced_staves_less6);
-					cout << ": 10^-8 < FHR < 10^-6";
+					cout << ": 10^-8 < FHR < 10^-4";
 				}
 				if(staves_less8.size()!=0)
 				{
@@ -478,28 +567,37 @@ void terminal_output(Int_t layer, Int_t n_stave, Int_t n_events, vector<string> 
 		{
 			cout <<"\e[35mrun " << cumulative_label[j] << "\t expert \t N/A \t \t \e[39m" << endl;
 			NA_counter++;
-		}
+		}	
+		
 		//put all the counter to zero for a new run
 		counter_less8=0;
-		counter_less6=0;
 		counter_less4=0;
 		counter_less3=0;
 		counter_more3=0;
 		counter_inactive=0;
+		counter_emulated_pp=0;
+		counter_emulated_PbPb=0;
+		
 		//reset vector of staves for a new run
 		staves_inactive.clear();
 		staves_more3.clear();
 		staves_less3.clear();
 		staves_less4.clear();
-		staves_less6.clear();
 		staves_less8.clear();
+		staves_emulated_pp.clear();
+		staves_no_emulated_pp.clear();
+		staves_emulated_PbPb.clear();
+		staves_no_emulated_PbPb.clear();
 		
 		reduced_staves_inactive.clear();
 		reduced_staves_more3.clear();
 		reduced_staves_less3.clear();
 		reduced_staves_less4.clear();
-		reduced_staves_less6.clear();
 		reduced_staves_less8.clear();
+		reduced_staves_emulated_pp.clear();
+		reduced_staves_no_emulated_pp.clear();
+		reduced_staves_emulated_PbPb.clear();
+		reduced_staves_no_emulated_PbPb.clear();
 	} 
 };
 
@@ -511,27 +609,34 @@ void create_repository(Int_t layer, Int_t n_stave, Int_t n_events, vector<string
 	//definition of counters to help the division
 	Int_t counter_inactive = 0;
 	Int_t counter_less8 = 0; //counter for FHR < 10^-8
-	Int_t counter_less6 = 0; //counter for 10^-8 < FHR < 10^-6 
-	Int_t counter_less4 = 0; //counter for 10^-6 < FHR < 10^-4 
+	Int_t counter_less4 = 0; //counter for 10^-8 < FHR < 10^-4 
 	Int_t counter_less3 = 0; //counter for 10^-4 < FHR < 10^-3
 	Int_t counter_more3 = 0; //counter for FHR > 10^-3
+	Int_t counter_emulated_pp = 0; //counter for emulated pp
+	Int_t counter_emulated_PbPb = 0; //counter for emulated PbPb
 	
 	//definition of vector<int> to store the different behaviour extended
 	vector<Int_t> staves_inactive;
 	vector<Int_t> staves_less8;
-	vector<Int_t> staves_less6;
 	vector<Int_t> staves_less4;
 	vector<Int_t> staves_less3;
 	vector<Int_t> staves_more3;
+	vector<Int_t> staves_emulated_pp;
+	vector<Int_t> staves_no_emulated_pp;
+	vector<Int_t> staves_emulated_PbPb;
+	vector<Int_t> staves_no_emulated_PbPb;
 	
 	//definition of vector<int> to store the different behaviour reduced
 	vector<Int_t> reduced_staves_inactive;
 	vector<Int_t> reduced_staves_less8;
-	vector<Int_t> reduced_staves_less6;
 	vector<Int_t> reduced_staves_less4;
 	vector<Int_t> reduced_staves_less3;
 	vector<Int_t> reduced_staves_more3;
-		
+    vector<Int_t> reduced_staves_emulated_pp;
+    vector<Int_t> reduced_staves_no_emulated_pp;
+    vector<Int_t> reduced_staves_emulated_PbPb;   
+    vector<Int_t> reduced_staves_no_emulated_PbPb;
+    		
 	//definition of factor to determine threshold of majority of staves, i.e. fixing half of the staves
 	Int_t threshold = 2;
 	
@@ -559,55 +664,142 @@ void create_repository(Int_t layer, Int_t n_stave, Int_t n_events, vector<string
 					staves_inactive.push_back(k);
 					counter_inactive++;
 				}
-			}
-			for(Int_t k=0; k < n_stave; k++)
-			{
-				content = staves[k]->GetPointY(j-NA_counter); 
 				if (content >=1.0e-3) 
 				{
 					staves_more3.push_back(k);
 					counter_more3++;
 				}
-			}
-			for(Int_t k=0; k < n_stave; k++)
-			{
-				content = staves[k]->GetPointY(j-NA_counter); 
 				if (content >=1.0e-4 && content < 1.0e-3) 
 				{
 					staves_less3.push_back(k);
 					counter_less3++;
 				}
-			}
-			for(Int_t k=0; k < n_stave; k++)
-			{
-				content = staves[k]->GetPointY(j-NA_counter); 
-				if (content >=1.0e-6 && content < 1.0e-4) 
+				if (content >=1.0e-8 && content < 1.0e-4) 
 				{
 					staves_less4.push_back(k);
 					counter_less4++;
 				}
-			}
-			for(Int_t k = 0; k < n_stave; k++)
-			{
-				content = staves[k]->GetPointY(j-NA_counter);
-				if (content >= 1.0e-8 && content < 1.0e-6) 
-				{
-					staves_less6.push_back(k);
-					counter_less6++;
-				}
-			}
-			for(Int_t k=0; k < n_stave; k++)
-			{
-				content = staves[k]->GetPointY(j-NA_counter);
 				if (content < 1.0e-8 && content!=0) 
 				{
 					staves_less8.push_back(k);
 					counter_less8++; 
 				}
+				if(layer == 0)
+				{
+				    if(content >= 1.9e-5 && content <= 2.1e-5)
+				    {
+				        staves_emulated_pp.push_back(k);
+				        counter_emulated_pp++;
+				    }
+				    else staves_no_emulated_pp.push_back(k);
+				    
+				    if(content >= 6.6e-4 && content <= 7.2e-4)
+				    {
+				        staves_emulated_PbPb.push_back(k);
+				        counter_emulated_PbPb++;
+				    }
+				    else staves_no_emulated_PbPb.push_back(k);
+				}
+				if(layer == 1)
+				{
+				    if(content >= 1.1e-5 && content <= 1.3e-5)
+				    {
+				        staves_emulated_pp.push_back(k);
+				        counter_emulated_pp++;
+				    }
+				    else staves_no_emulated_pp.push_back(k);
+				    
+				    if(content >= 4.3e-4 && content <= 4.7e-4)
+				    {
+				        staves_emulated_PbPb.push_back(k);
+				        counter_emulated_PbPb++;
+				    }
+				    else staves_no_emulated_PbPb.push_back(k);
+				}
+			    if(layer == 2)
+				{
+				    if(content >= 8.4e-6 && content <= 8.6e-6)
+				    {
+				        staves_emulated_pp.push_back(k);
+				        counter_emulated_pp++;
+				    }
+				    else staves_no_emulated_pp.push_back(k);
+				    
+				    if(content >= 2.7e-4 && content <= 3.1e-4)
+				    {
+				        staves_emulated_PbPb.push_back(k);
+				        counter_emulated_PbPb++;
+				    }
+				    else staves_no_emulated_PbPb.push_back(k);
+				}
+				if(layer == 3)
+				{
+				    if(content >= 5.2e-7 && content <= 5.4e-7)
+				    {
+				        staves_emulated_pp.push_back(k);
+				        counter_emulated_pp++;
+				    }
+				    else staves_no_emulated_pp.push_back(k);
+				    
+				    if(content >= 8.7e-6 && content <= 9.6e-6)
+				    {
+				        staves_emulated_PbPb.push_back(k);
+				        counter_emulated_PbPb++;
+				    }
+				    else staves_no_emulated_PbPb.push_back(k);
+				}
+				if(layer == 4)
+				{
+				    if(content >= 3.9e-7 && content <= 4.1e-7)
+				    {
+				        staves_emulated_pp.push_back(k);
+				        counter_emulated_pp++;
+				    }
+				    else staves_no_emulated_pp.push_back(k);
+				    
+				    if(content >= 5.9e-6 && content <= 6.8e-6)
+				    {
+				        staves_emulated_PbPb.push_back(k);
+				        counter_emulated_PbPb++;
+				    }
+				    else staves_no_emulated_PbPb.push_back(k);
+				}
+				if(layer == 5)
+				{
+				    if(content >= 2.5e-7 && content <= 2.7e-7)
+				    {
+				        staves_emulated_pp.push_back(k);
+				        counter_emulated_pp++;
+				    }
+				    else staves_no_emulated_pp.push_back(k);
+				    
+				    if(content >= 3.3e-6 && content <= 3.8e-6)
+				    {
+				        staves_emulated_PbPb.push_back(k);
+				        counter_emulated_PbPb++;
+				    }
+				    else staves_no_emulated_PbPb.push_back(k);
+				}
+				if(layer == 6)
+				{
+				    if(content >= 2.1e-7 && content <= 2.3e-7)
+				    {
+				        staves_emulated_pp.push_back(k);
+				        counter_emulated_pp++;
+				    }
+				    else staves_no_emulated_pp.push_back(k);
+				    
+				    if(content >= 2.7e-6 && content <= 3.2e-6)
+				    {
+				        staves_emulated_PbPb.push_back(k);
+				        counter_emulated_PbPb++;
+				    }
+				    else staves_no_emulated_PbPb.push_back(k);
+				}
 			}
-			
-			//layer status: 0 = expert check 1 = bad; 2 = warning 3 = good; 4 = N/A
-			//layer collision: 0 = expert check; 1 = cosmic; 2 = pp; 3 = Pb-Pb
+			   
+			//layer status: 0 = expert check 1 = bad; 2 = good; 3 = N/A
+			//layer collision: 0 = expert check; 1 = cosmic; 2 = pp coll; 3 = Pb-Pb coll; 4 = pp emul; 5: Pb-Pb emul;
 			//create comments for the repository
 			//first check: if all the staves have FHR in the same range
 			if(counter_inactive==n_stave) 
@@ -621,28 +813,22 @@ void create_repository(Int_t layer, Int_t n_stave, Int_t n_events, vector<string
 			{
 				final_comment.append(layer_name);
 				final_comment.append(", all staves: FHR < 10^-8; ");
-				build_layer_status.push_back(3);
+				build_layer_status.push_back(2);
 				build_layer_collision.push_back(1);	
 			}		
-			if(counter_less6==n_stave) 
+			
+			if(counter_less4==n_stave && counter_emulated_pp < n_stave/threshold && counter_emulated_PbPb < n_stave/threshold) 
 			{
 				final_comment.append(layer_name);
-				final_comment.append(", all staves: 10^-8 < FHR < 10^-6; ");
+				final_comment.append(", all staves: 10^-8 < FHR < 10^-4; ");
 				build_layer_status.push_back(2);
-				build_layer_collision.push_back(1);
-			}
-			if(counter_less4==n_stave) 
-			{
-				final_comment.append(layer_name);
-				final_comment.append(", all staves: 10^-6 < FHR < 10^-4; ");
-				build_layer_status.push_back(3);
 				build_layer_collision.push_back(2);
 			}
-			if(counter_less3==n_stave) 
+			if(counter_less3==n_stave && counter_emulated_pp < n_stave/threshold && counter_emulated_PbPb < n_stave/threshold) 
 			{
 				final_comment.append(layer_name);
 				final_comment.append(", all staves: 10^-4 < FHR < 10^-3; ");
-				build_layer_status.push_back(3);
+				build_layer_status.push_back(2);
 				build_layer_collision.push_back(3);
 			}
 			if(counter_more3==n_stave) 
@@ -652,7 +838,20 @@ void create_repository(Int_t layer, Int_t n_stave, Int_t n_events, vector<string
 				build_layer_status.push_back(1);
 				build_layer_collision.push_back(0);
 			}
-				
+			if(counter_emulated_pp==n_stave)
+			{
+			    final_comment.append(layer_name);
+			    final_comment.append(", all staves: inside layer values; ");
+			    build_layer_status.push_back(2);
+			    build_layer_collision.push_back(4);
+			}
+			if(counter_emulated_PbPb==n_stave)
+			{
+			    final_comment.append(layer_name);
+			    final_comment.append(", all staves: inside layer values; ");
+			    build_layer_status.push_back(2);
+			    build_layer_collision.push_back(5);
+			}	
 			//second check: if the majority of the staves have a FHR value - create a phrase with the staves with different behaviour
 			//majority: inactive
 			if(counter_inactive>=n_stave/threshold && counter_inactive!=n_stave) 
@@ -682,14 +881,14 @@ void create_repository(Int_t layer, Int_t n_stave, Int_t n_events, vector<string
 				{
 					final_comment.append(", stave ");
 					extended_to_reduced_repository(staves_less4, reduced_staves_less4, final_comment);
-					final_comment.append(": 10^-6 < FHR < 10^-4");
+					final_comment.append(": 10^-8 < FHR < 10^-4");
 				}
-				if(staves_less6.size()!=0)
+				if(staves_less8.size()!=0)
 				{
-					final_comment.append(", stave ");
-					extended_to_reduced_repository(staves_less6, reduced_staves_less6, final_comment);
-					final_comment.append(": 10^-8 < FHR < 10^-6");
-				}
+				    final_comment.append(", stave ");
+				    extended_to_reduced_repository(staves_less8, reduced_staves_less8, final_comment);
+				    final_comment.append(": FHR < 10^-8");
+				}				
 				final_comment.append("; ");
 			}
 			//majority: more3
@@ -720,22 +919,22 @@ void create_repository(Int_t layer, Int_t n_stave, Int_t n_events, vector<string
 				{
 					final_comment.append(", stave ");
 					extended_to_reduced_repository(staves_less4, reduced_staves_less4, final_comment);
-					final_comment.append(": 10^-6 < FHR < 10^-4");
+					final_comment.append(": 10^-8 < FHR < 10^-4");
 				}
-				if(staves_less6.size()!=0)
+				if(staves_less8.size()!=0)
 				{
-					final_comment.append(", stave ");
-					extended_to_reduced_repository(staves_less6, reduced_staves_less6, final_comment);
-					final_comment.append(": 10^-8 < FHR < 10^-6");
+				    final_comment.append(", stave ");
+				    extended_to_reduced_repository(staves_less8, reduced_staves_less8, final_comment);
+				    final_comment.append(": FHR < 10^-8");
 				}
 				final_comment.append("; ");
 			}
 			//majority: less3 - Pb-Pb candidate
-			if(counter_less3>=n_stave/threshold && counter_less3!=n_stave && counter_inactive<n_stave/threshold && counter_more3<n_stave/threshold) 
+			if(counter_less3>=n_stave/threshold && counter_less3!=n_stave && counter_inactive<n_stave/threshold && counter_more3<n_stave/threshold && counter_emulated_pp < n_stave/threshold && counter_emulated_PbPb < n_stave/threshold) 
 			{
 				final_comment.append(layer_name);
-				final_comment.append(", stave");
-				build_layer_status.push_back(3);
+				final_comment.append(", stave ");
+				build_layer_status.push_back(2);
 				build_layer_collision.push_back(3);
 				if(staves_less3.size()!=0)
 				{
@@ -758,27 +957,26 @@ void create_repository(Int_t layer, Int_t n_stave, Int_t n_events, vector<string
 				{
 					final_comment.append(", stave ");
 					extended_to_reduced_repository(staves_less4, reduced_staves_less4, final_comment);
-					final_comment.append(": 10^-6 < FHR < 10^-4");
+					final_comment.append(": 10^-8 < FHR < 10^-4");
 				}
-				if(staves_less6.size()!=0)
+				if(staves_less8.size()!=0)
 				{
-					final_comment.append(", stave ");
-					extended_to_reduced_repository(staves_less6, reduced_staves_less6, final_comment);
-					final_comment.append(": 10^-8 < FHR < 10^-6");
+				    final_comment.append(", stave ");
+				    extended_to_reduced_repository(staves_less8, reduced_staves_less8, final_comment);
+				    final_comment.append(": FHR < 10^-8");
 				}
-				final_comment.append("; ");
 			}
 			//majority: less4, pp candidate
-			if(counter_less4>=n_stave/threshold && counter_less4!=n_stave && counter_inactive<n_stave/threshold && counter_more3<n_stave/threshold && counter_less3<n_stave/threshold) 
+			if(counter_less4>=n_stave/threshold && counter_less4!=n_stave && counter_inactive<n_stave/threshold && counter_more3<n_stave/threshold && counter_less3<n_stave/threshold && counter_emulated_pp < n_stave/threshold && counter_emulated_PbPb < n_stave/threshold) 
 			{
 				final_comment.append(layer_name);
-				final_comment.append(", stave");
-				build_layer_status.push_back(3);
+				final_comment.append(", stave ");
+				build_layer_status.push_back(2);
 				build_layer_collision.push_back(2);
 				if(staves_less4.size()!=0)
 				{
 					extended_to_reduced_repository(staves_less4, reduced_staves_less4, final_comment);
-					final_comment.append(": 10^-6 < FHR < 10^-4");
+					final_comment.append(": 10^-8 < FHR < 10^-4");
 				}
 				if(staves_inactive.size()!=0)
 				{
@@ -798,58 +996,27 @@ void create_repository(Int_t layer, Int_t n_stave, Int_t n_events, vector<string
 					extended_to_reduced_repository(staves_less3, reduced_staves_less3, final_comment);
 					final_comment.append(": 10^-4 < FHR < 10^-3");
 				}
-				if(staves_less6.size()!=0)
+				if(staves_less8.size()!=0)
 				{
-					final_comment.append(", stave ");
-					extended_to_reduced_repository(staves_less6, reduced_staves_less6, final_comment);
-					final_comment.append(": 10^-8 < FHR < 10^-6");
+				    final_comment.append(", stave ");
+				    extended_to_reduced_repository(staves_less8, reduced_staves_less8, final_comment);
+				    final_comment.append(": FHR < 10^-8");
 				}
 				final_comment.append("; ");
 			}
-			//majority: less6, cosmic warn 
-			if(counter_less6>=n_stave/threshold && counter_less6!=n_stave && counter_inactive<n_stave/threshold &&  counter_more3<n_stave/threshold && counter_less3<n_stave/threshold && counter_less4<n_stave/threshold) 
+			
+			//majority: less8, cosmic good
+			if(counter_less8>=n_stave/threshold && counter_less8!=n_stave && counter_inactive<n_stave/threshold && counter_more3<n_stave/threshold && counter_less3<n_stave/threshold && counter_less4<n_stave/threshold)  
 			{
 				final_comment.append(layer_name);
-				final_comment.append(", stave");
+				final_comment.append(", stave ");
 				build_layer_status.push_back(2);
 				build_layer_collision.push_back(1);
-				if(staves_less6.size()!=0)
+				if(staves_less8.size()!=0)
 				{
-					extended_to_reduced_repository(staves_less6, reduced_staves_less6, final_comment);
-					final_comment.append(": 10^-8 < FHR < 10^-6");
+				    extended_to_reduced_repository(staves_less8, reduced_staves_less8, final_comment);
+				    final_comment.append(": FHR < 10^-8");
 				}
-				if(staves_inactive.size()!=0)
-				{
-					final_comment.append(", stave ");
-					extended_to_reduced_repository(staves_inactive, reduced_staves_inactive, final_comment);
-					final_comment.append(": no response");
-				}
-				if(staves_more3.size()!=0)
-				{
-					final_comment.append(", stave ");
-					extended_to_reduced_repository(staves_more3, reduced_staves_more3, final_comment);
-					final_comment.append(": FHR > 10^-3");
-				}
-				if(staves_less3.size()!=0)
-				{
-					final_comment.append(", stave ");
-					extended_to_reduced_repository(staves_less3, reduced_staves_less3, final_comment);
-					final_comment.append(": 10^-4 < FHR < 10^-3");
-				}
-				if(staves_less4.size()!=0)
-				{
-					final_comment.append(", stave ");
-					extended_to_reduced_repository(staves_less4, reduced_staves_less4, final_comment);
-					final_comment.append(": 10^-6 < FHR < 10^-4");
-				}
-				final_comment.append("; ");
-			}
-			//majority: less8, cosmic good
-			if(counter_less8>=n_stave/threshold && counter_less8!=n_stave && counter_inactive<n_stave/threshold &&  counter_more3<n_stave/threshold && counter_less3<n_stave/threshold && counter_less4<n_stave/threshold && counter_less6<n_stave/threshold)  
-			{
-				final_comment.append(layer_name);
-				build_layer_status.push_back(3);
-				build_layer_collision.push_back(1);
 				if(staves_inactive.size()!=0)
 				{
 					final_comment.append(", stave ");
@@ -872,18 +1039,52 @@ void create_repository(Int_t layer, Int_t n_stave, Int_t n_events, vector<string
 				{
 					final_comment.append(", stave ");
 					extended_to_reduced_repository(staves_less4, reduced_staves_less4, final_comment);
-					final_comment.append(": 10^-6 < FHR < 10^-4");
+					final_comment.append(": 10^-8 < FHR < 10^-4");
 				}
-				if(staves_less6.size()!=0)
+				final_comment.append("; ");
+			}
+			//majority: pp emulated
+			if(counter_emulated_pp >= n_stave/threshold && counter_emulated_pp!= n_stave)
+			{
+			    final_comment.append(layer_name);
+				final_comment.append(", stave ");
+				build_layer_status.push_back(2);
+				build_layer_collision.push_back(4);
+				if(staves_emulated_pp.size()!=0)
 				{
-					final_comment.append(", stave ");
-					extended_to_reduced_repository(staves_less6, reduced_staves_less6, final_comment);
-					final_comment.append(": 10^-8 < FHR < 10^-6");
+				    extended_to_reduced_repository(staves_emulated_pp, reduced_staves_emulated_pp, final_comment);
+				    final_comment.append(": inside layer values");
+				}
+				if(staves_no_emulated_pp.size()!=0)
+				{
+				    final_comment.append(", stave ");
+				    extended_to_reduced_repository(staves_no_emulated_pp, reduced_staves_no_emulated_pp, final_comment);
+				    final_comment.append(": outside layer values");
+				}
+				final_comment.append("; ");
+			}
+			//majority: PbPb emulated
+			if(counter_emulated_PbPb >= n_stave/threshold && counter_emulated_PbPb!= n_stave)
+			{
+			    final_comment.append(layer_name);
+				final_comment.append(", stave ");
+				build_layer_status.push_back(2);
+				build_layer_collision.push_back(5);
+				if(staves_emulated_PbPb.size()!=0)
+				{
+				    extended_to_reduced_repository(staves_emulated_PbPb, reduced_staves_emulated_PbPb, final_comment);
+				    final_comment.append(": inside layer values");
+				}
+				if(staves_no_emulated_PbPb.size()!=0)
+				{
+				    final_comment.append(", stave ");
+				    extended_to_reduced_repository(staves_no_emulated_PbPb, reduced_staves_no_emulated_PbPb, final_comment);
+				    final_comment.append(": outside layer values");
 				}
 				final_comment.append("; ");
 			}
 			//other cases
-			if(counter_inactive < n_stave/threshold && counter_more3 < n_stave/threshold && counter_less3 < n_stave/threshold && counter_less4 < n_stave/threshold && counter_less6 < n_stave/threshold && counter_less8 < n_stave/threshold)
+			if(counter_inactive < n_stave/threshold && counter_more3 < n_stave/threshold && counter_less3 < n_stave/threshold && counter_less4 < n_stave/threshold && counter_less8 < n_stave/threshold)
 			{
 				final_comment.append(layer_name);
 				build_layer_status.push_back(0);
@@ -910,13 +1111,7 @@ void create_repository(Int_t layer, Int_t n_stave, Int_t n_events, vector<string
 				{
 					final_comment.append(", stave ");
 					extended_to_reduced_repository(staves_less4, reduced_staves_less4, final_comment);
-					final_comment.append(": 10^-6 < FHR < 10^-4");
-				}
-				if(staves_less6.size()!=0)
-				{
-					final_comment.append(", stave ");
-					extended_to_reduced_repository(staves_less6, reduced_staves_less6, final_comment);
-					final_comment.append(": 10^-8 < FHR < 10^-6");
+					final_comment.append(": 10^-8 < FHR < 10^-4");
 				}
 				if(staves_less8.size()!=0)
 				{
@@ -935,31 +1130,39 @@ void create_repository(Int_t layer, Int_t n_stave, Int_t n_events, vector<string
 		{
 			final_comment = "";
 			comments.push_back(final_comment);
-			build_layer_status.push_back(4);
+			build_layer_status.push_back(3);
 			build_layer_collision.push_back(0);
 			NA_counter++;
 		}
 		//put all the counter to zero for a new run
 		counter_less8=0;
-		counter_less6=0;
 		counter_less4=0;
 		counter_less3=0;
 		counter_more3=0;
 		counter_inactive=0;
+		counter_emulated_pp=0;
+		counter_emulated_PbPb=0;
+		
 		//reset vector of staves for a new run
 		staves_inactive.clear();
 		staves_more3.clear();
 		staves_less3.clear();
 		staves_less4.clear();
-		staves_less6.clear();
 		staves_less8.clear();
+		staves_emulated_pp.clear();
+		staves_no_emulated_pp.clear();
+		staves_emulated_PbPb.clear();
+		staves_no_emulated_PbPb.clear();
 		
 		reduced_staves_inactive.clear();
 		reduced_staves_more3.clear();
 		reduced_staves_less3.clear();
 		reduced_staves_less4.clear();
-		reduced_staves_less6.clear();
 		reduced_staves_less8.clear();
+		reduced_staves_emulated_pp.clear();
+		reduced_staves_no_emulated_pp.clear();
+		reduced_staves_emulated_PbPb.clear();
+		reduced_staves_no_emulated_PbPb.clear();
 	
 	} 
 };
@@ -1038,50 +1241,56 @@ void CreateRepositoryFHR()
 	{
 		if(i<3)
 		{
-			if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data.root", i, run_lower, run_upper)))
+			if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data.root", i, run_lower, run_upper))&&gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d.root", i, run_lower, run_upper)))
 			{
 				cout << "The file for layer " << i << " does not exist. Check the run extremes " << endl; 
 				exit(1);
 			}
 			else 
 			{
-				input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data.root", i, run_lower, run_upper));
-				c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data", i));
+				input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data.root", i, run_lower, run_upper));
+				if(!input_file) input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d.root", i, run_lower, run_upper));
+				c = (TCanvas*)input_file->Get("canvas");
+				if(!c) c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data", i));
+				
 				hist = (TH1F*) c->FindObject(Form("hfake_L%d", i));
 				n_events[i] = hist->GetNbinsX();
 				for(Int_t j=0; j < n_events[i]; j++)
 				{
-					label = hist->GetXaxis()->GetBinLabel(j+1);
-					label.erase(0, 3);
-					label_prv.push_back(label);
-					cumulative_label.push_back(label);
+				 	label = hist->GetXaxis()->GetBinLabel(j+1);
+				   	label.erase(0, 3);
+				   	label_prv.push_back(label);
+				   	cumulative_label.push_back(label);
 				}
 				label_event.push_back(label_prv);
-				label_prv.clear();		
+				label_prv.clear();	
 			}	
 		}
 		else
 		{
-			if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data_HSLower.root", i, run_lower, run_upper)))
+			if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data_HSLower.root", i, run_lower, run_upper))&&gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_HSLower.root", i, run_lower, run_upper)))
 			{
-				cout << "The file for layer " << i << " HS lower does not exist. Check the run extremes. " << endl;
-				exit(1);
+                    cout << "The file for layer " << i << " HS lower does not exist. Check the run extremes. " << endl;
+				    exit(1);
 			}
 			else
 			{
-				input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data_HSLower.root", i, run_lower, run_upper));
-				c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data_HSLower", i));
+				input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data_HSLower.root", i, run_lower, run_upper));
+				if(!input_file) input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_HSLower.root", i, run_lower, run_upper)); 
+				c = (TCanvas*)input_file->Get("canvas_HSLower");
+				if(!c) c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data_HSLower", i));
+				
 				hist = (TH1F*) c->FindObject(Form("hfake_L%d", i));
-				n_events[i] = hist->GetNbinsX();
-				for(Int_t j=0; j < n_events[i]; j++)
-				{
-					label = hist->GetXaxis()->GetBinLabel(j+1);
-					label.erase(0, 3);
-					label_prv.push_back(label);
-					cumulative_label.push_back(label);
-				}
-				label_event.push_back(label_prv);
-				label_prv.clear();	
+			    n_events[i] = hist->GetNbinsX();
+			    for(Int_t j=0; j < n_events[i]; j++)
+			    {
+			    	label = hist->GetXaxis()->GetBinLabel(j+1);
+			    	label.erase(0, 3);
+			    	label_prv.push_back(label);
+			    	cumulative_label.push_back(label);
+			    }
+			    label_event.push_back(label_prv);
+			    label_prv.clear();
 			}
 		}	
 	}
@@ -1127,78 +1336,88 @@ void CreateRepositoryFHR()
 				else {layer_lower = layer_number; layer_upper = layer_number+1;}	
 			}
 			else if(layer_choice=="n" || layer_choice=="N") cout << "Proceding with the analysis af all layers in the sector selected " << endl;
-			else {cout << "Wrong choise. Restart the analysis " << endl; exit(1);}
+			else {cout << "wrong choise. Restart the analysis " << endl; exit(1);}
 		}
 		for(Int_t i=layer_lower; i < layer_upper; i++)
 		{
 			if(i < 3)
 			{
-				if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data.root", i, run_lower, run_upper)))
+				if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data.root", i, run_lower, run_upper))&&gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d.root", i, run_lower, run_upper)))
 				{
-					cout << "The file for layer " << i << " does not exist. Check the run extremes " << endl; 
-					exit(1);
+				    cout << "The file for layer " << i << " does not exist. Check the run extremes " << endl; 
+					exit(1);	
 				}
 				else 
 				{
-					input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data.root", i, run_lower, run_upper));
-					c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data", i));
-					n_stave = number_staves[i];
-					vector<TGraph*> staves;
-					for(Int_t j=0; j < n_stave; j++) 
-					{
-						TGraph* aux_stave = (TGraph*) c->GetPrimitive((Form("gr_L%d_stave%d_HS0", i, j)));
-						staves.push_back(aux_stave);
-					}
-					layer_name = Form("L%d", i);
-					terminal_output(i, n_stave, total_events, cumulative_label, label_event[i], staves, layer_name);
-					cout << "operation on layer " << i << " concluded " << endl;
-					staves.clear();
+					input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data.root", i, run_lower, run_upper));
+					if(!input_file) input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d.root", i, run_lower, run_upper));
+					c = (TCanvas*)input_file->Get("canvas");
+					if(!c) c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data", i));
+					
+				    n_stave = number_staves[i];
+				    vector<TGraph*> staves;
+				    for(Int_t j=0; j < n_stave; j++) 
+				    {
+				    	TGraph* aux_stave = (TGraph*) c->GetPrimitive((Form("gr_L%d_stave%d_HS0", i, j)));
+				    	staves.push_back(aux_stave);
+				    }
+				    layer_name = Form("L%d", i);
+ 				    terminal_output(i, n_stave, total_events, cumulative_label, label_event[i], staves, layer_name);
+    				cout << "operation on layer " << i << " concluded " << endl;
+    				staves.clear();
 				}
 			}
 			else
 			{
-				if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data_HSLower.root", i, run_lower, run_upper)))
+				if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data_HSLower.root", i, run_lower, run_upper))&&gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_HSLower.root", i, run_lower, run_upper)))
 				{
-					cout << "The file for layer " << i << " HS lower does not exist. Check the run extremes. " << endl;
+				    cout << "The file for layer " << i << " HS lower does not exist. Check the run extremes. " << endl;
 					exit(1);
 				}
 				else
 				{
-					input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data_HSLower.root", i, run_lower, run_upper));
-					c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data_HSLower", i));
+					input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data_HSLower.root", i, run_lower, run_upper));
+					if(!input_file) input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_HSLower.root", i, run_lower, run_upper));
+					c = (TCanvas*)input_file->Get("canvas_HSLower");
+					if(!c) c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data_HSLower", i));
+					
 					n_stave = number_staves[i];
 					vector<TGraph*> staves_lower;
-					for(Int_t j=0; j < n_stave; j++) 
-					{
-						TGraph* aux_stave = (TGraph*) c->GetPrimitive((Form("gr_L%d_stave%d_HS0", i, j)));
-						staves_lower.push_back(aux_stave);
-					}
-					layer_name = Form("L%dL", i);
-					terminal_output(i, n_stave, total_events, cumulative_label, label_event[i], staves_lower, layer_name);
+				    for(Int_t j=0; j < n_stave; j++) 
+				    {
+			    		TGraph* aux_stave = (TGraph*) c->GetPrimitive((Form("gr_L%d_stave%d_HS0", i, j)));
+			    		staves_lower.push_back(aux_stave);
+		    		}
+		    		layer_name = Form("L%dL", i);
+		    		terminal_output(i, n_stave, total_events, cumulative_label, label_event[i], staves_lower, layer_name);
 					cout << "operation on layer " << i << " lower concluded " << endl;
 					staves_lower.clear();
+					
 				}
 				
-				if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data_HSUpper.root", i, run_lower, run_upper)))
+				if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data_HSUpper.root", i, run_lower, run_upper))&&gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_HSUpper.root", i, run_lower, run_upper)))
 				{
 					cout << "The file for layer " << i << " HS upper does not exist. Check the run extremes. " << endl;
-					exit(1);
+					exit(1);    
 				}
 				else
 				{
-					input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data_HSUpper.root", i, run_lower, run_upper));
-					c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data_HSUpper", i));
+					input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data_HSUpper.root", i, run_lower, run_upper));
+					if(!input_file) input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_HSUpper.root", i, run_lower, run_upper)); 
+					c = (TCanvas*)input_file->Get("canvas_HSUpper");
+					if(!c) c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data_HSUpper", i));
+					
 					n_stave = number_staves[i];
 					vector<TGraph*> staves_upper;
 					for(Int_t j=0; j < n_stave; j++) 
 					{
-						TGraph* aux_stave = (TGraph*) c->GetPrimitive((Form("gr_L%d_stave%d_HS1", i, j)));
-						staves_upper.push_back(aux_stave);
-					}
-					layer_name = Form("L%dU", i);
-					terminal_output(i, n_stave, total_events, cumulative_label, label_event[i], staves_upper, layer_name);
-					cout << "operation on layer " << i << " upper concluded " << endl;
-					staves_upper.clear();
+					  TGraph* aux_stave = (TGraph*) c->GetPrimitive((Form("gr_L%d_stave%d_HS1", i, j)));
+					  staves_upper.push_back(aux_stave);
+				    }
+				    layer_name = Form("L%dU", i);
+				    terminal_output(i, n_stave, total_events, cumulative_label, label_event[i], staves_upper, layer_name);
+				    cout << "operation on layer " << i << " upper concluded " << endl;
+				    staves_upper.clear();
 				}
 			}
 		}
@@ -1231,95 +1450,105 @@ void CreateRepositoryFHR()
 			string final_comment = "";
 			if(i < 3)
 			{
-				if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data.root", i, run_lower, run_upper)))
+				if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data.root", i, run_lower, run_upper))&&gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d.root", i, run_lower, run_upper)))
 				{
-					cout << "The file for layer " << i << " does not exist. Check the run extremes " << endl; 
-					exit(1);
+				    cout << "The file for layer " << i << " does not exist. Check the run extremes " << endl; 
+					exit(1); 
 				}
 				else 
 				{
-					input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data.root", i, run_lower, run_upper));
-					c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data", i));
-					c->Draw();
-					c->SaveAs(Form("../Plots/FHR_from_run%d_to_run%d_L%d.png", run_lower, run_upper, i));
-					n_stave = number_staves[i];
-					vector<TGraph*> staves;
-					for(Int_t j=0; j < n_stave; j++) 
-					{
-						TGraph* aux_stave = (TGraph*) c->GetPrimitive((Form("gr_L%d_stave%d_HS0", i, j)));
-						staves.push_back(aux_stave);
-					}
-					layer_name = Form("L%d", i);
-					create_repository(i, n_stave, total_events, cumulative_label, label_event[i], staves, layer_name, final_comment, build_vcomments, build_layer_status, build_layer_collision);
-					comments.push_back(build_vcomments);
-					layer_status.push_back(build_layer_status);
-					layer_collision.push_back(build_layer_collision);
-					build_vcomments.clear();
-					build_layer_status.clear();
-					build_layer_collision.clear();
-					cout << "repository operation on layer " << i << " concluded " << endl;
-					staves.clear();
+					input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data.root", i, run_lower, run_upper));
+					if(!input_file) input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d.root", i, run_lower, run_upper));
+					c = (TCanvas*)input_file->Get("canvas");
+					if(!c) c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data", i));
+					
+				    c->Draw();
+				    c->SaveAs(Form("FHR_from_run%d_to_run%d_L%d.png", run_lower, run_upper, i));
+				    n_stave = number_staves[i];
+				    vector<TGraph*> staves;
+				    for(Int_t j=0; j < n_stave; j++) 
+				    {
+				    	TGraph* aux_stave = (TGraph*) c->GetPrimitive((Form("gr_L%d_stave%d_HS0", i, j)));
+				    	staves.push_back(aux_stave);
+				    }
+	    			layer_name = Form("L%d", i);
+	    			create_repository(i, n_stave, total_events, cumulative_label, label_event[i], staves, layer_name, final_comment, build_vcomments, build_layer_status, build_layer_collision);
+	    			comments.push_back(build_vcomments);
+	    			layer_status.push_back(build_layer_status);
+	    			layer_collision.push_back(build_layer_collision);
+	    			build_vcomments.clear();
+	    			build_layer_status.clear();
+	    			build_layer_collision.clear();
+	    			cout << "repository operation on layer " << i << " concluded " << endl;
+	    			staves.clear();			
 				}
 			}
 			else
 			{
-				if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data_HSLower.root", i, run_lower, run_upper)))
+				if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data_HSLower.root", i, run_lower, run_upper))&&gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_HSLower.root", i, run_lower, run_upper)))
 				{
 					cout << "The file for layer " << i << " HS lower does not exist. Check the run extremes. " << endl;
 					exit(1);
 				}
 				else
 				{
-					input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data_HSLower.root", i, run_lower, run_upper));
-					c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data_HSLower", i));
-					c->Draw();
-					c->SaveAs(Form("../Plots/FHR_from_run%d_to_run%d_L%d_HSLower.png", run_lower, run_upper, i));
-					n_stave = number_staves[i];
-					vector<TGraph*> staves_lower;
-					for(Int_t j=0; j < n_stave; j++) 
-					{
-						TGraph* aux_stave = (TGraph*) c->GetPrimitive((Form("gr_L%d_stave%d_HS0", i, j)));
-						staves_lower.push_back(aux_stave);
-					}
-					layer_name = Form("L%dL", i);
-					create_repository(i, n_stave, total_events, cumulative_label, label_event[i], staves_lower, layer_name, final_comment, build_vcomments, build_layer_status, build_layer_collision);
-					comments.push_back(build_vcomments);
-					layer_status.push_back(build_layer_status);
-					layer_collision.push_back(build_layer_collision);
-					build_vcomments.clear();
-					build_layer_status.clear();
-					build_layer_collision.clear();
-					cout << "repository operation on layer " << i << " lower concluded " << endl;
-					staves_lower.clear();
+					input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data_HSLower.root", i, run_lower, run_upper));
+					if(!input_file) input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_HSLower.root", i, run_lower, run_upper));
+					c = (TCanvas*)input_file->Get("canvas_HSLower");
+					if(!c) c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data_HSLower", i));
+					
+				    c->Draw();
+				    c->SaveAs(Form("FHR_from_run%d_to_run%d_L%d_HSLower.png", run_lower, run_upper, i));
+				    n_stave = number_staves[i];
+				    vector<TGraph*> staves_lower;
+				    for(Int_t j=0; j < n_stave; j++) 
+				    {
+					    TGraph* aux_stave = (TGraph*) c->GetPrimitive((Form("gr_L%d_stave%d_HS0", i, j)));
+					    staves_lower.push_back(aux_stave);
+				    }
+				    layer_name = Form("L%dL", i);
+				    create_repository(i, n_stave, total_events, cumulative_label, label_event[i], staves_lower, layer_name, final_comment, build_vcomments, build_layer_status, build_layer_collision);
+			    	comments.push_back(build_vcomments);
+			    	layer_status.push_back(build_layer_status);
+			    	layer_collision.push_back(build_layer_collision);
+			    	build_vcomments.clear();
+			    	build_layer_status.clear();
+			    	build_layer_collision.clear();
+			    	cout << "repository operation on layer " << i << " lower concluded " << endl;
+			    	staves_lower.clear();					
 				}
-				if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data_HSUpper.root", i, run_lower, run_upper)))
+				
+				if(gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data_HSUpper.root", i, run_lower, run_upper))&&gSystem->AccessPathName(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_HSUpper.root", i, run_lower, run_upper)))
 				{
-					cout << "The file for layer " << i << " HS upper does not exist. Check the run extremes. " << endl;
-					exit(1);
+				    cout << "The file for layer " << i << " HS upper does not exist. Check the run extremes. " << endl;
+		    	    exit(1);
 				}
 				else
 				{
-					input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_and_trig_data_HSUpper.root", i, run_lower, run_upper));
-					c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data_HSUpper", i));
-					c->Draw();
-					c->SaveAs(Form("FHR_from_run%d_to_run%d_L%d_HSUpper.png", run_lower, run_upper, i));
-					n_stave = number_staves[i];
-					vector<TGraph*> staves_upper;
-					for(Int_t j=0; j < n_stave; j++) 
-					{
-						TGraph* aux_stave = (TGraph*) c->GetPrimitive((Form("gr_L%d_stave%d_HS1", i, j)));
-						staves_upper.push_back(aux_stave);
-					}
-					layer_name = Form("L%dU", i);
-					create_repository(i, n_stave, total_events, cumulative_label, label_event[i], staves_upper, layer_name, final_comment, build_vcomments, build_layer_status, build_layer_collision);
-					comments.push_back(build_vcomments);
-					layer_status.push_back(build_layer_status);
-					layer_collision.push_back(build_layer_collision);
-					build_vcomments.clear();
-					build_layer_status.clear();
-					build_layer_collision.clear();
-					cout << "repository operation on layer " << i << " upper concluded " << endl;
-					staves_upper.clear();
+					input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_w_error_data_HSUpper.root", i, run_lower, run_upper));
+					if(!input_file) input_file = TFile::Open(Form("../Plots/Layer%d_fakehitrate_from_run%d_to_run%d_HSUpper.root", i, run_lower, run_upper));
+					c = (TCanvas*)input_file->Get("canvas_HSUpper");
+					if(!c) c = (TCanvas*)input_file->Get(Form("Layer%d_fakehitrate_w_error_and_trig_data_HSUpper", i));
+					
+				    c->Draw();
+				    c->SaveAs(Form("FHR_from_run%d_to_run%d_L%d_HSUpper.png", run_lower, run_upper, i));
+				    n_stave = number_staves[i];
+				    vector<TGraph*> staves_upper;
+				    for(Int_t j=0; j < n_stave; j++) 
+				    {
+				    	TGraph* aux_stave = (TGraph*) c->GetPrimitive((Form("gr_L%d_stave%d_HS1", i, j)));
+				    	staves_upper.push_back(aux_stave);
+				    }
+				    layer_name = Form("L%dU", i);
+				    create_repository(i, n_stave, total_events, cumulative_label, label_event[i], staves_upper, layer_name, final_comment, build_vcomments, build_layer_status, build_layer_collision);
+				    comments.push_back(build_vcomments);
+				    layer_status.push_back(build_layer_status);
+				    layer_collision.push_back(build_layer_collision);
+				    build_vcomments.clear();
+				    build_layer_status.clear();
+				    build_layer_collision.clear();
+				    cout << "repository operation on layer " << i << " upper concluded " << endl;
+				    staves_upper.clear();			
 				}
 			}
 		}
@@ -1350,7 +1579,6 @@ void CreateRepositoryFHR()
 		{
 			if(global_status[i]==0) global_status_descriptive.push_back("expert check");
 			else if(global_status[i]==1) global_status_descriptive.push_back("bad");
-			else if(global_status[i]==2) global_status_descriptive.push_back("warning");
 			else global_status_descriptive.push_back("good");
 		}
 	
@@ -1360,9 +1588,8 @@ void CreateRepositoryFHR()
 			{
 				if(layer_status[i][j]==0) build_layer_status_descriptive.push_back("expert check");
 				else if(layer_status[i][j]==1) build_layer_status_descriptive.push_back("bad");
-				else if(layer_status[i][j]==2) build_layer_status_descriptive.push_back("warning");
-				else if(layer_status[i][j]==3) build_layer_status_descriptive.push_back("good");
-				else build_layer_status_descriptive.push_back("N/A");
+				else if(layer_status[i][j]==2) build_layer_status_descriptive.push_back("good");
+				else if(layer_status[i][j]==3) build_layer_status_descriptive.push_back("N/A");
 			}
 			layer_status_descriptive.push_back(build_layer_status_descriptive);
 			build_layer_status_descriptive.clear();
@@ -1385,17 +1612,20 @@ void CreateRepositoryFHR()
 		{
 			if (global_collision[i]==0) global_collision_descriptive.push_back("expert check");
 			else if(global_collision[i]==1) global_collision_descriptive.push_back("cosmic");
-			else if(global_collision[i]==2) global_collision_descriptive.push_back("pp");
-			else global_collision_descriptive.push_back("Pb-Pb");
+			else if(global_collision[i]==2) global_collision_descriptive.push_back("collisions pp");
+			else if(global_collision[i]==3) global_collision_descriptive.push_back("collisions Pb-Pb");
+			else if(global_collision[i]==4) global_collision_descriptive.push_back("emulated pp");
+			else if(global_collision[i]==5) global_collision_descriptive.push_back("emulated Pb-Pb");
 		}
 	
 		ofstream output;
-		output.open(Form("../Plots/repository_from_run%d_to_run%d.txt", run_lower, run_upper));
+		output.open(Form("repository_from_run%d_to_run%d.txt", run_lower, run_upper));
 		if(output.fail())
 		{
 			cout << "Error in repository file creation " << endl;
 			exit(1);
 		}
+		
 		for(Int_t i=0; i < total_events; i++) 
 		{
 			output << cumulative_label[i] << "\t" << global_collision_descriptive[i] << "\t" << global_status_descriptive[i] << "\t";
