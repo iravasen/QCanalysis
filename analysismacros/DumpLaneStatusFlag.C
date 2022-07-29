@@ -20,7 +20,7 @@ int ns[] = {12,16,20,24,30,42,48}; // n staves for each layer
 
 void DoAnalysis(string filepath);
 int getlayer(int ifee){
-  return (ifee-1) < 36 ? 0 : (ifee-1) < 84 ? 1 : (ifee-1) < 144 ? 2 : (ifee-1) < 192 ? 3 : (ifee-1) < 252 ? 4 : (ifee-1) < 336 ? 5 : 6;
+  return (ifee) < 36 ? 0 : (ifee) < 84 ? 1 : (ifee) < 144 ? 2 : (ifee) < 192 ? 3 : (ifee) < 252 ? 4 : (ifee) < 336 ? 5 : 6;
 }
 
 int getstave(int lay, int ifee){
@@ -118,7 +118,7 @@ void DoAnalysis(string filepath){
 	for(int i=0; i<(int)herr.size(); i++){
 		for(int ifee = 0; ifee < herr[i]->GetNbinsX(); ifee++) {
 			for(int ilane = 0; ilane < herr[i]->GetNbinsY(); ilane++) {
-				double binc = herr[i]->GetBinContent(ifee, ilane);
+				double binc = herr[i]->GetBinContent(ifee+1, ilane+1);
      			        if(binc>0){
         				int layer = getlayer(ifee);
         				int stave = getstave(layer,ifee);
@@ -134,7 +134,7 @@ void DoAnalysis(string filepath){
 	for(int i=0; i<(int)hfault.size(); i++){
 		for(int ifee = 0; ifee < hfault[i]->GetNbinsX(); ifee++) {
 			for(int ilane = 0; ilane < hfault[i]->GetNbinsY(); ilane++) {
-				double binc = hfault[i]->GetBinContent(ifee, ilane);
+				double binc = hfault[i]->GetBinContent(ifee+1, ilane+1);
      			        if(binc>0){
         				int layer = getlayer(ifee);
         				int stave = getstave(layer,ifee);
@@ -150,7 +150,7 @@ void DoAnalysis(string filepath){
 	for(int i=0; i<(int)hwarning.size(); i++){
 		for(int ifee = 0; ifee < hwarning[i]->GetNbinsX(); ifee++) {
 			for(int ilane = 0; ilane < hwarning[i]->GetNbinsY(); ilane++) {
-				double binc = hwarning[i]->GetBinContent(ifee, ilane);
+				double binc = hwarning[i]->GetBinContent(ifee+1, ilane+1);
      			        if(binc>0){
         				int layer = getlayer(ifee);
         				int stave = getstave(layer,ifee);
