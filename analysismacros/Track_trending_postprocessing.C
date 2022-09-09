@@ -25,7 +25,7 @@
 #include "inc/ccdb.h"
 
 void Track_trending_postprocessing(){
-gROOT->SetBatch(kTRUE);
+
 string fpath;
 cout<<"Available file(s) for the analysis of track task:"<<endl;
 gSystem->Exec("ls ../Data/*TrackTask* -Art | tail -n 500");
@@ -1208,98 +1208,98 @@ if(ccdb_upload){
 string Runperiod = Form("run%s_to_run%s",runs.front().c_str(), runs.back().c_str());
 
 	c1->SetName("MostProbable_Clusters_per_track_vs_eta");
-auto mo1 = std::make_shared<o2::quality_control::core::MonitorObject>(c1, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto mo1 = std::make_shared<o2::quality_control::core::MonitorObject>(c1, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         mo1->setIsOwner(false);
         ccdb->storeMO(mo1);
 	
 	c2->SetName("Average_Eta_distribution");
-auto mo2 = std::make_shared<o2::quality_control::core::MonitorObject>(c2, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto mo2 = std::make_shared<o2::quality_control::core::MonitorObject>(c2, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         mo2->setIsOwner(false);
         ccdb->storeMO(mo2);
 
 	c21->SetName("Rel_number_tracks_Eta_distribution");
-auto mo21 = std::make_shared<o2::quality_control::core::MonitorObject>(c21, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto mo21 = std::make_shared<o2::quality_control::core::MonitorObject>(c21, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         mo21->setIsOwner(false);
         ccdb->storeMO(mo21);
 
 	c3->SetName("Average_Phi_distribution");
-auto mo3 = std::make_shared<o2::quality_control::core::MonitorObject>(c3, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto mo3 = std::make_shared<o2::quality_control::core::MonitorObject>(c3, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         mo3->setIsOwner(false);
         ccdb->storeMO(mo3);
 
 	c31->SetName("Rel_number_tracks_Phi_distribution");
-auto mo31 = std::make_shared<o2::quality_control::core::MonitorObject>(c31, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto mo31 = std::make_shared<o2::quality_control::core::MonitorObject>(c31, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         mo31->setIsOwner(false);
         ccdb->storeMO(mo31);
 
 	cz1->SetName("Mean_Zvertex_coordinate");
-auto moz1 = std::make_shared<o2::quality_control::core::MonitorObject>(cz1, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto moz1 = std::make_shared<o2::quality_control::core::MonitorObject>(cz1, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         moz1->setIsOwner(false);
         ccdb->storeMO(moz1);
 
         cz11->SetName("Rms_Zvertex_coordinate");
-auto moz11 = std::make_shared<o2::quality_control::core::MonitorObject>(cz11, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto moz11 = std::make_shared<o2::quality_control::core::MonitorObject>(cz11, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         moz11->setIsOwner(false);
         ccdb->storeMO(moz11);
 
 	c_summary1->SetName("Summary_Distance_Primary_Vertex");
-auto mosummary1 = std::make_shared<o2::quality_control::core::MonitorObject>(c_summary1, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto mosummary1 = std::make_shared<o2::quality_control::core::MonitorObject>(c_summary1, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         mosummary1->setIsOwner(false);
         ccdb->storeMO(mosummary1);
 
         c_summary->SetName("Summary_Track_Vertex_Coordinates");
-auto mosummary = std::make_shared<o2::quality_control::core::MonitorObject>(c_summary, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto mosummary = std::make_shared<o2::quality_control::core::MonitorObject>(c_summary, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         mosummary->setIsOwner(false);
         ccdb->storeMO(mosummary);
 
         cxy->SetName("Track_Vertex_Coordinates");
-auto moxy = std::make_shared<o2::quality_control::core::MonitorObject>(cxy, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto moxy = std::make_shared<o2::quality_control::core::MonitorObject>(cxy, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         moxy->setIsOwner(false);
         ccdb->storeMO(moxy);
 
 cxyrms->SetName("Track_Vertex_Coordinates_Rms");
-auto moxyrms = std::make_shared<o2::quality_control::core::MonitorObject>(cxyrms, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto moxyrms = std::make_shared<o2::quality_control::core::MonitorObject>(cxyrms, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         moxyrms->setIsOwner(false);
         ccdb->storeMO(moxyrms);
 
         ce->SetName("Mean_NVertexContributors");
-auto moe = std::make_shared<o2::quality_control::core::MonitorObject>(ce, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto moe = std::make_shared<o2::quality_control::core::MonitorObject>(ce, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         moe->setIsOwner(false);
         ccdb->storeMO(moe);
 
         cerms->SetName("Rms_NVertexContributors");
-auto moerms = std::make_shared<o2::quality_control::core::MonitorObject>(cerms, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto moerms = std::make_shared<o2::quality_control::core::MonitorObject>(cerms, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         moerms->setIsOwner(false);
         ccdb->storeMO(moerms);
 
         ct->SetName("Mean_NTracks_EbyE");
-auto mot = std::make_shared<o2::quality_control::core::MonitorObject>(ct, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto mot = std::make_shared<o2::quality_control::core::MonitorObject>(ct, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         mot->setIsOwner(false);
         ccdb->storeMO(mot);
 
         ctrms->SetName("Rms_NTracks_EbyE");
-auto motrms = std::make_shared<o2::quality_control::core::MonitorObject>(ctrms, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto motrms = std::make_shared<o2::quality_control::core::MonitorObject>(ctrms, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         motrms->setIsOwner(false);
         ccdb->storeMO(motrms);
 
         c0->SetName("Mean_Fraction_Clusters_Tracks");
-auto mo0 = std::make_shared<o2::quality_control::core::MonitorObject>(c0, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto mo0 = std::make_shared<o2::quality_control::core::MonitorObject>(c0, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         mo0->setIsOwner(false);
         ccdb->storeMO(mo0);
 
         c0rms->SetName("Rms_Fraction_Clusters_Tracks");
-auto mo0rms = std::make_shared<o2::quality_control::core::MonitorObject>(c0rms, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto mo0rms = std::make_shared<o2::quality_control::core::MonitorObject>(c0rms, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         mo0rms->setIsOwner(false);
         ccdb->storeMO(mo0rms);
 
 
         c_->SetName("Mean_NumberCluster_per_Track");
-auto mo_ = std::make_shared<o2::quality_control::core::MonitorObject>(c_, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto mo_ = std::make_shared<o2::quality_control::core::MonitorObject>(c_, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         mo_->setIsOwner(false);
         ccdb->storeMO(mo_);
 
         c->SetName("LessProbable_Clusters_per_track_vs_eta");
-auto moc = std::make_shared<o2::quality_control::core::MonitorObject>(c, TaskName, TaskClass, DetectorName,1,Runperiod);
+auto moc = std::make_shared<o2::quality_control::core::MonitorObject>(c, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         moc->setIsOwner(false);
         ccdb->storeMO(moc);
 
