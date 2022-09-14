@@ -57,7 +57,10 @@ todo(){
     16) echo -e "\n\e[32m=> Starting cluster occupation analysis run by run\e[39m"
        root -l -b -q AnalyzeLayerClusterOccupancy.C++
        remove ;;
-    17) echo -e "\n\e[32m=> Starting full analysis of track and vertex parameters\e39m"
+    17) echo -e "\n\e[32m=> Starting empty lanes analysis from clusters run by run\e[39m"
+        root -l -b -q AnalyzeEmptyLanesFromClusters.C++
+        remove ;;
+    18) echo -e "\n\e[32m=> Starting full analysis of track and vertex parameters\e39m"
        root -l -b -q Track_trending_postprocessing.C++
        remove ;;
     *) echo -e "Invalid option \n"
@@ -91,9 +94,10 @@ analysismenu(){
   echo "[Analyses on Clusters]"
   echo -e "\t 15.  Average cluster size run by run"
   echo -e "\t 16.  Cluster occupation run by run"
+  echo -e "\t 17.  Analyze empty lanes run by run"
   echo -e "\n"
   echo "[Analyses on Tracks]"
-  echo -e "\t 17.  Full trending of track and vertex parameters\e[39m"
+  echo -e "\t 18.  Full trending of track and vertex parameters\e[39m"
   echo -e "\n"
   echo -e "Enter option \c"
   cd analysismacros
