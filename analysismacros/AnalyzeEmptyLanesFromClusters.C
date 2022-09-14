@@ -13,6 +13,8 @@
 #include <TSystem.h>
 #include <TGraph.h>
 #include <TKey.h>
+#include <map>
+#include <fstream>
 #include "QualityControl/PostProcessingInterface.h"
 #include "QualityControl/Reductor.h"
 #include "QualityControl/DatabaseFactory.h"
@@ -192,6 +194,7 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
    int ChipMin {1};
    int ChipMax {1};
    int ilayer = 0;
+   std::unordered_map<std::string, std::vector<int>> deadchipmap;
 
    for(int ihist = (int) vInput_Histo.size() - 1; ihist >= 0; ihist--){ //start from the last in order to have the runs from the oldest to the newest
 
@@ -212,7 +215,9 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
            if(vInput_Histo[ihist]->GetBinContent(ibinx, ibiny) < 1e-15) nDeadchips++; // @ here can be used TH1 *hproj
         }
         if(nDeadchips > 0) cout << "Layer " << vLayerNumber[ihist] << " Stave " << ibiny - 1 << " Run: " << vNumberOfRuns[ihist] << " Dead lanes: " << nDeadchips << endl;
-        gEmptyLanes[ilayer][ibiny-1]->SetPoint(irun, irun, nDeadchips); // @ final output
+        float maxlanes = std::stoi(vLayerNumber[ihist]) < 3 ? 9 : (std::stoi(vLayerNumber[ihist]) > 2 && std::stoi(vLayerNumber[ihist]) < 5) ? 16 : 28;
+        gEmptyLanes[ilayer][ibiny-1]->SetPoint(irun, irun, ((float)nDeadchips / maxlanes)*100.); // @ final output
+        deadchipmap[vNumberOfRuns[ihist]].push_back(nDeadchips);
 
         //Style
         if(stoi(vLayerNumber[ihist]) < 3){
@@ -247,6 +252,19 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
       if(ihist > 0 && vLayerNumber[ihist - 1] != vLayerNumber[ihist]) irun = 0;
    } // end of loop over histograms
 
+   //dump on a file the dead chips per run and per layer
+   // Format is: RunNumber L6_00 ... L6_47, L5_00, ..., L5_41, ...., L0_00, ..., L0_11
+   ofstream outtxt(Form("../Plots/EmptyLanesSummary_%s.txt",sFile_Path.substr(sFile_Path.find("from"), sFile_Path.find(".root")-sFile_Path.find("from")).c_str()));
+   for (auto const& elem : deadchipmap){
+     outtxt<<elem.first<<" ";
+     for(int is=0; is<elem.second.size(); is++){
+       if(is<elem.second.size()-1) outtxt<<elem.second[is]<<" ";
+       else outtxt<<elem.second[is];
+     }
+     outtxt<<"\n";
+   }
+   outtxt.close();
+
    //Axis labels____________________________________________
    int ilayEff = 0;
    TH1F *hDummy[7];
@@ -268,7 +286,7 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
       // cout << "ilay " << ilay << " ilayEff " << ilayEff << " nRunsTot " << nRunsTot<< endl;
 
       if(npoints == 0) continue;
-      hDummy[ilay] = new TH1F(Form("hEmptyLanes_L%i", ilay), "; Run; #Empty lanes", npoints, -0.5, (double) npoints - 0.5);
+      hDummy[ilay] = new TH1F(Form("hEmptyLanes_L%i", ilay), "; Run; Empty lanes (%)", npoints, -0.5, (double) npoints - 0.5);
 
       for(int ir = 0; ir <= numberOfRuns_PerLayer[ilayEff]; ir++){
          hDummy[ilay]->GetXaxis()->SetBinLabel(ir+1, Form("%06d", stoi(vNumberOfRuns[nRunsTot-ir-1]))); // @ run%06d
@@ -307,10 +325,9 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
         leg->AddEntry(gEmptyLanes[ilay][istave], Form("Stv%d",istave), "p");
       }
 
-      double maxA = ilayEff < 3 ? 10 : (ilayEff > 2 && ilayEff < 5) ? 18 : 30;
-      hDummy[ilay]->GetYaxis()->SetRangeUser(1., maxA);
+      hDummy[ilay]->GetYaxis()->SetRangeUser(1, 100);
       hDummy[ilay]->GetXaxis()->SetTitleOffset(2);
-      hDummy[ilay]->SetTitle(Form("Layer-%s - Empty lanes - %s", vLayerNumber[nRunsTot].c_str(), sFile_Path.substr(sFile_Path.find("from"), sFile_Path.find(".root")-sFile_Path.find("from")).c_str()));
+      hDummy[ilay]->SetTitle(Form("Layer-%s - Empty lanes percentage - %s", vLayerNumber[nRunsTot].c_str(), sFile_Path.substr(sFile_Path.find("from"), sFile_Path.find(".root")-sFile_Path.find("from")).c_str()));
       canvas->cd();
       hDummy[ilay]->Draw();
       for(int istave = 0; istave < vInput_Histo[nRunsTot]->GetNbinsY(); istave++){
