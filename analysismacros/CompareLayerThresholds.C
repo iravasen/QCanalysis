@@ -93,7 +93,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
 	string Runperiod = Form("from_run%s_to_run%s",runNumbers[0].c_str(),runNumbers[nRuns-1].c_str());
  //   string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str()); //This should be used for actual data      
 	canvas->SetName(Form("Layer%s_Threshold_correlation",layer.c_str()));			
-	auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(canvas,TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,1,Runperiod);
+	auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(canvas,TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,std::stoi(runNumbers.back()),Runperiod);
  	mo1->addMetadata("ReferenceRunNumber",refrun.c_str());
         mo1->setIsOwner(false);
         ccdb->storeMO(mo1);
