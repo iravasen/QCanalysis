@@ -533,11 +533,12 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isOnlyHot
 	TString NameCnv = "";
 	// The number 27 is the sum of the 2*6 digit run numbers+ len("_to_run")+len("from_run")
 	string Runperiod = Form("%s",filepath_hit.substr(filepath_hit.find("from"),27).c_str());
+	int RunNumber = std::stoi(filepath_hit.substr(filepath_hit.find("n")+1,6).c_str());
 	if (StavePart==0){
 	  if (numStavePart==1){ NameCnv = Form("../Plots/Layer%i_FHRpixmask_%s", ilayEff,filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
 	    if(ccdb_upload){
 	      canvas->SetName(Form("Layer%i_FHRpixmask",ilayEff));
-	      auto mo1 = std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%i",ilayEff),TaskClass, DetectorName,1,Runperiod);
+	      auto mo1 = std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%i",ilayEff),TaskClass, DetectorName,RunNumber,Runperiod);
 	      mo1->setIsOwner(false);
 	      ccdb->storeMO(mo1);
 	    }
@@ -545,7 +546,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isOnlyHot
 	  else {NameCnv = Form("../Plots/Layer%i_HSLower_FHRpixmask_%s", ilayEff, filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
 	    if(ccdb_upload){
 	      canvas->SetName(Form("Layer%i_HSLower_FHRpixmask",ilayEff));
-	      auto mo2 = std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%i",ilayEff),TaskClass, DetectorName,1,Runperiod);
+	      auto mo2 = std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%i",ilayEff),TaskClass, DetectorName,RunNumber,Runperiod);
 	      mo2->setIsOwner(false);
 	      ccdb->storeMO(mo2);}
 	  }
@@ -553,7 +554,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isOnlyHot
 	else{ NameCnv = Form("../Plots/Layer%i_HSUpper_FHRpixmask_%s", ilayEff, filepath_hit.substr(filepath_hit.find("from"), filepath_hit.find(".root")-filepath_hit.find("from")).c_str());
 	  if(ccdb_upload){
 	    canvas->SetName(Form("Layer%i_HSUpper_FHRpixmask",ilayEff));
-	    auto mo3 = std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%i",ilayEff),TaskClass, DetectorName,1,Runperiod);
+	    auto mo3 = std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%i",ilayEff),TaskClass, DetectorName,RunNumber,Runperiod);
 	    mo3->setIsOwner(false);
 	    ccdb->storeMO(mo3);
 	  }
@@ -634,7 +635,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isOnlyHot
         hHotMap[ilay][istave]->SetTitle(Form("Hitmap of Layer %d Stave %d",ilay,istave));
     	  hHotMap[ilay][istave]->SetTitleSize(0.05);
     	  hHotMap[ilay][istave]->GetYaxis()->SetLabelSize(0.11);
-    	  auto mohp= std::make_shared<o2::quality_control::core::MonitorObject>(hHotMap[ilay][istave], TaskName+Form("/Layer%d",ilay),TaskClass, DetectorName,1,Runperiod);
+    	  auto mohp= std::make_shared<o2::quality_control::core::MonitorObject>(hHotMap[ilay][istave], TaskName+Form("/Layer%d",ilay),TaskClass, DetectorName,RunNumber,Runperiod);
     	  mohp->setIsOwner(false);
     	  ccdb->storeMO(mohp);
 
