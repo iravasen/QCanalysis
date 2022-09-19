@@ -121,7 +121,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
 	hHotMap->GetXaxis()->SetLabelOffset(0.003);
 	hHotMap->SetTitleSize(0.05);		
 	hHotMap->GetYaxis()->SetLabelSize(0.11);
-	auto mo = std::make_shared<o2::quality_control::core::MonitorObject>(hHotMap, TaskName+Form("/Layer%d",ilay), TaskClass, DetectorName,1,Runperiod);
+	auto mo = std::make_shared<o2::quality_control::core::MonitorObject>(hHotMap, TaskName+Form("/Layer%d",ilay), TaskClass, DetectorName,std::stoi(runNumbers.back()),Runperiod);
        mo->setIsOwner(false);
        ccdb->storeMO(mo);
 		}

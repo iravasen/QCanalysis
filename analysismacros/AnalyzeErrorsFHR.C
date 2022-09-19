@@ -220,7 +220,7 @@ if(ccdb_upload){
     string canvas_name("FHRErrorPlotSummary");
 
     canvas.SetName(canvas_name.c_str());
-        auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(&canvas, TaskName,TaskClass, DetectorName,1,Runperiod);
+        auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(&canvas, TaskName,TaskClass, DetectorName,std::stoi(runnumbers.front()),Runperiod);
         mo1->setIsOwner(false);
         ccdb->storeMO(mo1);
         }
@@ -262,7 +262,7 @@ if(ccdb_upload){
     string canvas_name2("FHRError_trends_IB");
 
     canvas2.SetName(canvas_name2.c_str());
-        auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(&canvas2, TaskName,TaskClass, DetectorName,1,Runperiod);
+        auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(&canvas2, TaskName,TaskClass, DetectorName,std::stoi(runnumbers.front()),Runperiod);
         mo2->setIsOwner(false);
         ccdb->storeMO(mo2);
         }
@@ -291,7 +291,7 @@ if(ccdb_upload){
     string canvas_name3("FHRError_trends_OB");
 
     canvas3.SetName(canvas_name3.c_str());
-        auto mo3= std::make_shared<o2::quality_control::core::MonitorObject>(&canvas3, TaskName, TaskClass, DetectorName,1,Runperiod);
+        auto mo3= std::make_shared<o2::quality_control::core::MonitorObject>(&canvas3, TaskName, TaskClass, DetectorName,std::stoi(runnumbers.front()),Runperiod);
         mo3->setIsOwner(false);
         ccdb->storeMO(mo3);
         }
