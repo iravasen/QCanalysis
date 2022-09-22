@@ -635,6 +635,7 @@ void DoAnalysis(string filepath_hit, string skipruns, int IBorOB, bool isOnlyHot
         hHotMap[ilay][istave]->SetTitle(Form("Hitmap of Layer %d Stave %d",ilay,istave));
     	  hHotMap[ilay][istave]->SetTitleSize(0.05);
     	  hHotMap[ilay][istave]->GetYaxis()->SetLabelSize(0.11);
+	  int RunNumber = std::stoi(filepath_hit.substr(filepath_hit.find("n")+1,6).c_str());
     	  auto mohp= std::make_shared<o2::quality_control::core::MonitorObject>(hHotMap[ilay][istave], TaskName+Form("/Layer%d",ilay),TaskClass, DetectorName,RunNumber,Runperiod);
     	  mohp->setIsOwner(false);
     	  ccdb->storeMO(mohp);
