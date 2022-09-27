@@ -203,7 +203,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
 
 	if(ccdb_upload){
 	string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
-	int RunNumber = std::stoi(filepath.substr(filepath.find("n")+1,6).c_str());
+	int RunNumber = std::stoi(filepath.substr(filepath.find("run")+3,6).c_str());
 	canvas.SetName("Summary_Lane_Status_Flag_ERROR");
 	auto mo_err= std::make_shared<o2::quality_control::core::MonitorObject>(&canvas, TaskName, TaskClass, DetectorName,RunNumber,Runperiod);
 	mo_err->setIsOwner(false);
