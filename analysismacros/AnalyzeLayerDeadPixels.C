@@ -179,7 +179,7 @@ itsAnalysis myAnalysis("DeadPixel");
 	string Runperiod = Form("from_run%s_to_run%s",runNumbers.back().c_str(),runNumbers[0].c_str());		
  //   string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str()); //This should be used for actual data 
 	canvas->SetName(Form("Layer%s_Dead_pixels",layer.c_str()));
-	auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,1,Runperiod);
+	auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,std::stoi(runNumbers.back()),Runperiod);
         mo1->setIsOwner(false);
         ccdb->storeMO(mo1);
 }
@@ -214,7 +214,7 @@ if(ccdb_upload){
         string Runperiod = Form("from_run%s_to_run%s",runNumbers.back().c_str(),runNumbers[0].c_str());
 //   string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str()); //This should be used for actual data 
         canvas->SetName(Form("Layer%s_HS_Upper_Dead_pixels",layer.c_str()));
-        auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,1,Runperiod);
+        auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,std::stoi(runNumbers.back()),Runperiod);
         mo2->setIsOwner(false);
         ccdb->storeMO(mo2);
 }
@@ -227,7 +227,7 @@ if(ccdb_upload){
         string Runperiod = Form("from_run%s_to_run%s",runNumbers.back().c_str(),runNumbers[0].c_str());  
 //   string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str()); //This should be used for actual data 
         canvas->SetName(Form("Layer%s_HS_Lower_Dead_pixels",layer.c_str()));
-        auto mo3= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,1,Runperiod);
+        auto mo3= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,std::stoi(runNumbers.back()),Runperiod);
         mo3->setIsOwner(false);
         ccdb->storeMO(mo3);
 }

@@ -177,7 +177,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
  //   string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str()); //This should be used for actual data	
      string canvas_name = Form("Layer%s_average_threshold", layer.c_str());
        canvas->SetName(canvas_name.c_str());
-        auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,1,Runperiod);
+        auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,std::stoi(runNumbers.back()),Runperiod);
         mo1->setIsOwner(false);
         ccdb->storeMO(mo1);}
       canvas->SaveAs(Form("../Plots/Layer%s_thresholds_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
@@ -211,7 +211,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
  //   string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str()); //This should be used for actual data    
        string canvas_name = Form("Layer%s_HS_Upper_average_threshold", layer.c_str());
        canvas->SetName(canvas_name.c_str());
-       auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,1,Runperiod);
+       auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,std::stoi(runNumbers.back()),Runperiod);
        mo2->setIsOwner(false);
        ccdb->storeMO(mo2);} 
 	 canvas->SaveAs(Form("../Plots/Layer%s_HS-upper_thresholds_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));
@@ -223,7 +223,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
      string Runperiod = Form("from_run%s_to_run%s",runNumbers.back().c_str(),runNumbers[0].c_str());
        string canvas_name = Form("Layer%s_HS_Lower_average_threshold", layer.c_str());
        canvas->SetName(canvas_name.c_str());
-       auto mo3= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,1,Runperiod);
+       auto mo3= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",layer.c_str()), TaskClass, DetectorName,std::stoi(runNumbers.back()),Runperiod);
        mo3->setIsOwner(false);
        ccdb->storeMO(mo3);}   
        canvas->SaveAs(Form("../Plots/Layer%s_HS-lower_thresholds_run%s-run%s.pdf", layer.c_str(),runNumbers.back().c_str(),runNumbers[0].c_str()));

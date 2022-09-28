@@ -493,7 +493,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
     if(ccdb_upload){
       string canvas_name = Form("Layer%d_NoisyPixComparison_Allstaves",ilay);
       canvas->SetName(canvas_name.c_str());
-      auto mo= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%d",ilay),TaskClass, DetectorName,1,Runperiod);
+      auto mo= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%d",ilay),TaskClass, DetectorName,std::stoi(runnumbers.front()),Runperiod);
       mo->addMetadata("ReferenceRunNumber",Reference_run.c_str());
       mo->setIsOwner(false);
       ccdb->storeMO(mo);	
@@ -553,7 +553,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, long int ref
       
       if(ccdb_upload){
 	canvas->SetName(Form("Layer%d-Stave%d_NoisyPixComparison",ilay,is));
-	auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%d",ilay),TaskClass, DetectorName,1,Runperiod);
+	auto mo2= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%d",ilay),TaskClass, DetectorName,std::stoi(runnumbers.front()),Runperiod);
         mo2->addMetadata("ReferenceRunNumber",Reference_run.c_str());
         mo2->setIsOwner(false);
         ccdb->storeMO(mo2);
