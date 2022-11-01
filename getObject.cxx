@@ -904,6 +904,9 @@ case 4: { //FEE
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagERROR", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagFAULT", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagWARNING", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagCumulativeERROR", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagCumulativeFAULT", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagCumulativeWARNING", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
       string objname = "TriggerVsFeeid";
       cout<<"\nAll data in qc/ITS/MO/ITSFEE/"<<objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
       Download(choice, ccdb, ccdbApi, myname, "qc/ITS/MO/ITSFEE", objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
@@ -1388,6 +1391,9 @@ if(objname.find("LaneStatus") != string::npos){
     else if(objname.find("LaneStatus/laneStatusFlagFAULT")!=string::npos) histname = Form("h2_LSfault%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
     else if(objname.find("LaneStatus/laneStatusFlagOK")!=string::npos) histname = Form("h2_LSok%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
     else if(objname.find("LaneStatus/laneStatusFlagWARNING")!=string::npos) histname = Form("h2_LSwarning%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+    else if(objname.find("LaneStatus/laneStatusFlagCumulativeERROR")!=string::npos) histname = Form("h2_LCSerror%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+    else if(objname.find("LaneStatus/laneStatusFlagCumulativeFAULT")!=string::npos) histname = Form("h2_LCSfault%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+    else if(objname.find("LaneStatus/laneStatusFlagCumulativeWARNING")!=string::npos) histname = Form("h2_LCSwarning%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
     h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
     outputfile->cd();
     h2s->Write();

@@ -45,6 +45,9 @@ todo(){
     12) echo -e "\n\e[32m=> Starting analysis of the lane status flags for all runs\e[39m"
        root -l -b -q AnalyzeLaneStatusFlag.C++
        remove ;;
+    121) echo -e "\n\e[32m=> Starting analysis of the lane status flags for all runs - extended ALPHA version\e[39m"
+       root -l -b -q AnalyzeLaneStatusFlagExtended.C++
+       remove ;;
     13) echo -e "\n\e[32m=> Starting dump of lanes into error, fault, warning\e[39m"
        root -l -b -q DumpLaneStatusFlag.C++
        remove ;;
@@ -88,6 +91,7 @@ analysismenu(){
   echo -e "\n"
   echo "[Analyses on FEE]"
   echo -e "\t 12. FEE Post Processing Offline: Lane Status Flags (ERROR,FAULT,WARNING)"
+  echo -e "\t 121. FEE Post Processing Offline: Lane Status Flags (ERROR,FAULT,WARNING) extended ALPHA version"
   echo -e "\t 13. Dump in txt file of lanes into ERROR, FAULT, WARNING"
   echo -e "\t 14. Trigger Flags analysis for all runs"
   echo -e "\n"
