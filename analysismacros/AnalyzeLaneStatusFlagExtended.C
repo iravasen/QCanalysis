@@ -283,6 +283,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns, bool ccdb_up
 		for(int iStatus=0; iStatus<NStatus; iStatus++){
 			hfeex[iStatus][iRun]->Reset();//reset
 			for(int iFid=0; iFid<432; iFid++){
+				tmp_nol=0;
 				for(int iLane=0;iLane<28;iLane++){
 					if(iStatus==0)tmp_nonzero = herr[iRev]->GetBinContent(iFid+1,iLane+1);
 					if(iStatus==1)tmp_nonzero = hfault[iRev]->GetBinContent(iFid+1,iLane+1);
