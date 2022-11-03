@@ -42,10 +42,10 @@ todo(){
     11) echo -e "\n\e[32m=> Starting preparation of dead-pixel map\e[39m"
        root -l -b -q MakeDeadPixelMap.C++
        remove ;;
-    12) echo -e "\n\e[32m=> Starting analysis of the lane status flags for all runs\e[39m"
+    12) echo -e "\n\e[32m=> Starting analysis of the lane status flags for all runs, extended version\e[39m"
        root -l -b -q AnalyzeLaneStatusFlagExtended.C++
        remove ;;
-    120) echo -e "\n\e[32m=> Starting analysis of the lane status flags for all runs - extended ALPHA version\e[39m"
+    120) echo -e "\n\e[32m=> Starting analysis of the lane status flags for all runs - reduced old version\e[39m"
        root -l -b -q AnalyzeLaneStatusFlag.C++
        remove ;;
     13) echo -e "\n\e[32m=> Starting dump of lanes into error, fault, warning\e[39m"
