@@ -635,6 +635,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
 
       hblank[iStatus][iLayer]->GetYaxis()->SetRangeUser(0, 30); // for number of nonzero lanes in each FEEID
       hblank[iStatus][iLayer]->GetXaxis()->SetTitleOffset(2.8);
+      hblank[iStatus][iLayer]->GetXaxis()->LabelsOption("v");
+      hblank[iStatus][iLayer]->GetXaxis()->SetLabelOffset(0.01);
       ctrend2[iStatus][iLayer] = new TCanvas();
       ctrend2[iStatus][iLayer]->cd();
       ctrend2[iStatus][iLayer]->SetTickx();
@@ -763,9 +765,10 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
     for (int ir = 0; ir < (int)runnumbersErr.size(); ir++)
       hblank2[iLayer]->GetXaxis()->SetBinLabel(ir + 1,Form("%06d", stoi(runnumbersErr[runnumbersErr.size() - 1 - ir]))); // runnumbersErr is a descending order
      
-
+    hblank2[iLayer]->GetXaxis()->LabelsOption("v");
     hblank2[iLayer]->GetYaxis()->SetRangeUser(1.e-7, 6);
     hblank2[iLayer]->GetXaxis()->SetTitleOffset(2.8);
+    hblank2[iLayer]->GetXaxis()->SetLabelOffset(0.01);
     ctrend3[iLayer] = new TCanvas();
     ctrend3[iLayer]->cd();
     ctrend3[iLayer]->SetTickx();
@@ -795,6 +798,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
       if (iLayer ==6) for (int ist = 0; ist<nstave[iLayer]; ist++) average += time_L6[ist]->GetPointY(ir) / nstave[iLayer];
       Avg[iLayer][ir] = new TLine(ir-0.5,average,ir+0.5,average);
       Avg[iLayer][ir]->SetLineColor(2);
+      Avg[iLayer][ir]->SetLineWidth(2);
       Avg[iLayer][ir]->Draw("same");
     }
     
