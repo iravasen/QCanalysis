@@ -751,8 +751,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
   TH1F *hblank2[NLayer];
   TLatex latex;
   TLatex latex2;
-  latex.SetTextSize(0.025);
-  latex2.SetTextSize(0.02);
+  latex.SetTextSize(0.024);
+  latex2.SetTextSize(0.021);
   TLine *Avg[NLayer][(int)runnumbersErr.size()];
   for (int iLayer = 0; iLayer < NLayer; iLayer++) {
     hblank2[iLayer] = new TH1F(Form("hblank2_%d", iLayer),
@@ -764,7 +764,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
       hblank2[iLayer]->GetXaxis()->SetBinLabel(ir + 1,Form("%06d", stoi(runnumbersErr[runnumbersErr.size() - 1 - ir]))); // runnumbersErr is a descending order
      
 
-    hblank2[iLayer]->GetYaxis()->SetRangeUser(1.e-7, 5);
+    hblank2[iLayer]->GetYaxis()->SetRangeUser(1.e-7, 6);
     hblank2[iLayer]->GetXaxis()->SetTitleOffset(2.8);
     ctrend3[iLayer] = new TCanvas();
     ctrend3[iLayer]->cd();
@@ -772,9 +772,11 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
     ctrend3[iLayer]->SetTicky();
     ctrend3[iLayer]->SetMargin(0.0988, 0.1, 0.194, 0.0993);
     hblank2[iLayer]->Draw();
-    latex2.DrawLatex(-0.4,3,"Normalization uncertainty:");
+    latex2.DrawLatex(-0.4,6.5,"Normalization uncertainty (%):");
+    int yoffset=0;
     for (int ir = 0; ir < (int)runnumbersErr.size(); ir++){
-      latex.DrawLatex(ir-0.4, 1.5, Form("%4.0f%%",100.*nOrbitDispersion[ir][iLayer]));
+      latex.DrawLatex(ir-0.95, 2.5-yoffset, Form("%4.0f",100.*nOrbitDispersion[ir][iLayer]));
+      yoffset = 1 - yoffset;
     }
     gPad->SetLogy(); // for total number of errors
     gPad->SetGridx();
