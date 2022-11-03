@@ -731,7 +731,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
      // adding to the file trigger plot for suspicious runs
     for (int ir=0; ir<NRun; ir++)
       for (int il=0;il<7;il++){
-	if (nOrbitDispersion[ir][il] > 0.25){
+	if (nOrbitDispersion[ir][il] > 0.10){
 	  TCanvas *ctemp = new TCanvas;
 	  int irev = NRun - ir -1;
 	  htrg[irev]->SetTitle(Form("Trigger flags for sanity check of averaged time in run %s",runnumbersErr[irev].c_str()));
