@@ -384,7 +384,7 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
          leg->AddEntry(gClusterOccupation[ilay][istave][0], Form("Stv%d",istave), "p");
       }
 
-      hDummy[ilay]->GetYaxis()->SetRangeUser(1e-9, 1e+1);
+      hDummy[ilay]->GetYaxis()->SetRangeUser(1e-5, 1e+2);
       hDummy[ilay]->GetXaxis()->SetTitleOffset(2);
       hDummy[ilay]->SetTitle(Form("Layer-%s, %s", vLayerNumber[nRunsTot].c_str(), sFile_Path.substr(sFile_Path.find("from"), sFile_Path.find(".root")-sFile_Path.find("from")).c_str()));
       canvas->cd();
@@ -443,7 +443,7 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
             // The number 27 is the sum of the 2*6 digit run numbers+ len("_to_run")+len("from_run")
             string Runperiod = Form("%s",sFile_Path.substr(sFile_Path.find("from"), 27).c_str());
             Secondcanvas->SetName(Secondcanvas_name.c_str());
-       	int RunNumber = std::stoi(sFile_Path.substr(sFile_Path.find("n")+1,6).c_str());   
+       	int RunNumber = std::stoi(sFile_Path.substr(sFile_Path.find("n")+1,6).c_str());
 	     auto mo3 = std::make_shared<o2::quality_control::core::MonitorObject>(Secondcanvas, TaskName+Form("/Layer%s", vLayerNumber[nRunsTot].c_str()), TaskClass, DetectorName, 1 , Runperiod); //  @ CCDB  upload
             mo3->setIsOwner(false);
             ccdb->storeMO(mo3);

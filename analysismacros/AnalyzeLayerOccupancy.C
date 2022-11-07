@@ -42,7 +42,7 @@ void AnalyzeLayerOccupancy(){
   cout<<"\nCopy file name: ";
   cin>>fpath;
   cout<<endl;
-  
+
   int IBorOB;
   bool ccdb_upload;
 
@@ -78,11 +78,11 @@ void AnalyzeLayerOccupancy(){
     skipruns=" ";
   cout<<"Would you like to upload the output to ccdb? [y/n] ";
   cin>>CCDB_up;
-  cout<<endl; 
+  cout<<endl;
  if(CCDB_up =="y"||CCDB_up =="Y") ccdb_upload= true;
   else ccdb_upload= false;
- 
-if(ccdb_upload)SetTaskName(__func__); 
+
+if(ccdb_upload)SetTaskName(__func__);
 
  //Call
   DoAnalysis(fpath, nchips, skipruns, IBorOB, ccdb_upload );
@@ -122,7 +122,7 @@ void DoAnalysis(string filepath, int nChips, string skipruns, int IBorOB, bool c
   int col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602, 921, 874};
 
 //Setting up the connection to the ccdb database
-  
+
 //	CcdbDatabase* ccdb;
 //	if(ccdb_upload) ccdb = SetupConnection();	~To-Do- Currently not working
 
@@ -133,7 +133,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   ccdb->connect(ccdbport.c_str(), "", "", "");
 
 
-  
+
 
 
   //Read the file and the list of plots with entries
@@ -323,11 +323,11 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   int npoints=0;
   TH1F *hfake[7];
   nRunsTot =0;
-  for(int ilay=0; ilay<nLayers; ilay++){    
+  for(int ilay=0; ilay<nLayers; ilay++){
     if (nLayers==1) ilayEff = stoi(laynums[0]);
     else if (IBorOB==1) ilayEff = ilay + 3 ;
     else ilayEff = ilay;
-    if (nRunsB[ilayEff]!=-1) nRunsTot += (nRunsB[ilayEff]+1);   
+    if (nRunsB[ilayEff]!=-1) nRunsTot += (nRunsB[ilayEff]+1);
     npoints    = trend[ilay][0][0]->GetN();
     //    cout << "ilay " << ilay << " ilayEff " << ilayEff << " nRunsTot " << nRunsTot<< endl;
     if (npoints==0) continue;
@@ -370,11 +370,11 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
     if (ilayEff>=3) IsTwoCanvas = 1;
 
     TLegend *leg = new TLegend(0.857, 0.197,0.997,0.898);
-    if (ilayEff>=3) leg->SetNColumns(2);  
+    if (ilayEff>=3) leg->SetNColumns(2);
 
     for(int istave=0; istave<hmaps[nRunsTot]->GetNbinsY(); istave++)
       leg->AddEntry(trend[ilay][istave][0], Form("Stv%d",istave), "p");
-    hfake[ilay]->GetYaxis()->SetRangeUser(1e-14, 1e-2);
+    hfake[ilay]->GetYaxis()->SetRangeUser(1e-12, 1e-2);
     hfake[ilay]->GetXaxis()->SetTitleOffset(2);
     hfake[ilay]->SetTitle(Form("Layer-%s, %s",laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     canvas->cd();
@@ -386,21 +386,21 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
     }
     leg->Draw("same");
      if (!IsTwoCanvas){
-if(ccdb_upload){    
+if(ccdb_upload){
 	// The number 27 is the sum of the 2*6 digit run numbers+ len("_to_run")+len("from_run")
      string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
-     string canvas_name = Form("Layer%s_fakehitrate_w_error_and_trig_data", laynums[nRunsTot].c_str()); 
+     string canvas_name = Form("Layer%s_fakehitrate_w_error_and_trig_data", laynums[nRunsTot].c_str());
        canvas->SetName(canvas_name.c_str());
         auto mo1= std::make_shared<o2::quality_control::core::MonitorObject>(canvas, TaskName+Form("/Layer%s",laynums[nRunsTot].c_str()), TaskClass, DetectorName,std::stoi(runnumbers.front()),Runperiod);
         mo1->setIsOwner(false);
         ccdb->storeMO(mo1);}
 
         canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s.pdf", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
-       
+
       canvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s.root", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     }
     else {
-   // The number 27 is the sum of the 2*6 digit run numbers+ len("_to_run")+len("from_run") 
+   // The number 27 is the sum of the 2*6 digit run numbers+ len("_to_run")+len("from_run")
       if(ccdb_upload){
 	string Runperiod = Form("%s",filepath.substr(filepath.find("from"),27).c_str());
       string canvas_name2 = Form("Layer%s_fakehitrate_w_error_and_trig_data_HSLower",laynums[nRunsTot].c_str());
@@ -418,7 +418,7 @@ if(ccdb_upload){
       hfake[ilay]->SetTitle(Form("Layer-%s, HS Upper, %s",laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
       hfake[ilay]->Draw();
       for(int istave=0; istave<hmaps[nRunsTot]->GetNbinsY(); istave++){
-	trend[ilay][istave][1]->Draw("P same");      
+	trend[ilay][istave][1]->Draw("P same");
 	fileout->WriteTObject(trend[ilay][istave][1]);
       }
       leg->Draw("same");
@@ -433,7 +433,7 @@ if(ccdb_upload){
 	}
       Secondcanvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSUpper.pdf", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
       Secondcanvas->SaveAs(Form("../Plots/Layer%s_fakehitrate_%s_HSUpper.root", laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
- 	
+
    }
 
     delete canvas;
@@ -441,12 +441,12 @@ if(ccdb_upload){
     delete leg;
   }
   fileout->Close();
-  
+
   //Make GIF with TH2 for each run and for each layer
   nRunsTot =0;
   irun=1;
   gStyle->SetPalette(1);
-  
+
   for(int ilay=0; ilay<nLayers; ilay++) {//remove images if they exist already
     if (nLayers==1) ilayEff = stoi(laynums[0]);
     else if (IBorOB==1) ilayEff = ilay + 3 ;
@@ -458,7 +458,7 @@ if(ccdb_upload){
   }
 
 
-  nRunsTot = nRunsTotFixed-1; 
+  nRunsTot = nRunsTotFixed-1;
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){// start from the last in order to have the runs from the oldest to the newest
     if (ihist!=((int)hmaps.size()-1) && (stoi(laynums[ihist])!=stoi(laynums[ihist+1]))) {
       if (nRunsB[stoi(laynums[ihist])]!=-1)      nRunsTot-= (nRunsB[stoi(laynums[ihist])]+1);
