@@ -42,6 +42,8 @@ def StripLaneFile(file_name):
         s.pop(1)                        #FEEID number removed
         s_int = [int(x) for x in s]     #string to integer
         lista.append(s_int)             #list of array = matrix
+    if not lista:
+        lista = [[0, 0, 0, 0],[0, 0, 0, 0]]  #it removes the list mismatch issue in case of an empty file
 
     return lista
 
