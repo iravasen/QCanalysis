@@ -40,8 +40,8 @@ TFile *file = TFile::Open(fpath.c_str());
    TIter next(keyslist);
    TKey *key;
    vector<string> runs, runs1, runs2, runs3, runs4, runsZ, runs5, runs_eta, runs_phi;
-   vector<double>phi_ave, phicounts, phicounts1, phicounts2, relative_phi1, relative_phi2; 
-   vector<double>eta_ave, etacounts, relative_eta1, relative_eta2; 
+   vector<double>phi_ave, phicounts, phicounts1, phicounts2, relative_phi1, relative_phi2;
+   vector<double>eta_ave, etacounts, relative_eta1, relative_eta2;
    vector<double>cycle,cycle1,cycle2, cycle3, cycle4, cycle5, cycle_eta, cycle_phi;
    vector<double>binminCenters, binminCenters1, binminCenters2, binminCenters3, binminCenters4, binminCenters5;
    vector<double>binmaxCenters, binmaxCenters1, binmaxCenters2, binmaxCenters3, binmaxCenters4, binmaxCenters5;
@@ -60,7 +60,7 @@ TFile *file = TFile::Open(fpath.c_str());
        string name= keysub->GetName();
        if(name.find("NClustersPerTrackEta")!=string::npos){
         string run = name.substr(name.find("run")+3, 6);
-        cout<<run<<endl;  
+        cout<<run<<endl;
        }
     }
 
@@ -83,6 +83,13 @@ TFile *file = TFile::Open(fpath.c_str());
   else ccdb_upload= false;
 
 if(ccdb_upload)SetTaskName(__func__);
+
+string vtxRun3;
+bool isVtxRun3 = false;
+cout<<"Is this the vertex trend for full Run 3? [y/n] ";
+cin>>vtxRun3;
+cout<<endl;
+if(vtxRun3 == "y" || vtxRun3 == "Y") isVtxRun3 = true;
 
 //Setting up the connection to the ccdb database
 std::unique_ptr<DatabaseInterface> mydb = DatabaseFactory::create("CCDB");
@@ -108,15 +115,15 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
           j++;
 
           TH1D *h= (TH1D *) key->ReadObj();
-          
+
           //Integral in all range
           double integral = h->Integral();
 
           //Extract the mean value in x axis
           double x_mean = h->GetMean(1);
           eta_ave.push_back(x_mean);
-          
-          
+
+
           //Find the bin number for a value in x axis
           TAxis* xaxis = h->GetXaxis();
           int binx = xaxis->FindBin(x_mean);
@@ -125,34 +132,34 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
           double bin = h->GetBinContent(binx);
           //std::cout<<"etaCounts_y_value= "<< bin << std::endl;
           etacounts.push_back(bin);
-          
+
           TH1D *hc1 = (TH1D *)h->Clone();
           hc1->GetXaxis()->SetRangeUser(-1.5, 0);
-          
+
           //Integral in range (-pi/2)-(0)
           double integral1 = hc1->Integral();
-          
+
           TH1D *hc2 = (TH1D *)h->Clone();
           hc2->GetXaxis()->SetRangeUser(0, 1.5);
-          
+
           //Integral in range 0-pi/2
           double integral2 = hc2->Integral();
-          
+
           //Relative values
           double rel_eta1;
           if (integral != 0){
             rel_eta1 = (integral1/integral);
           }
           else {rel_eta1 = 0;}
-          
+
           relative_eta1.push_back(rel_eta1);
-          
+
           double rel_eta2;
           if (integral != 0){
             rel_eta2 = (integral2/integral);
           }
           else {rel_eta2 = 0;}
-          
+
           relative_eta2.push_back(rel_eta2);
 
      }
@@ -169,10 +176,10 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
           k++;
 
           TH1D *h= (TH1D *) key->ReadObj();
-          
+
           //Integral in range 0-2pi
           double integral = h->Integral();
-                    
+
           //Extract the mean value in x axis
           double x_mean = h->GetMean(1);
           phi_ave.push_back(x_mean);
@@ -186,10 +193,10 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
 
           TH1D *hc1 = (TH1D *)h->Clone();
           hc1->GetXaxis()->SetRangeUser(0, 3);
-          
+
           //Integral in range 0-pi
           double integral1 = hc1->Integral();
-          
+
           //Extract the mean value in x axis
           double x_mean1 = hc1->GetMean(1);
           //Find the bin number for a value in x axis
@@ -202,10 +209,10 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
 
           TH1D *hc2 = (TH1D *)h->Clone();
           hc2->GetXaxis()->SetRangeUser(3, 6);
-          
+
           //Integral in range pi-2pi
           double integral2 = hc2->Integral();
-          
+
           //Extract the mean value in x axis
           double x_mean2 = hc2->GetMean(1);
           //Find the bin number for a value in x axis
@@ -215,28 +222,28 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
           double bin2 = hc2->GetBinContent(binx2);
           //cout<<"y value clone 2= "<<bin2<<endl;
           phicounts2.push_back(bin2);
-          
+
           //Relative values
           double rel_phi1;
           if (integral != 0){
             rel_phi1 = (integral1/integral);
           }
           else {rel_phi1 = 0;}
-          
+
           relative_phi1.push_back(rel_phi1);
-          
+
           double rel_phi2;
           if (integral != 0){
             rel_phi2 = (integral2/integral);
           }
           else {rel_phi2 = 0;}
-          
+
           relative_phi2.push_back(rel_phi2);
       }
-      
+
 //////////////////////////////////////////////////////////////////////////////////
     if (keyname.find("VertexZ")!=string::npos){
-         
+
          cout<<keyname<<endl;
          cout<<"Run number: "<<runnum<<endl;
 
@@ -245,17 +252,17 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
          z++;
 
          TH1D *hz1= (TH1D *) key->ReadObj();
-         
+
          //Mean value in x axis
          double ave3 = hz1->GetMean(1);
          aves3.push_back(ave3);
          aves3_err.push_back(hz1->GetMeanError());
-         
+
          //Extract RMS of the distribution
          double rms3 = hz1->GetRMS();
          rmss3.push_back(rms3);
          rmss3_err.push_back(hz1->GetRMSError());
-      }      
+      }
 
 //////////////////////////////////////////////////////////////////////////////////
     if (keyname.find("VertexRvsZ")!=string::npos){
@@ -263,10 +270,10 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
         cout<<"Run number: "<<runnum<<endl;
 
         runsZ.push_back(runnum);
-        
+
         TH2D *hz= (TH2D *) key->ReadObj();
         histos1.push_back(hz);
-         
+
         int binsx1 = hz->GetNbinsX();
         bx1.push_back(binsx1);
         int binsy1 = hz->GetNbinsY();
@@ -274,13 +281,13 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
         double xmax1=hz->GetXaxis()->GetXmax();
         xmaxs1.push_back(xmax1);
         double xmin1=hz->GetXaxis()->GetXmin();
-        xmins1.push_back(xmin1);        
+        xmins1.push_back(xmin1);
         double ymax1 = hz->GetYaxis()->GetBinLowEdge(hz->GetNbinsY()) + hz->GetYaxis()->GetBinWidth(hz->GetNbinsY());
         ymaxs1.push_back(ymax1);
         double ymin1 = hz->GetYaxis()->GetBinLowEdge(1);
         ymins1.push_back(ymin1);
-     }       
-////////////////////////////////////////////////////////////////////////////////////       
+     }
+////////////////////////////////////////////////////////////////////////////////////
       if (keyname.find("VertexCoordinates")!=string::npos){
          cout<<keyname<<endl;
          cout<<"Run number: "<<runnum<<endl;
@@ -291,7 +298,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
 
          TH2D *hf= (TH2D *) key->ReadObj();
          histos.push_back(hf);
-         //x 
+         //x
          xpoints.push_back(hf->GetMean(1));
          xpoints_err.push_back(hf->GetMeanError(1));
          rmsx_vertex.push_back(hf->GetRMS(1));
@@ -301,28 +308,28 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
          ypoints_err.push_back(hf->GetMeanError(2));
          rmsy_vertex.push_back(hf->GetRMS(2));
          rmsy_vertex_err.push_back(hf->GetRMSError(2));
-         
-      } 
-      
-//////////////////////////////////////////////////////////////////////////////////  
+
+      }
+
+//////////////////////////////////////////////////////////////////////////////////
        if (keyname.find("NVertexContributors")!=string::npos){
          cout<<keyname<<endl;
          cout<<"Run number: "<<runnum<<endl;
 
          runs3.push_back(runnum);
          cycle3.push_back(e);
-         e++;         
+         e++;
 
          TH1D *he= (TH1D *) key->ReadObj();
-         
+
          //Mean value in x axis
          aves2.push_back(he->GetMean());
          aves2_err.push_back(he->GetMeanError());
-         
+
          //Extract RMS of the distribution
          rmss2.push_back(he->GetRMS());
          rmss2_err.push_back(he->GetRMSError());
-      }           
+      }
 
 //////////////////////////////////////////////////////////////////////////////////
        if (keyname.find("Ntracks")!=string::npos){
@@ -334,7 +341,7 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
          d++;
 
          TH1D *ht= (TH1D *) key->ReadObj();
-         
+
          //Mean value in x axis
          aves1.push_back(ht->GetMean(1));
          aves1_err.push_back(ht->GetMeanError(1));
@@ -347,9 +354,9 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
          aves1_nozero_err.push_back(ht->GetMeanError(1));
          rmss1_nozero.push_back(ht->GetRMS());
          rmss1_nozero_err.push_back(ht->GetRMSError(1));
-         
-      }   
-//////////////////////////////////////////////////////////////////////////////////          
+
+      }
+//////////////////////////////////////////////////////////////////////////////////
       if (keyname.find("AssociatedClusterFraction")!=string::npos){
           cout<<keyname<<endl;
           cout<<"Run number: "<<runnum<<endl;
@@ -359,13 +366,13 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
           b++;
 
           TH1D *hh= (TH1D *) key->ReadObj();
-          
+
           //Mean value in x axis
           aves.push_back(hh->GetMean(1));
           aves_err.push_back(hh->GetMeanError(1));
           rmss.push_back(hh->GetRMS());
           rmss_err.push_back(hh->GetRMSError());
-          
+
           //remove entries at x = 0
           hh->SetBinContent(1,0);
 
@@ -373,8 +380,8 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
           aves_nozero_err.push_back(hh->GetMeanError());
           rmss_nozero.push_back(hh->GetRMS());
           rmss_nozero_err.push_back(hh->GetRMSError());
-      } 
-      
+      }
+
 //////////////////////////////////////////////////////////////////////////////////
       if (keyname.find("NClustersPerTrackEta")!=string::npos){
           cout<<keyname<<endl;
@@ -388,11 +395,11 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
 
 //////////////Projection for -1.5 < eta < 1.5////////////////////////////
           TH1D *hproj = h->ProjectionY();
-         
+
           int nbinsx=hproj->GetNbinsX();
           //Average
           double x_mean = hproj->GetMean(1);
-          means.push_back(x_mean);       
+          means.push_back(x_mean);
           //Find the bin with minimum content != 0
           double min = 1e20;
           int minbin = 1;;
@@ -411,18 +418,18 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
           int max=hproj->GetMaximumBin();
           double binmaxcenter=hproj->GetBinCenter(max);
           binmaxCenters.push_back(x_mean<1e-15 ? 0 : binmaxcenter);
-          
+
 ////////////////Projection for -1.2 < eta < 1.2////////////////////////
           TH2D *hclon1 = (TH2D *)h->Clone();
           hclon1->GetXaxis()->SetRangeUser(-1.2, 1.2);
           TH1D *hproj1 = hclon1->ProjectionY();
-          
+
           int nbinsx1=hproj1->GetNbinsX();
-         
+
           //Average
           double x_mean1 = hproj1->GetMean(1);
           means1.push_back(x_mean1);
-          
+
           //Find the bin with minimum content != 0
           int minbin1 = 1;
           min = 1e20;
@@ -432,26 +439,26 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
               min = content;
               minbin1 = b;
             }
-          } 
+          }
           double binmincenter1=hproj1->GetBinCenter(minbin1);
           binminCenters1.push_back(x_mean1<1e-15 ? 0 : binmincenter1);
-          
+
           //Find the bin with maximum content
           int max1=hproj1->GetMaximumBin();
           double binmaxcenter1=hproj1->GetBinCenter(max1);
           binmaxCenters1.push_back(x_mean1<1e-15 ? 0 : binmaxcenter1);
-                   
+
 ///////////////Projection for -0.8 < eta < 0.8////////////////////////
           TH2D *hclon2 = (TH2D *)h->Clone();
           hclon2->GetXaxis()->SetRangeUser(-0.8, 0.8);
           TH1D *hproj2 = hclon2->ProjectionY();
-          
+
           int nbinsx2=hproj2->GetNbinsX();
-         
+
           //Average
           double x_mean2 = hproj2->GetMean(1);
           means2.push_back(x_mean2);
-          
+
           //Find the bin with minimum content != 0
           int minbin2 = 1;
           min = 1e20;
@@ -461,26 +468,26 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
               min = content;
               minbin2 = b;
             }
-          } 
+          }
           double binmincenter2=hproj2->GetBinCenter(minbin2);
           binminCenters2.push_back(x_mean2<1e-15 ? 0 : binmincenter2);
-          
+
           //Find the bin with maximum content
           int max2=hproj2->GetMaximumBin();
           double binmaxcenter2=hproj2->GetBinCenter(max2);
           binmaxCenters2.push_back(x_mean2<1e-15 ? 0 : binmaxcenter2);
-                    
+
 ///////////////Projection for -1.5 < eta < -1.4///////////////////////////////
           TH2D *hclon3 = (TH2D *)h->Clone();
           hclon3->GetXaxis()->SetRangeUser(-1.5, -1.4);
           TH1D *hproj3 = hclon3->ProjectionY();
-          
+
           int nbinsx3=hproj3->GetNbinsX();
-         
+
           //Average
           double x_mean3 = hproj3->GetMean(1);
           means3.push_back(x_mean3);
-          
+
           //Find the bin with minimum content != 0
           int minbin3 = 1;
           min = 1e20;
@@ -493,23 +500,23 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
           }
           double binmincenter3=hproj3->GetBinCenter(minbin3);
           binminCenters3.push_back(x_mean3<1e-15 ? 0 : binmincenter3);
-          
+
           //Find the bin with maximum content
           int max3=hproj3->GetMaximumBin();
           double binmaxcenter3=hproj3->GetBinCenter(max3);
           binmaxCenters3.push_back(x_mean3<1e-15 ? 0 : binmaxcenter3);
-          
+
 ////////////////Projection for 1.4 < eta < 1.5///////////////////////////////
           TH2D *hclon4 = (TH2D *)h->Clone();
           hclon4->GetXaxis()->SetRangeUser(1.4, 1.5);
           TH1D *hproj4 = hclon4->ProjectionY();
-          
+
           int nbinsx4=hproj4->GetNbinsX();
-         
+
           //Average
           double x_mean4 = hproj4->GetMean(1);
           means4.push_back(x_mean4);
-          
+
           //Find the bin with minimum content != 0
           int minbin4 = 1;
           min = 1e20;
@@ -519,26 +526,26 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
               min = content;
               minbin4 = b;
             }
-          } 
+          }
           double binmincenter4=hproj4->GetBinCenter(minbin4);
           binminCenters4.push_back(x_mean4<1e-15 ? 0 : binmincenter4);
-          
+
           //Find the bin with maximum content
           int max4=hproj4->GetMaximumBin();
           double binmaxcenter4=hproj4->GetBinCenter(max4);
           binmaxCenters4.push_back(x_mean4<1e-15 ? 0 : binmaxcenter4);
-          
+
 ////////////Projection for -0.2 < eta < 0.2/////////////////////////////////////
           TH2D *hclon5 = (TH2D *)h->Clone();
           hclon5->GetXaxis()->SetRangeUser(-0.2, 0.2);
           TH1D *hproj5 = hclon5->ProjectionY();
-          
+
           int nbinsx5=hproj5->GetNbinsX();
 
           //Average
          double x_mean5 = hproj5->GetMean(1);
          means5.push_back(x_mean5);
-          
+
           //Find the bin with minimum content != 0
           int minbin5 = 1;
           min = 1e20;
@@ -548,18 +555,18 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
               min = content;
               minbin5 = b;
             }
-          } 
+          }
           double binmincenter5=hproj5->GetBinCenter(minbin5);
           binminCenters5.push_back(x_mean5<1e-15 ? 0 : binmincenter5);
-          
+
           //Find the bin with maximum content
           int max5=hproj5->GetMaximumBin();
           double binmaxcenter5=hproj5->GetBinCenter(max5);
           binmaxCenters5.push_back(x_mean5<1e-15 ? 0 : binmaxcenter5);
      }
-                  
+
     }
-    
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   std::reverse(runs_eta.begin(),runs_eta.end());
@@ -569,12 +576,12 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   c2->SetGrid(0,1);
   auto gr2 = new TGraph(cycle_eta.size(),&cycle_eta[0],&eta_ave[0]);
   double b2=0;
-  
+
   gr2->GetXaxis()->SetNdivisions(cycle_eta.size());
   TH1F hfake("hfake","hfake", gr2->GetN(),-0.5,(double)gr2->GetN()-0.5);
   hfake.SetStats(0);
   for (int i=1;i<=(int)cycle_eta.size();i++) hfake.GetXaxis()->SetBinLabel(i,runs_eta[i-1].data());
-  
+
   hfake.GetXaxis()->SetLabelSize(0.027);
   hfake.SetNameTitle("Average of Eta distributions", "Average of Eta distributions");
   hfake.GetXaxis()->SetTitle("");
@@ -585,22 +592,22 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   gr2->Draw("PL same");
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+
   std::reverse(relative_eta1.begin(),relative_eta1.end());
   std::reverse(relative_eta2.begin(),relative_eta2.end());
-  
+
   auto c21 = new TCanvas("Relative number of tracks in Eta distributions");
   c21->SetGrid(0,1);
 
   auto gr21 = new TGraph(cycle_eta.size(),&cycle_eta[0],&relative_eta1[0]);
   auto gr22 = new TGraph(cycle_eta.size(),&cycle_eta[0],&relative_eta2[0]);
   double b21=0;
-  
+
   gr21->GetXaxis()->SetNdivisions(cycle_eta.size());
   TH1F hfake2("hfake2","hfake2", gr21->GetN(),-0.5,(double)gr21->GetN()-0.5);
   hfake2.SetStats(0);
   for (int i=1;i<=(int)cycle_eta.size();i++) hfake2.GetXaxis()->SetBinLabel(i,runs_eta[i-1].data());
-  
+
 
   hfake2.GetYaxis()->SetRangeUser(0,1.);
   hfake2.GetXaxis()->SetLabelSize(0.027);
@@ -623,8 +630,8 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   legend->SetHeader("#eta range","");
   legend->AddEntry(gr21,"-1.5-0","lp");
   legend->AddEntry(gr22,"0-1.5","lp");
-  legend->Draw();  
-  
+  legend->Draw();
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   std::reverse(runs_phi.begin(),runs_phi.end());
@@ -636,11 +643,11 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
 
   auto gr3 = new TGraph(cycle_phi.size(),&cycle_phi[0],&phi_ave[0]);
   double b3=0;
-  
+
   TH1F hfake3("hfake3","hfake3", gr3->GetN(),-0.5,(double)gr3->GetN()-0.5);
   hfake3.SetStats(0);
   gr3->GetXaxis()->SetNdivisions(cycle_phi.size());
-  
+
   for (int i=1;i<=(int)cycle_phi.size();i++) hfake3.GetXaxis()->SetBinLabel(i,runs_phi[i-1].data());
 
   hfake3.GetXaxis()->SetLabelSize(0.027);
@@ -651,26 +658,26 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   gr3->SetMarkerStyle(20);
   hfake3.Draw();
   gr3->Draw("PL same");
-  
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   std::reverse(phicounts1.begin(),phicounts1.end());
   std::reverse(phicounts2.begin(),phicounts2.end());
   std::reverse(relative_phi1.begin(),relative_phi1.end());
   std::reverse(relative_phi2.begin(),relative_phi2.end());
-  
+
   auto c31 = new TCanvas("Relative number of tracks in Phi distributions");
   c31->SetGrid(0,1);
 
   auto gr31 = new TGraph(cycle_phi.size(),&cycle_phi[0],&relative_phi1[0]);
   auto gr32 = new TGraph(cycle_phi.size(),&cycle_phi[0],&relative_phi2[0]);
   double b31=0;
-  
+
   gr31->GetXaxis()->SetNdivisions(cycle_phi.size());
   TH1F hfake4("hfake4","hfake4", gr31->GetN(),-0.5,(double)gr31->GetN()-0.5);
   hfake4.SetStats(0);
   for (int i=1;i<=(int)cycle_phi.size();i++) hfake4.GetXaxis()->SetBinLabel(i,runs_phi[i-1].data());
-  
+
   hfake4.GetYaxis()->SetRangeUser(0,1);
   hfake4.GetXaxis()->SetLabelSize(0.027);
   hfake4.SetNameTitle("Relative number of tracks in Phi distributions", "Relative number of tracks in Phi distributions");
@@ -702,7 +709,7 @@ std::reverse(aves3_err.begin(),aves3_err.end());
 std::reverse(rmss3.begin(),rmss3.end());
 std::reverse(rmss3_err.begin(),rmss3_err.end());
 auto cz1 = new TCanvas();
-cz1->SetGrid(0,1); 
+cz1->SetGrid(0,1);
 auto gerr3 = new TGraphErrors(cycle5.size(),&cycle5[0],&aves3[0],0,&aves3_err[0]);
 gerr3->GetXaxis()->SetNdivisions(cycle5.size());
 TH1F hfake5("hfake5","hfake5", gerr3->GetN(),-0.5,(double)gerr3->GetN()-0.5);
@@ -739,13 +746,13 @@ gerr31->Draw("PL same");
 std::reverse(runsZ.begin(),runsZ.end());
 auto c_summary1 = new TCanvas();
 TH2D *hSummary1 =  (TH2D*)histos1[0]->Clone("hSummary1");
-for(int iplot=1; iplot<(int)histos1.size(); iplot++){  
+for(int iplot=1; iplot<(int)histos1.size(); iplot++){
   hSummary1->Add(histos1[iplot]);
 }
 c_summary1->cd();
 c_summary1->SetLogz();
 hSummary1->SetTitle("Distance in transverse plane vs Z. Summary plot for all runs");
-hSummary1->Draw("colz");   
+hSummary1->Draw("colz");
 
 
 ///////////////////////////VertexCoordinates AVG///////////////////////////////////////////////////
@@ -761,16 +768,16 @@ std::reverse(rmsy_vertex.begin(), rmsy_vertex.end());
 std::reverse(rmsy_vertex_err.begin(), rmsy_vertex_err.end());
 auto c_summary = new TCanvas();
 TH2D *hSummary =  (TH2D*)histos[0]->Clone("hSummary");
-for(int iplot=1; iplot<(int)histos.size(); iplot++){  
+for(int iplot=1; iplot<(int)histos.size(); iplot++){
   hSummary->Add(histos[iplot]);
 }
 c_summary->cd();
 c_summary->SetLogz();
 hSummary->SetTitle("Coordinates of track vertex. Summary plot for all runs");
-hSummary->Draw("colz"); 
+hSummary->Draw("colz");
 
 auto cxy = new TCanvas();
-cxy->SetGrid(0,1); 
+cxy->SetGrid(0,1);
 auto grx = new TGraphErrors(cycle4.size(),&cycle4[0],&xpoints[0], NULL, &xpoints_err[0]);
 grx->GetXaxis()->SetNdivisions(cycle4.size());
 TH1F hfake6("hfake6","hfake6", grx->GetN(),-0.5,(double)grx->GetN()-0.5);
@@ -832,7 +839,7 @@ std::reverse(rmss2.begin(),rmss2.end());
 std::reverse(aves2_err.begin(),aves2_err.end());
 std::reverse(rmss2_err.begin(),rmss2_err.end());
 auto ce = new TCanvas();
-ce->SetGrid(0,1); 
+ce->SetGrid(0,1);
 auto gerr2 = new TGraphErrors(cycle3.size(),&cycle3[0],&aves2[0],0,&aves2_err[0]);
 gerr2->GetXaxis()->SetNdivisions(cycle3.size());
 TH1F hfake7("hfake7","hfake7", gerr2->GetN(),-0.5,(double)gerr2->GetN()-0.5);
@@ -865,7 +872,7 @@ hfake7rms.Draw();
 gerr2rms->Draw("PL same");
 
 
-///////////////////////////Ntracks averages///////////////////////////////////////////// 
+///////////////////////////Ntracks averages/////////////////////////////////////////////
 
 std::reverse(runs2.begin(),runs2.end());
 std::reverse(aves1.begin(),aves1.end());
@@ -878,7 +885,7 @@ std::reverse(rmss1_nozero.begin(),rmss1_nozero.end());
 std::reverse(rmss1_nozero_err.begin(),rmss1_nozero_err.end());
 
 auto ct = new TCanvas();
-ct->SetGrid(0,1); 
+ct->SetGrid(0,1);
 auto gerr1 = new TGraphErrors(cycle2.size(),&cycle2[0],&aves1[0],0,&aves1_err[0]);
 auto gerr1_nozero = new TGraphErrors(cycle2.size(),&cycle2[0],&aves1_nozero[0],0,&aves1_nozero_err[0]);
 gerr1->GetXaxis()->SetNdivisions(cycle2.size());
@@ -939,7 +946,7 @@ std::reverse(aves_nozero_err.begin(),aves_nozero_err.end());
 std::reverse(rmss_nozero.begin(),rmss_nozero.end());
 std::reverse(rmss_nozero_err.begin(),rmss_nozero_err.end());
 auto c0 = new TCanvas();
-c0->SetGrid(0,1); 
+c0->SetGrid(0,1);
 auto gerr = new TGraphErrors(cycle1.size(),&cycle1[0],&aves[0],0,&aves_err[0]);
 auto gerr_nozero = new TGraphErrors(cycle1.size(),&cycle1[0],&aves_nozero[0],0,&aves_nozero_err[0]);
 gerr->GetXaxis()->SetNdivisions(cycle1.size());
@@ -997,7 +1004,7 @@ std::reverse(means4.begin(),means4.end());
 std::reverse(means5.begin(),means5.end());
 
 auto c_ = new TCanvas();
-c_->SetGrid(0,1); 
+c_->SetGrid(0,1);
 auto gr_ = new TGraph(cycle.size(),&cycle[0],&means[0]);
 gr_->GetXaxis()->SetNdivisions(cycle.size());
 TH1F hfake10("hfake10","hfake10", gr_->GetN(),-0.5,(double)gr_->GetN()-0.5);
@@ -1053,14 +1060,14 @@ legend_->AddEntry(gr_3,"-1.5<#eta<-1.4","lp");
 legend_->AddEntry(gr_4,"1.4<#eta<1.5","lp");
 legend_->Draw();
 
-std::reverse(binminCenters.begin(),binminCenters.end()); 
-std::reverse(binminCenters1.begin(),binminCenters1.end()); 
-std::reverse(binminCenters2.begin(),binminCenters2.end());    
-std::reverse(binminCenters3.begin(),binminCenters3.end()); 
-std::reverse(binminCenters4.begin(),binminCenters4.end()); 
-std::reverse(binminCenters5.begin(),binminCenters5.end());                     
+std::reverse(binminCenters.begin(),binminCenters.end());
+std::reverse(binminCenters1.begin(),binminCenters1.end());
+std::reverse(binminCenters2.begin(),binminCenters2.end());
+std::reverse(binminCenters3.begin(),binminCenters3.end());
+std::reverse(binminCenters4.begin(),binminCenters4.end());
+std::reverse(binminCenters5.begin(),binminCenters5.end());
 auto c = new TCanvas();
-c->SetGrid(0,1); 
+c->SetGrid(0,1);
 auto gr = new TGraph(cycle.size(),&cycle[0],&binminCenters[0]);
 gr->GetXaxis()->SetNdivisions(cycle.size());
 TH1F hfake11("hfake11","hfake11", gr->GetN(),-0.5,(double)gr->GetN()-0.5);
@@ -1123,7 +1130,7 @@ std::reverse(binmaxCenters3.begin(),binmaxCenters3.end());
 std::reverse(binmaxCenters4.begin(),binmaxCenters4.end());
 std::reverse(binmaxCenters5.begin(),binmaxCenters5.end());
 auto c1 = new TCanvas();
-c1->SetGrid(0,1); 
+c1->SetGrid(0,1);
 auto gr0 = new TGraph(cycle.size(),&cycle[0],&binmaxCenters[0]);
 gr0->GetXaxis()->SetNdivisions(cycle.size());
 TH1F hfake12("hfake12","hfake12", gr0->GetN(),-0.5,(double)gr0->GetN()-0.5);
@@ -1179,16 +1186,16 @@ legend0->AddEntry(gr03,"-1.5<#eta<-1.4","lp");
 legend0->AddEntry(gr04,"1.4<#eta<1.5","lp");
 legend0->Draw();
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-c2->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf[", runs.front().c_str(), runs.back().c_str())); 
-c2->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));    
-c21->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));   
-c3->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str())); 
-c31->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));   
+
+c2->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf[", runs.front().c_str(), runs.back().c_str()));
+c2->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
+c21->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
+c3->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
+c31->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
 cz1->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
 cz11->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
-c_summary1->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));  
-c_summary->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));  
+c_summary1->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
+c_summary->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
 cxy->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
 cxyrms->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
 ce->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
@@ -1198,20 +1205,20 @@ ctrms->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_s
 c0->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
 c0rms->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
 c_->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
-c->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str())); 
+c->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
 c1->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf", runs.front().c_str(), runs.back().c_str()));
-c1->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf]", runs.front().c_str(), runs.back().c_str())); 
+c1->SaveAs(Form("../Plots/track_qc_from_run%s_to_run%s.pdf]", runs.front().c_str(), runs.back().c_str()));
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////	
-	
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 if(ccdb_upload){
-string Runperiod = Form("run%s_to_run%s",runs.front().c_str(), runs.back().c_str());
+string Runperiod = Form("run%s_to_run%s%s",runs.front().c_str(), runs.back().c_str(), isVtxRun3 ? "_vtxRun3" :"");
 
 	c1->SetName("MostProbable_Clusters_per_track_vs_eta");
 auto mo1 = std::make_shared<o2::quality_control::core::MonitorObject>(c1, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         mo1->setIsOwner(false);
         ccdb->storeMO(mo1);
-	
+
 	c2->SetName("Average_Eta_distribution");
 auto mo2 = std::make_shared<o2::quality_control::core::MonitorObject>(c2, TaskName, TaskClass, DetectorName,std::stoi(runs.front()),Runperiod);
         mo2->setIsOwner(false);
@@ -1304,12 +1311,12 @@ auto moc = std::make_shared<o2::quality_control::core::MonitorObject>(c, TaskNam
         ccdb->storeMO(moc);
 
 
-}     
-	
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
+
 TFile *f1 = new TFile(Form("../Plots/TrackTask_Result_trends_from_run%s_to_run%s.root", runs.front().c_str(), runs.back().c_str()), "RECREATE");
-f1->cd();    
+f1->cd();
 c2->Write();
 c21->Write();
 c3->Write();
@@ -1328,9 +1335,9 @@ c0->Write();
 c0rms->Write();
 c_->Write();
 c->Write();
-c1->Write();    
-f1->Close();  
-  
+c1->Write();
+f1->Close();
+
 delete gr2; delete gr21; delete gr22; delete legend; delete c2; delete c21;
 delete gr3; delete gr31; delete gr32; delete legend1; delete c3; delete c31;
 delete gerr3; delete cz1; delete cz11;
@@ -1346,5 +1353,3 @@ delete gr0; delete gr01; delete gr02; delete gr03; delete gr04; delete gr05; del
 
 ccdb->disconnect();
 }
-
-
