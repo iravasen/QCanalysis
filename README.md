@@ -19,11 +19,19 @@ The script *startanalysis.sh* will load the QualityControl environment with:
 ```bash
 alienv load QualityControl/latest
 ```
+Before thisi, make sure that you have set the WORKDIR path of aliBuild with the path of the `sw` folder:
+```
+export ALIBUILD_WORK_DIR=$HOME/<path-to-sw>/sw
+```
+and:
+```
+eval "`alienv shell-helper`"
+```
+
 **Be sure that this command works on your machine**. Then, you need to have permissions to execute the script *startanalysis.sh*. To do so, just do on your terminal (in the folder where the script is):
 ```bash
 chmod +x startanalysis.sh
-```
-Inside the folder there is also a MakeFile needed to compile *getObject.cxx*. As a **temporary solution**, you need to edit the lines 46-54,60,61 where you see a path to the "sw/*operatingSytem*/" folder. Edit them by writing the correct path of the sw/*operatingSysyem*/ folder on your computer. 
+``` 
 
 ## Start the analysis
 To start the download (optional) and analysis of the data you simply need to run the script *startanalysis.sh*:

@@ -320,9 +320,7 @@ todooption(){
        echo -e "Enter option: \c"
        read optccdb
        case "$optccdb" in
-         1) echo -e "\n\e[32m=> Compiling the software for the database\e[39m"
-            make
-            echo -e "\n\e[32m=> Choose what to download\n"
+         1) echo -e "\n\e[32m=> Choose what to download\n"
             echo -e "1. Fake-hit rate data"
             echo -e "2. Threshold data"
             echo -e "3. Track data"
@@ -332,23 +330,28 @@ todooption(){
             read downloadoption
             case "$downloadoption" in
               1) echo -e "\n\e[32m=> Downloading data for fake-hit rate to analyse\e[39m"
-                 ./getObject expert 1
+                 root -l -b -q "getObject.cxx++(\"expert\",1)"
+                 rm *.d *.so *.pcm
                  echo -e "\n"
                  analysismenu ;;
               2) echo -e "\n\e[32m=> Downloading data for thresholds to analyse\e[39m"
-                 ./getObject expert 2
+                 root -l -b -q "getObject.cxx++(\"expert\",2)"
+                 rm *.d *.so *.pcm
                  echo -e "\n"
                  analysismenu ;;
               3) echo -e "\n\e[32m=> Downloading data for tracks to analyse\e[39m"
-                 ./getObject expert 3
+                 root -l -b -q "getObject.cxx++(\"expert\",3)"
+                 rm *.d *.so *.pcm
                  echo -e "\n"
                  analysismenu ;;
 	      4) echo -e "\n\e[32m=> Downloading data for FEE to analyse\e[39m"
-		 ./getObject expert 4
+		 root -l -b -q "getObject.cxx++(\"expert\",4)"
+                 rm *.d *.so *.pcm
 		 echo -e "\n"
                  analysismenu ;;
               5) echo -e "\n\e[32m=> Downloading data for clusters to analyse\e[39m"
-      		 ./getObject expert 5
+      		 root -l -b -q "getObject.cxx++(\"expert\",5)"
+                 rm *.d *.so *.pcm
       		 echo -e "\n"
                  analysismenu;;
               *) echo -e "\n\e[32m=> Option not valid. Rerun the script. \e[39m" ;;
@@ -391,8 +394,6 @@ doexpert(){
 }
 
 doshifters(){
-     echo -e "\n\e[32m=> Compiling the software for the database\e[39m"
-     make
      echo -e "\n\e[32m=> Choose what to download\n"
      echo -e "1. Fake-hit rate runs"
      echo -e "2. Threshold runs\e[39m"
@@ -400,7 +401,8 @@ doshifters(){
      read downloadoption
      case "$downloadoption" in
       1) echo -e "\n\e[32m=> Downloading files to analyse\e[39m"
-         ./getObject shifter 1
+         root -l -b -q "getObject.cxx++(\"shifter\",1)"
+         rm *.d *.so *.pcm
          echo -e "\n"
          echo -e "\n\e[32m=> Starting analysis run by run and preparation of the 24h Report for fake-hit rate runs \e[39m"
          cd analysismacros
@@ -408,7 +410,8 @@ doshifters(){
          cd ..
          remove ;;
       2) echo -e "\n\e[32m=> Downloading files to analyse\e[39m"
-         ./getObject shifter 2
+         root -l -b -q "getObject.cxx++(\"shifter\",2)"
+         rm *.d *.so *.pcm
          echo -e "\n"
          echo -e "\n\e[32m=> Starting analysis run by run and preparation of the 24h Report for Threshold runs \e[39m"
          cd analysismacros
