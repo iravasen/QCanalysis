@@ -21,9 +21,9 @@ using namespace o2::quality_control::core;
 string GetCorrectTS(string selrun, vector<string> runs, vector<string> timestamps);
 array<string,2> GetLastRunWithTS(o2::ccdb::CcdbApi ccdbApi, string taskname, string objname);
 array<string,2> GetRunWithTS24hAgo(o2::ccdb::CcdbApi ccdbApi, string taskname, string objname, string timestamp);
-vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run2, string runtype);
-bool RunShifter(CcdbDatabase *ccdb, int opt);
-bool RunExpert(CcdbDatabase *ccdb, int opt);
+vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run2, string runtype, string qcpathstart);
+bool RunShifter(CcdbDatabase *ccdb, int opt, string syncasync);
+bool RunExpert(CcdbDatabase *ccdb, int opt, string syncasync);
 void DownloadTimestamps(CcdbDatabase *ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname, string objname, long int ts_start, long int ts_end, int lnum);
 void DownloadRuns(CcdbDatabase *ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, int lnum, vector<string> runlistfromfile);
 bool GetListOfHisto(CcdbDatabase* ccdb, string taskname, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers, vector<int>runnumbers2);
@@ -33,6 +33,7 @@ string GetListName(int opt, int ilist);
 
 const int nStavesInLay[7] = {12, 16, 20, 24, 30, 42, 48};
 TFile *outputfile;
+std::string selpassname;
 
 //to which CCDB we have to connect
 // For P2 operations put: ali-qcdb.cern.ch:8083
@@ -41,6 +42,69 @@ string ccdbport = "ali-qcdb-gpn.cern.ch:8083";
 
 void getObject(string expOrShift, int whatToDownload)
 {
+
+  int dbnum;
+  std::cout<<"Select the CCDB from where to download data"<<std::endl;
+  std::cout<<"  1. localhost:8083 (make sure to setup lxtunnel properly)"<<std::endl;
+  std::cout<<"  2. ali-qcdb-gpn.cern.ch:8083 (default)" << std::endl;
+  std::cout<<"  3. ccdb-test.cern.ch:8080" << std::endl;
+  std::cout<<"Enter number: ";
+  std::cin>>dbnum;
+  std::cout<<std::endl;
+  switch(dbnum){
+    case 1:
+      {
+        ccdbport = "localhost:8083";
+        break;
+      }
+    case 2:
+      {
+        ccdbport = "ali-qcdb-gpn.cern.ch:8083";
+        break;
+      }
+    case 3:
+      {
+        ccdbport = "ccdb-test.cern.ch:8080";
+        break;
+      }
+    default:
+      {
+        std::cout<<"Unknown number. Exiting..."<<std::endl;
+        exit(1);
+      }
+  }
+
+  int sa;
+  string syncasync;
+  std::cout<<std::endl;
+  std::cout<<"You would like to check synchronous or asynchronous QC plots? "<<std::endl;
+  std::cout<<"  1. Sync"<<std::endl;
+  std::cout<<"  2. Async"<<std::endl;
+  std::cout<<"Enter number: ";
+  cin>>sa;
+  std::cout<<std::endl;
+  switch(sa){
+    case 1:
+    {
+      syncasync = "sync";
+      break;
+    }
+    case 2:
+    {
+      syncasync = "async";
+      break;
+    }
+    default:
+    {
+      std::cout<<"Uknown number. Exiting ..."<<std::endl;
+      exit(1);
+    }
+  }
+
+  if(sa==2) {
+    std::cout<<"Type the pass name to download as reported in PassName field in qcdb (ex: apass3): ";
+    cin>>selpassname;
+  }
 
   std::unique_ptr<DatabaseInterface> mydb = DatabaseFactory::create("CCDB");
   if(mydb == nullptr) {
@@ -57,14 +121,14 @@ void getObject(string expOrShift, int whatToDownload)
   ccdb->connect(ccdbport.c_str(), "", "", "");
 
   if(expOrShift == "expert") {
-    RunExpert(ccdb, whatToDownload);
+    RunExpert(ccdb, whatToDownload, syncasync);
   }
   else if (expOrShift == "shifter") {
-    RunShifter(ccdb, whatToDownload);
+    RunShifter(ccdb, whatToDownload, syncasync);
   }
   else {
     cerr<<"The expOfShift string "<<expOrShift<<" is not recognized, please check!"<<endl;
-  } 
+  }
 
   ccdb->disconnect();
 
@@ -133,7 +197,14 @@ array<string,2> GetRunWithTS24hAgo(o2::ccdb::CcdbApi ccdbApi, string taskname, s
 //
 // Expert mode
 //
-bool RunShifter(CcdbDatabase *ccdb, int opt){
+bool RunShifter(CcdbDatabase *ccdb, int opt, std::string syncasync){
+
+  std::string qcpathstart;
+  if(syncasync == "sync") {
+    qcpathstart = "qc/";
+  } else if (syncasync == "async") {
+    qcpathstart = "qc_async/";
+  }
 
   //Choose the layer number
   int layernum;
@@ -147,23 +218,23 @@ bool RunShifter(CcdbDatabase *ccdb, int opt){
   if(opt==2) adderrordata = false;
 
   //taskname
-  string taskname[4] = {"qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR", "qc/ITS/MO/ITSFHR"};
+  string taskname[4] = {qcpathstart+"ITS/MO/ITSFHR", qcpathstart+"ITS/MO/ITSFHR", qcpathstart+"ITS/MO/ITSFHR", qcpathstart+"ITS/MO/ITSFHR"};
 
   //set the task name
   switch(opt){
     case 1: {// fake-hit
-      taskname[0] = "qc/ITS/MO/ITSFHR";//L0T, L0B
-      taskname[1] = "qc/ITS/MO/ITSFHR";//L1T, L1B
-      taskname[2] = "qc/ITS/MO/ITSFHR"; //L2T
-      taskname[3] = "qc/ITS/MO/ITSFHR"; //L2B
+      taskname[0] = qcpathstart+"ITS/MO/ITSFHR";//L0T, L0B
+      taskname[1] = qcpathstart+"ITS/MO/ITSFHR";//L1T, L1B
+      taskname[2] = qcpathstart+"ITS/MO/ITSFHR"; //L2T
+      taskname[3] = qcpathstart+"ITS/MO/ITSFHR"; //L2B
       break;
     }
 
     case 2: { //thr scan
-      taskname[0] = "qc/ITS/MO/ITSTHRTask0";
-      taskname[1] = "qc/ITS/MO/ITSTHRTask1";
-      taskname[2] = "qc/ITS/MO/ITSTHRTask2T";
-      taskname[3] = "qc/ITS/MO/ITSTHRTask2B";
+      taskname[0] = qcpathstart+"ITS/MO/ITSTHRTask0";
+      taskname[1] = qcpathstart+"ITS/MO/ITSTHRTask1";
+      taskname[2] = qcpathstart+"ITS/MO/ITSTHRTask2T";
+      taskname[3] = qcpathstart+"ITS/MO/ITSTHRTask2B";
       break;
     }
 
@@ -263,7 +334,7 @@ bool RunShifter(CcdbDatabase *ccdb, int opt){
 
       else if(layernum==-1){
 
-        vector<string> goodrunlist = GetGoodRunList(ccdbApi, runts1[1], runts2[1], "Fhr");
+        vector<string> goodrunlist = GetGoodRunList(ccdbApi, runts1[1], runts2[1], "Fhr", qcpathstart);
 
         for(int il=0; il<nListElements; il++){//loop on lists
           switch(il){
@@ -319,7 +390,7 @@ bool RunShifter(CcdbDatabase *ccdb, int opt){
       cout<<"Finding runs in: "<<taskname[0]<<"/Threshold/Layer0/Threshold_Vs_Chip_and_Stave"<<endl;
       runts2 = GetLastRunWithTS(ccdbApi, taskname[0], "Threshold/Layer0/Threshold_Vs_Chip_and_Stave"); //take a random object name since run-list is the same.
       runts1 = GetRunWithTS24hAgo(ccdbApi, taskname[0], "Threshold/Layer0/Threshold_Vs_Chip_and_Stave", runts2[0]);
-      vector<string> goodrunlist = GetGoodRunList(ccdbApi, runts1[1], runts2[1], "Thr");
+      vector<string> goodrunlist = GetGoodRunList(ccdbApi, runts1[1], runts2[1], "Thr", qcpathstart);
       cout<<"Run interval selected:       "<<runts1[1]<<"-"<<runts2[1]<<endl;
       cout<<"Timestamp interval selected: "<<runts1[0]<<"-"<<runts2[0]<<endl;
 
@@ -420,7 +491,14 @@ bool RunShifter(CcdbDatabase *ccdb, int opt){
 //
 // Expert mode
 //
-bool RunExpert(CcdbDatabase *ccdb, int opt){
+bool RunExpert(CcdbDatabase *ccdb, int opt, std::string syncasync){
+  std::string qcpathstart;
+  if(syncasync == "sync") {
+    qcpathstart = "qc/";
+  } else if (syncasync == "async") {
+    qcpathstart = "qc_async/";
+  }
+
   int IBorOB;
   int layernum;
   if(opt==3) layernum=-2;
@@ -458,25 +536,25 @@ bool RunExpert(CcdbDatabase *ccdb, int opt){
   //  cin>>layernum;
 
   //taskname
-  string taskname[8]    = {"qc/ITS/MO/FHRTask", "qc/ITS/MO/FHRTask", "qc/ITS/MO/FHRTask", "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask",  "qc/ITS/MO/FHRTask"};
+  string taskname[8]    = {qcpathstart+"ITS/MO/FHRTask", qcpathstart+"ITS/MO/FHRTask", qcpathstart+"ITS/MO/FHRTask", qcpathstart+"ITS/MO/FHRTask",  qcpathstart+"ITS/MO/FHRTask",  qcpathstart+"ITS/MO/FHRTask",  qcpathstart+"ITS/MO/FHRTask",  qcpathstart+"ITS/MO/FHRTask"};
 
   //set the task name
   switch(IBorOB){
   case 0: {//Inner Barrel
     switch(opt){
     case 1: {// fake-hit
-      taskname[0] = "qc/ITS/MO/FHRTask";//L0T, L0B
-      taskname[1] = "qc/ITS/MO/FHRTask";//L1T, L1B
-      taskname[2] = "qc/ITS/MO/FHRTask"; //L2T
-      taskname[3] = "qc/ITS/MO/FHRTask"; //L2B
+      taskname[0] = qcpathstart+"ITS/MO/FHRTask";//L0T, L0B
+      taskname[1] = qcpathstart+"ITS/MO/FHRTask";//L1T, L1B
+      taskname[2] = qcpathstart+"ITS/MO/FHRTask"; //L2T
+      taskname[3] = qcpathstart+"ITS/MO/FHRTask"; //L2B
       break;
     }
 
     case 2: { //thr scan
-      taskname[0] = "qc/ITS/MO/ITSTHRTask0";
-      taskname[1] = "qc/ITS/MO/ITSTHRTask1";
-      taskname[2] = "qc/ITS/MO/ITSTHRTask2T";
-      taskname[3] = "qc/ITS/MO/ITSTHRTask2B";
+      taskname[0] = qcpathstart+"ITS/MO/ITSTHRTask0";
+      taskname[1] = qcpathstart+"ITS/MO/ITSTHRTask1";
+      taskname[2] = qcpathstart+"ITS/MO/ITSTHRTask2T";
+      taskname[3] = qcpathstart+"ITS/MO/ITSTHRTask2B";
 
       break;
     }
@@ -487,20 +565,20 @@ bool RunExpert(CcdbDatabase *ccdb, int opt){
   case 1: { //Outer Barrel
     switch(opt){
     case 1: {// fake-hit
-      taskname[4] = "qc/ITS/MO/FHRTask";//L3
-      taskname[5] = "qc/ITS/MO/FHRTask";//L4
-      taskname[6] = "qc/ITS/MO/FHRTask";//L5
-      taskname[7] = "qc/ITS/MO/FHRTask";//L6
+      taskname[4] = qcpathstart+"ITS/MO/FHRTask";//L3
+      taskname[5] = qcpathstart+"ITS/MO/FHRTask";//L4
+      taskname[6] = qcpathstart+"ITS/MO/FHRTask";//L5
+      taskname[7] = qcpathstart+"ITS/MO/FHRTask";//L6
 
       break;
     }
 
     case 2: { //thr scan
       //path name to be changed for OB
-      taskname[4] = "qc/ITS/MO/ITSTHRTask0";
-      taskname[5] = "qc/ITS/MO/ITSTHRTask1";
-      taskname[6] = "qc/ITS/MO/ITSTHRTask2T";
-      taskname[7] = "qc/ITS/MO/ITSTHRTask2B";
+      taskname[4] = qcpathstart+"ITS/MO/ITSTHRTask0";
+      taskname[5] = qcpathstart+"ITS/MO/ITSTHRTask1";
+      taskname[6] = qcpathstart+"ITS/MO/ITSTHRTask2T";
+      taskname[7] = qcpathstart+"ITS/MO/ITSTHRTask2B";
 
       break;
     }
@@ -510,28 +588,28 @@ bool RunExpert(CcdbDatabase *ccdb, int opt){
   case 2: { //Inner and Outer Barrel
     switch(opt){
     case 1: {// fake-hit
-      taskname[0] = "qc/ITS/MO/FHRTask";//L0
-      taskname[1] = "qc/ITS/MO/FHRTask";//L1
-      taskname[2] = "qc/ITS/MO/FHRTask";//L2
-      taskname[3] = "qc/ITS/MO/FHRTask";//not used for FHR
-      taskname[4] = "qc/ITS/MO/FHRTask";//L3
-      taskname[5] = "qc/ITS/MO/FHRTask";//L4
-      taskname[6] = "qc/ITS/MO/FHRTask";//L5
-      taskname[7] = "qc/ITS/MO/FHRTask";//L6
+      taskname[0] = qcpathstart+"ITS/MO/FHRTask";//L0
+      taskname[1] = qcpathstart+"ITS/MO/FHRTask";//L1
+      taskname[2] = qcpathstart+"ITS/MO/FHRTask";//L2
+      taskname[3] = qcpathstart+"ITS/MO/FHRTask";//not used for FHR
+      taskname[4] = qcpathstart+"ITS/MO/FHRTask";//L3
+      taskname[5] = qcpathstart+"ITS/MO/FHRTask";//L4
+      taskname[6] = qcpathstart+"ITS/MO/FHRTask";//L5
+      taskname[7] = qcpathstart+"ITS/MO/FHRTask";//L6
 
       break;
     }
 
     case 2: { //thr scan
       // path name to be changed
-      taskname[0] = "qc/ITS/MO/ITSTHRTask0";
-      taskname[1] = "qc/ITS/MO/ITSTHRTask1";
-      taskname[2] = "qc/ITS/MO/ITSTHRTask2T";
-      taskname[3] = "qc/ITS/MO/ITSTHRTask2B";
-      taskname[4] = "qc/ITS/MO/ITSTHRTask0";
-      taskname[5] = "qc/ITS/MO/ITSTHRTask1";
-      taskname[6] = "qc/ITS/MO/ITSTHRTask2T";
-      taskname[7] = "qc/ITS/MO/ITSTHRTask2B";
+      taskname[0] = qcpathstart+"ITS/MO/ITSTHRTask0";
+      taskname[1] = qcpathstart+"ITS/MO/ITSTHRTask1";
+      taskname[2] = qcpathstart+"ITS/MO/ITSTHRTask2T";
+      taskname[3] = qcpathstart+"ITS/MO/ITSTHRTask2B";
+      taskname[4] = qcpathstart+"ITS/MO/ITSTHRTask0";
+      taskname[5] = qcpathstart+"ITS/MO/ITSTHRTask1";
+      taskname[6] = qcpathstart+"ITS/MO/ITSTHRTask2T";
+      taskname[7] = qcpathstart+"ITS/MO/ITSTHRTask2B";
 
       break;
     }
@@ -556,8 +634,8 @@ bool RunExpert(CcdbDatabase *ccdb, int opt){
   int choice;
   cout<<endl;
   cout<<"Download data - Choose an option:\n"<<endl;
-  cout<<"1. Enter run numbers"<<endl;
-  cout<<"2. Enter timestamps"<<endl;
+  cout<<"1. Enter run numbers (not possible in qc_async)"<<endl;
+  cout<<"2. Enter timestamps (not possible in qc_async)"<<endl;
   cout<<"3. Run list as input txt file (must be in Data folder)"<<endl;
   cout<<"[Type option number]: ";
   cin>>choice;
@@ -621,7 +699,7 @@ bool RunExpert(CcdbDatabase *ccdb, int opt){
     case 3: {
       cout<<"\n"<<"Files potentially containing a run list:"<<endl;
       cout<<endl;
-      gSystem->Exec("ls Data/*.txt -Art | tail -n 500"); 
+      gSystem->Exec("ls Data/*.txt -Art | tail -n 500");
       string filename;
       cout<<"\n"<<"Enter file name (example: my_run_list.txt): ";
       cin>>filename;
@@ -786,7 +864,7 @@ bool RunExpert(CcdbDatabase *ccdb, int opt){
     }//end case 1
 
     case 2: {// thresholds
-      vector<string> goodrunlist = GetGoodRunList(ccdbApi, run1, run2, "Thr"); //good run list
+      vector<string> goodrunlist = GetGoodRunList(ccdbApi, run1, run2, "Thr", qcpathstart); //good run list
       if(layernum>=0){
         for(int il=0; il<nListElements; il++){//loop on lists
           switch(il){
@@ -886,57 +964,59 @@ bool RunExpert(CcdbDatabase *ccdb, int opt){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 case 3: { //tracks
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSTrackTask", "AngularDistribution", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSTrackTask", "EtaDistribution", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSTrackTask", "PhiDistribution", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSTrackTask", "NClusters", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSTrackTask", "VertexZ", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSTrackTask", "VertexRvsZ", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSTrackTask", "VertexCoordinates", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSTrackTask", "NVertexContributors", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSTrackTask", "Ntracks", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSTrackTask", "AssociatedClusterFraction", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSTrackTask", "NClustersPerTrackEta", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      string trackname = (syncasync == "async") ? "Tracks" : "ITSTrackTask";
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/"+trackname, "AngularDistribution", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/"+trackname, "EtaDistribution", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/"+trackname, "PhiDistribution", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/"+trackname, "NClusters", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/"+trackname, "VertexZ", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/"+trackname, "VertexRvsZ", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/"+trackname, "VertexCoordinates", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/"+trackname, "NVertexContributors", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/"+trackname, "Ntracks", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/"+trackname, "AssociatedClusterFraction", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/"+trackname, "NClustersPerTrackEta", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
 
       break;
     }//end of case 3
     //////////////////////////////////////////////////////////
 case 4: { //FEE
-      cout<<"\nAll data in "<<"qc/ITS/MO/ITSFEE/LaneStatus/LaneStatusFlagError(ERROR,FAULT,WARNING)"<<" between run"<<run1<<" and run"<<run2<<" downloading..."<<endl;
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagERROR", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagFAULT", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagWARNING", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagCumulativeERROR", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagCumulativeFAULT", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSFEE","LaneStatus/laneStatusFlagCumulativeWARNING", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      cout<<"\nAll data in "<<qcpathstart+"ITS/MO/ITSFEE/LaneStatus/LaneStatusFlagError(ERROR,FAULT,WARNING)"<<" between run"<<run1<<" and run"<<run2<<" downloading..."<<endl;
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/ITSFEE","LaneStatus/laneStatusFlagERROR", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/ITSFEE","LaneStatus/laneStatusFlagFAULT", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/ITSFEE","LaneStatus/laneStatusFlagWARNING", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/ITSFEE","LaneStatus/laneStatusFlagCumulativeERROR", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/ITSFEE","LaneStatus/laneStatusFlagCumulativeFAULT", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/ITSFEE","LaneStatus/laneStatusFlagCumulativeWARNING", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
       string objname = "TriggerVsFeeid";
-      cout<<"\nAll data in qc/ITS/MO/ITSFEE/"<<objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
-      Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSFEE", objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      cout<<"\nAll data in "<<qcpathstart<< "ITS/MO/ITSFEE/"<<objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/ITSFEE", objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
       break;
     }//end of case 4
     //////////////////////////////////////////////////////////
     case 5:{ //Clusters
+      string cluname = (syncasync=="async") ? "Clusters":"ITSClusterTask";
       if(layernum>=0){
 
          //Cluster occupation
-         cout<<"\nAll data in "<< Form("qc/ITS/MO/ITSClusterTask/Layer%d/ClusterOccupation", layernum) << " between run" << run1 << " and run" << run2 << " are going to be downloaded." <<endl;
-         Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSClusterTask", Form("Layer%d/ClusterOccupation", layernum), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
+         cout<<"\nAll data in "<< Form("%sITS/MO/%s/Layer%d/ClusterOccupation",qcpathstart.c_str(), cluname.c_str() ,layernum) << " between run" << run1 << " and run" << run2 << " are going to be downloaded." <<endl;
+         Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/"+cluname, Form("Layer%d/ClusterOccupation", layernum), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
 
          //Average cluster size
-         cout<<"\nAll data in "<< Form("qc/ITS/MO/ITSClusterTask/Layer%d/AverageClusterSize", layernum) << " between run" << run1 << " and run" << run2 << " are going to be downloaded." <<endl;
-         Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSClusterTask", Form("Layer%d/AverageClusterSize", layernum), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
+         cout<<"\nAll data in "<< Form("%sITS/MO/%s/Layer%d/AverageClusterSize", qcpathstart.c_str(), cluname.c_str(), layernum) << " between run" << run1 << " and run" << run2 << " are going to be downloaded." <<endl;
+         Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/"+cluname, Form("Layer%d/AverageClusterSize", layernum), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
 
       } else if (layernum == -1){
 
          for(int ilay = ilayMin; ilay <= ilayMax; ilay++){ // "-1" option corresponds to ALL LAYERS in OB or IB, or even for whole ITS
 
             //Cluster occupation
-            cout<<"\nAll data in "<< Form("qc/ITS/MO/ITSClusterTask/Layer%d/ClusterOccupation", ilay) << " between run" << run1 << " and run" << run2 << " are going to be downloaded." <<endl;
-            Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSClusterTask", Form("Layer%d/ClusterOccupation", ilay), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay, runlistfromfile);
+            cout<<"\nAll data in "<< Form("%sITS/MO/%s/Layer%d/ClusterOccupation", qcpathstart.c_str(), cluname.c_str(),ilay) << " between run" << run1 << " and run" << run2 << " are going to be downloaded." <<endl;
+            Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/"+cluname, Form("Layer%d/ClusterOccupation", ilay), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay, runlistfromfile);
 
             //Average cluster size
-            cout<<"\nAll data in "<< Form("qc/ITS/MO/ITSClusterTask/Layer%d/AverageClusterSize", ilay) << " between run" << run1 << " and run" << run2 << " are going to be downloaded." <<endl;
-            Download(choice, ccdb, ccdbApi, "qc/ITS/MO/ITSClusterTask", Form("Layer%d/AverageClusterSize", ilay), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay, runlistfromfile);
+            cout<<"\nAll data in "<< Form("%sITS/MO/%s/Layer%d/AverageClusterSize",qcpathstart.c_str(), cluname.c_str(), ilay) << " between run" << run1 << " and run" << run2 << " are going to be downloaded." <<endl;
+            Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/"+cluname, Form("Layer%d/AverageClusterSize", ilay), run1, run2, vector<string>(), (long)ts_start, (long)ts_end, ilay, runlistfromfile);
          }
       }
       break;
@@ -952,10 +1032,10 @@ case 4: { //FEE
 //
 // Return run list of GOOD runs = runs in all CCDB paths for TH2
 //
-vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run2, string runtype){//run type can be "Thr" or "Fhr"
+vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run2, string runtype, string qcpathstart){//run type can be "Thr" or "Fhr"
 
   string objnames[4] = {"Threshold/Layer0/Threshold_Vs_Chip_and_Stave", "Threshold/Layer1/Threshold_Vs_Chip_and_Stave", "Threshold/Layer2/Threshold_Vs_Chip_and_Stave", "Threshold/Layer2/Threshold_Vs_Chip_and_Stave"};
-  string tasknames[4] = {"qc/ITS/MO/ITSTHRTask0", "qc/ITS/MO/ITSTHRTask1", "qc/ITS/MO/ITSTHRTask2T", "qc/ITS/MO/ITSTHRTask2B"};
+  string tasknames[4] = {qcpathstart+"ITS/MO/ITSTHRTask0", qcpathstart+"ITS/MO/ITSTHRTask1", qcpathstart+"ITS/MO/ITSTHRTask2T", qcpathstart+"ITS/MO/ITSTHRTask2B"};
 
   //in case of FHR
   if(runtype=="Fhr"){
@@ -964,10 +1044,10 @@ vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run
     objnames[2] = "Occupancy/Layer2/Layer2ChipStave";
     objnames[3] = "Occupancy/Layer2/Layer2ChipStave";
 
-    tasknames[0] = "qc/ITS/MO/ITSFHR";
-    tasknames[1] = "qc/ITS/MO/ITSFHR";
-    tasknames[2] = "qc/ITS/MO/ITSFHR";
-    tasknames[3] = "qc/ITS/MO/ITSFHR";
+    tasknames[0] = qcpathstart+"ITS/MO/ITSFHR";
+    tasknames[1] = qcpathstart+"ITS/MO/ITSFHR";
+    tasknames[2] = qcpathstart+"ITS/MO/ITSFHR";
+    tasknames[3] = qcpathstart+"ITS/MO/ITSFHR";
   }
 
   vector<vector<string>> runlists;
@@ -1070,7 +1150,9 @@ void DownloadTimestamps(CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string ta
 // Download data based on run numbers - available in metadata from 03/07/2019 21.49 (run 582 --> fake hit scan)
 //
 void DownloadRuns(CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, int lnum, vector<string> runlistfromfile){
-
+  
+  bool isQCAsync = taskname.find("qc_async")!=string::npos;
+  
   //Extract all the time stamps and run numbers of the object
   string objectlist = ccdbApi.list(taskname + "/" + objname,false,"text/plain");
   string objectlist2 = " ";
@@ -1080,7 +1162,7 @@ void DownloadRuns(CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname
 
   stringstream ss(objectlist);
   string word;
-  vector<string> alltimestamps, timestamps, runs;
+  vector<string> alltimestamps, timestamps, runs, passnames;
 
   //filter normal path but correct timestamps with the one from alternative path (if needed)
   while(ss>>word){
@@ -1094,8 +1176,17 @@ void DownloadRuns(CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname
       if(word.size()==3) continue; //protection for fee task in particular: skip runs with 3 digits.
       runs.push_back(word);
       timestamps.push_back(alltimestamps[alltimestamps.size()-1]);//this keep only the timestamps connected to a run number
-      if(stoi(word)==stoi(run1)) break;
+      if(!isQCAsync && stoi(word)==stoi(run1)) break; // skip in QCasync since runs are in random order in QCDB
     }
+    if(isQCAsync && word=="PassName") { //relevant only for qc_async 
+      ss>>word;
+      ss>>word;
+      passnames.push_back(word); 
+    }
+  }
+
+  if(!isQCAsync) {
+    passnames=runs; // just to assign to passnames some random values 
   }
 
   //filter all runs to get the ones within run1 and run2 (get most recent for each run!!) --> take from good run list if defined or from user-defined list
@@ -1104,7 +1195,7 @@ void DownloadRuns(CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname
   int counter=0;
 
   for(int irun=0; irun<(int)runs.size(); irun++){
-    if(runlistfromfile.size()==0 && (stoi(runs[irun])>=stoi(run1) && stoi(runs[irun])<=stoi(run2)) && (goodrunlist.size()==0 || std::find(goodrunlist.begin(), goodrunlist.end(), runs[irun]) != goodrunlist.end())){
+    if(runlistfromfile.size()==0 && (stoi(runs[irun])>=stoi(run1) && stoi(runs[irun])<=stoi(run2)) && (goodrunlist.size()==0 || std::find(goodrunlist.begin(), goodrunlist.end(), runs[irun]) != goodrunlist.end()) && (!isQCAsync)){ // NOT DONE IN QC ASYNC
       counter++;
       if(counter==1){
         runs_selperiod.push_back(std::stoi(runs[irun]));
@@ -1118,20 +1209,20 @@ void DownloadRuns(CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname
         }
       }
     }
-    
+
     else if (runlistfromfile.size()>0 && (stoi(runs[irun])>=stoi(runlistfromfile[runlistfromfile.size()-1]) && stoi(runs[irun])<=stoi(runlistfromfile[0]))) { //user-defined list
       bool isfound = false;
       for(int imatch = 0; imatch<(int)runlistfromfile.size(); imatch++) {
-        if(runs[irun] == runlistfromfile[imatch]) {
+        if(runs[irun] == runlistfromfile[imatch] && (!isQCAsync || selpassname == passnames[irun])) {
           isfound = true;
           break;
         }
-        if(stoi(runs[irun]) > stoi(runlistfromfile[0])) {
+        if(!isQCAsync && stoi(runs[irun]) > stoi(runlistfromfile[0])) {
           break;
         }
-        if(stoi(runs[irun]) < stoi(runlistfromfile[runlistfromfile.size()-1])){
+        if(!isQCAsync && stoi(runs[irun]) < stoi(runlistfromfile[runlistfromfile.size()-1])){
           break;
-        } 
+        }
       }
       if(isfound) {
         counter++;
@@ -1140,7 +1231,8 @@ void DownloadRuns(CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname
           timestamps_selperiod.push_back(std::stol(timestamps[irun]));
         }
         else{
-          if(runs[irun]==runs[irun-1]) continue;
+          if(!isQCAsync && runs[irun]==runs[irun-1]) continue;
+          if(std::find(runs_selperiod.begin(), runs_selperiod.end(), std::stoi(runs[irun])) != runs_selperiod.end()) continue;
           else{
             runs_selperiod.push_back(std::stoi(runs[irun]));
             timestamps_selperiod.push_back(std::stol(timestamps[irun]));
@@ -1149,7 +1241,7 @@ void DownloadRuns(CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname
       } // end of if on isfound
     } // end of else if
 
-  } // end of for loop on all runs  
+  } // end of for loop on all runs
 
   cout<<"\n"<<"Selected runs and corresponding timestamps: "<<endl;
   for(int i=0; i<(int)runs_selperiod.size();i++){
@@ -1186,6 +1278,12 @@ string GetCorrectTS(string selrun, vector<string> runs, vector<string> timestamp
 //
 bool GetListOfHisto(CcdbDatabase* ccdb, string taskname, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers, vector<int>runnumbers2){
 
+  string qcpathstart;
+  if(taskname.find("qc_async")!=string::npos) {
+    qcpathstart = "qc_async";
+  } else {
+    qcpathstart = "qc";
+  }
   //Getting root files from the database and write them to file
   cout<<"\n"<<"... Getting files from the database"<<endl;
 
@@ -1205,7 +1303,7 @@ bool GetListOfHisto(CcdbDatabase* ccdb, string taskname, string objname, vector<
 
       //MonitorObject *monitor = ccdb->retrieve(taskname, objname, timestamps[i]);
 
-      auto monitor = ccdb->retrieveMO(Form("ITS/MO/ITS%sTask2B",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw"), objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
+      auto monitor = ccdb->retrieveMO(Form("ITS/MO/ITS%sTask2B",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw"), objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i], { 0, 0, "", "", qcpathstart });
 
       if (monitor == nullptr) {
         cerr << "Failed to get MonitorObject for timestamp: " << timestamps[i]<< endl;
@@ -1235,7 +1333,7 @@ bool GetListOfHisto(CcdbDatabase* ccdb, string taskname, string objname, vector<
 
     //MonitorObject *monitor = ccdb->retrieve(taskname, objname, timestamps[i]);
 
-    auto monitor = ccdb->retrieveMO(taskname.substr(3), objname, timestamps[i]);
+    auto monitor = ccdb->retrieveMO(qcpathstart=="qc_async" ? taskname.substr(9) : taskname.substr(3), objname, timestamps[i], { 0, 0, "", "", qcpathstart });
 
     if (monitor == nullptr) {
       cerr << "Failed to get MonitorObject for timestamp: " << timestamps[i]<< endl;
@@ -1249,7 +1347,7 @@ bool GetListOfHisto(CcdbDatabase* ccdb, string taskname, string objname, vector<
     TObject *obj2 = nullptr;
     if(/*objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos
        || */objname.find("Layer2/Threshold_Vs_Chip_and_Stave")!=string::npos || objname.find("Layer2/DeadPixel_Vs_Chip_and_Stave")!=string::npos){
-      auto monitor2 = ccdb->retrieveMO(Form("ITS/MO/ITS%sTask2B",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw"), objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i]);
+      auto monitor2 = ccdb->retrieveMO(Form("ITS/MO/ITS%sTask2B",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw"), objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i], { 0, 0, "", "", qcpathstart });
       obj2 = monitor2->getObject();
       monitor2->setIsOwner(false);
     }
@@ -1475,7 +1573,7 @@ bool Download(int choice, CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string 
       DownloadTimestamps(ccdb, ccdbApi, taskname, objname, ts_start, ts_end, lnum); //download with timestamps
       break;
     }
-    
+
     case 3: {
       DownloadRuns(ccdb, ccdbApi, taskname, objname, run1, run2, goodrunlist, lnum, runlistfromfile);//download with runs from input run list
       break;
