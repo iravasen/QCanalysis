@@ -19,12 +19,12 @@
 using namespace std;
 
 void SetStyle(TGraph *gObject, int color, Style_t marker);
-void DoAnalysis(string sFile_Path);
+void DoAnalysis(string sFile_Path, string output_file_name);
 std::vector<int> GetChipInModList(int layer, int stave, int lane);
 
 //___________________________________________________
 // MAIN
-void DumpEmptyChipsClusterOccupancy(){
+void DumpEmptyChipsClusterOccupancy(string output_file_name = "file.txt"){
 
    string sFile_Path;
    // int nchips = 9;
@@ -35,7 +35,7 @@ void DumpEmptyChipsClusterOccupancy(){
    cout << endl;
 
    //Call
-   DoAnalysis(sFile_Path);
+   DoAnalysis(sFile_Path, output_file_name);
 }
 
 //___________________________________________________
@@ -49,7 +49,7 @@ void SetStyle(TGraph *gObject, int color, Style_t marker){
 
 //___________________________________________________
 // Analyse data
-void DoAnalysis(string sFile_Path){
+void DoAnalysis(string sFile_Path, string output_file_name){
 
    //___________________________________________________
    //Auxiliary variables
@@ -111,7 +111,7 @@ void DoAnalysis(string sFile_Path){
    if (nTimes == 0) {cout << "\nInput files contains no plots\n" << endl; return;}
 
    // Check empty chips
-   ofstream outfl ("lhc22f_chiptomask.dat");
+   ofstream outfl (output_file_name.c_str());
    for(int ihist = 0; ihist < (int)vInput_Histo.size(); ihist++){
      for(int istave = 1; istave<=vInput_Histo[ihist]->GetNbinsY(); istave++) {
        for(int ilane = 1; ilane<=vInput_Histo[ihist]->GetNbinsX(); ilane++){
