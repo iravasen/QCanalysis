@@ -8,6 +8,8 @@
 #include "QualityControl/QcInfoLogger.h"
 #include "QualityControl/CcdbDatabase.h"
 #include "inc/ccdb.h"
+#include <TH2.h>
+#include <THnSparse.h>
 
 using namespace o2::quality_control::repository;
 using namespace o2::quality_control::core;
