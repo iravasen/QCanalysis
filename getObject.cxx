@@ -146,7 +146,7 @@ array<string,2> GetLastRunWithTS(o2::ccdb::CcdbApi ccdbApi, string taskname, str
   array<string,2> runts;
 
   while(ss>>word){
-    if(word=="Created:"){// take the one related to file creation
+    if(word=="Validity:"){// take the one related to file creation
       ss>>word;
       runts[0] = word;
     }
@@ -176,7 +176,7 @@ array<string,2> GetRunWithTS24hAgo(o2::ccdb::CcdbApi ccdbApi, string taskname, s
   long int stamp_int_24hago = stamp_int_actual - 86400000; //remove number of milliseconds in 1 day
 
   while(ss>>word){
-    if(word=="Created:"){// take the one related to file creation
+    if(word=="Validity:"){// take the one related to file creation
       ss>>word;
       if(stol(word)>=stamp_int_24hago){
         runts[0] = word;
@@ -1057,7 +1057,7 @@ vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run
     string word;
     vector<string>runlist;
     while(ss>>word){
-      if(word=="Created:"){// take the one related to file creation
+      if(word=="Validity:"){// take the one related to file creation
         ss>>word;
         //alltimestampsALT.push_back(word);
       }
@@ -1110,7 +1110,7 @@ void DownloadTimestamps(CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string ta
   string word;
   vector <string> timestamps;
   while(ss>>word){
-    if(word=="Created:"){// take the one related to file creation
+    if(word=="Validity:"){// take the one related to file creation
       ss>>word;
       timestamps.push_back(word);
     }
@@ -1166,7 +1166,7 @@ void DownloadRuns(CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname
 
   //filter normal path but correct timestamps with the one from alternative path (if needed)
   while(ss>>word){
-    if(word=="Created:"){// take the one related to file creation
+    if(word=="Validity:"){// take the one related to file creation
       ss>>word;
       alltimestamps.push_back(word);
     }
