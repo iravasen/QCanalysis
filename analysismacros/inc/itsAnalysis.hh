@@ -6,6 +6,10 @@
 #include <vector>
 #include <TFile.h>
 #include <TList.h>
+#include "TH2.h"
+#include "THnSparse.h"
+#include "TSystem.h"
+#include "TKey.h"
 
 //using namespace std;
 
