@@ -4,6 +4,8 @@
 #include "TCanvas.h"
 #include "string"
 #include "TStyle.h"
+#include "TLine.h"
+#include "TLatex.h"
 
 using namespace std;
 
@@ -15,7 +17,11 @@ void MakeNoisyPixFraction(string filename, string runnum){
   ifstream infile(filename.c_str());
   string stave;
   int noisypix;
-  TH1D *hhits = new TH1D("hhits",Form("Noisy pix fraction per stave run%s; ;noisy pix (per mille)",runnum.c_str()), nstavestot,0,(double)nstavestot);
+  TH1D *hhits = new TH1D("hhits",Form("Fraction of noisy pixels per stave in ITS2 - cosmic run%s - ITS2 framing rate 202 kHz - #recorded readout frames: 27.5 $#times$ 10^{6}; ;Faction (\\hbox{‰})",runnum.c_str()), nstavestot,0,(double)nstavestot);
+  TLine *lineIBOB = new TLine(48,0,48, 2e-1);
+  lineIBOB->SetLineStyle(2);
+  TLatex *lat = new TLatex();
+  lat->SetTextFont(42);
   while(infile>>stave>>noisypix){
     string layer = stave.substr(1,1);
     string stavenum = stave.substr(3,2);
@@ -58,6 +64,9 @@ void MakeNoisyPixFraction(string filename, string runnum){
   hhits->SetMarkerStyle(20);
   hhits->SetMarkerSize(1.2);
   hhits->Draw("PE");
+  lat->DrawLatex(30,1e-1,"#splitline{Inner Barrel}{pixels with >10^{-2} hits/ROF}");
+  lat->DrawLatex(50,1e-1,"#splitline{Outer Barrel}{pixels with >10^{-6} hits/ROF}");
+  lineIBOB->Draw();
 
   c->SaveAs(Form("../yaml/noise_masks/fractions/noisypix_fraction_%s.pdf",runnum.c_str()));
 }
