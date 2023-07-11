@@ -231,10 +231,10 @@ bool RunShifter(CcdbDatabase *ccdb, int opt, std::string syncasync){
     }
 
     case 2: { //thr scan
-      taskname[0] = qcpathstart+"ITS/MO/ITSTHRTask0";
-      taskname[1] = qcpathstart+"ITS/MO/ITSTHRTask1";
-      taskname[2] = qcpathstart+"ITS/MO/ITSTHRTask2T";
-      taskname[3] = qcpathstart+"ITS/MO/ITSTHRTask2B";
+      taskname[0] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[1] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[2] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[3] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
       break;
     }
 
@@ -384,7 +384,7 @@ bool RunShifter(CcdbDatabase *ccdb, int opt, std::string syncasync){
       }//end if layernum==-1
       break;
     }//end case 1
-
+    /*
     case 2: {//thresholds
       //run interval definition
       cout<<"Finding runs in: "<<taskname[0]<<"/Threshold/Layer0/Threshold_Vs_Chip_and_Stave"<<endl;
@@ -479,7 +479,36 @@ bool RunShifter(CcdbDatabase *ccdb, int opt, std::string syncasync){
       }//end if layernum==-1
       break;
     }// end of case 2
+          */
+    case 2: {//thresholds
+        //run interval definition
+        cout << "Finding runs in: " << taskname[0] << "ThrNoiseChipAverageIB" << endl;
+        runts2 = GetLastRunWithTS(ccdbApi, taskname[0], "ThrNoiseChipAverageIB"); //take a random object name since run-list is the same.
+        runts1 = GetRunWithTS24hAgo(ccdbApi, taskname[0], "ThrNoiseChipAverageIB", runts2[0]);
+        vector<string> goodrunlist = GetGoodRunList(ccdbApi, runts1[1], runts2[1], "Thr", qcpathstart);
+        cout << "Run interval selected:       " << runts1[1] << "-" << runts2[1] << endl;
+        cout << "Timestamp interval selected: " << runts1[0] << "-" << runts2[0] << endl;
 
+        outputfile = new TFile(Form("Data/Output%s_%s_from_%s%s_to_%s%s%s.root", layername.c_str(), optname.c_str(), suffix.c_str(), runts1[1].c_str(), suffix.c_str(), runts2[1].c_str(), adderrordata ? "_w_error_and_trig_data" : ""), "RECREATE");
+        outputfile->cd();
+
+        if (layernum >= 0) {
+                    string objname = "ThrNoiseChipAverageIB";
+                    cout << "\nAll data in " << taskname[layernum] + "/" + objname << " between run" << runts1[1] << " and run" << runts2[1] << " are going to be downloaded." << endl;
+                    Download(1, ccdb, ccdbApi, taskname[layernum], objname, runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), layernum, vector<string>());
+         
+        }//end if layernum>=0
+
+        else if (layernum == -1) {
+                    for (int ilay = 0; ilay <= 2; ilay++) {
+                        string objname = "ThrNoiseChipAverageIB";
+                        cout << "\nAll data in " << taskname[ilay] + "/" + objname << " between run" << runts1[1] << " and run" << runts2[1] << " are going to be downloaded." << endl;
+                        Download(1, ccdb, ccdbApi, taskname[ilay], objname, runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), ilay, vector<string>());
+                    }
+              
+        }//end if layernum==-1
+        break;
+    }// end of case 2
   }//end switch
 
   outputfile->Close();
@@ -1034,8 +1063,8 @@ case 4: { //FEE
 //
 vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run2, string runtype, string qcpathstart){//run type can be "Thr" or "Fhr"
 
-  string objnames[4] = {"Threshold/Layer0/Threshold_Vs_Chip_and_Stave", "Threshold/Layer1/Threshold_Vs_Chip_and_Stave", "Threshold/Layer2/Threshold_Vs_Chip_and_Stave", "Threshold/Layer2/Threshold_Vs_Chip_and_Stave"};
-  string tasknames[4] = {qcpathstart+"ITS/MO/ITSTHRTask0", qcpathstart+"ITS/MO/ITSTHRTask1", qcpathstart+"ITS/MO/ITSTHRTask2T", qcpathstart+"ITS/MO/ITSTHRTask2B"};
+  string objnames[4] = {"ThrNoiseChipAverageIB", "ThrNoiseChipAverageIB", "ThrNoiseChipAverageIB", "ThrNoiseChipAverageIB"};
+  string tasknames[4] = {qcpathstart+"ITS/MO/ITSThresholdCalibrationTask", qcpathstart+"ITS/MO/ITSThresholdCalibrationTask", qcpathstart+"ITS/MO/ITSThresholdCalibrationTask", qcpathstart+"ITS/MO/ITSTHRTask2B"};
 
   //in case of FHR
   if(runtype=="Fhr"){
