@@ -997,6 +997,14 @@ bool RunExpert(CcdbDatabase *ccdb, int opt, std::string syncasync){
                         string objname = "ThrNoiseChipAverageIB";
                         cout << "\nAll data in " << taskname[layernumEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
                         Download(choice, ccdb, ccdbApi, taskname[layernumEff], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
+                      
+                        objname = "ThrNoiseChipAverageML";
+                        cout << "\nAll data in " << taskname[layernumEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+                        Download(choice, ccdb, ccdbApi, taskname[layernumEff], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
+                        
+                        objname = "ThrNoiseChipAverageOL";
+                        cout << "\nAll data in " << taskname[layernumEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+                        Download(choice, ccdb, ccdbApi, taskname[layernumEff], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
                 }//end loop on lists
             }//end if layernum>=0
 
@@ -1008,6 +1016,14 @@ bool RunExpert(CcdbDatabase *ccdb, int opt, std::string syncasync){
                             if (IBorOB == 1) ilayEff = ilay + 1;
                             else if (IBorOB == 2 && ilay >= 3) ilayEff = ilay + 1;
                             string objname = "ThrNoiseChipAverageIB";
+                            cout << "\nAll data in " << taskname[ilayEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+                            Download(choice, ccdb, ccdbApi, taskname[ilayEff], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay, runlistfromfile);
+
+                            objname = "ThrNoiseChipAverageML";
+                            cout << "\nAll data in " << taskname[ilayEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+                            Download(choice, ccdb, ccdbApi, taskname[ilayEff], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay, runlistfromfile);
+
+                            objname = "ThrNoiseChipAverageOL";
                             cout << "\nAll data in " << taskname[ilayEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
                             Download(choice, ccdb, ccdbApi, taskname[ilayEff], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay, runlistfromfile);
                         }
