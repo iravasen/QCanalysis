@@ -195,7 +195,7 @@ array<string,2> GetRunWithTS24hAgo(o2::ccdb::CcdbApi ccdbApi, string taskname, s
 }
 
 //
-// Expert mode
+// Shift mode
 //
 bool RunShifter(CcdbDatabase *ccdb, int opt, std::string syncasync){
 
@@ -891,7 +891,7 @@ bool RunExpert(CcdbDatabase *ccdb, int opt, std::string syncasync){
       }//end if layernum==-1
       break;
     }//end case 1
-
+          /*
     case 2: {// thresholds
       vector<string> goodrunlist = GetGoodRunList(ccdbApi, run1, run2, "Thr", qcpathstart); //good run list
       if(layernum>=0){
@@ -989,6 +989,32 @@ bool RunExpert(CcdbDatabase *ccdb, int opt, std::string syncasync){
       }//end if layernum==-1
       break;
     }// end of case 2
+          */
+        case 2: {// thresholds
+            vector<string> goodrunlist = GetGoodRunList(ccdbApi, run1, run2, "Thr", qcpathstart); //good run list
+            if (layernum >= 0) {
+                for (int il = 0; il < nListElements; il++) {//loop on lists
+                        string objname = "ThrNoiseChipAverageIB";
+                        cout << "\nAll data in " << taskname[layernumEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+                        Download(choice, ccdb, ccdbApi, taskname[layernumEff], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
+                }//end loop on lists
+            }//end if layernum>=0
+
+            else if (layernum == -1) {
+                for (int il = 0; il < nListElements; il++) {//loop on lists
+                        //for(int ilay=0; ilay<=2; ilay++){
+                        for (int ilay = ilayMin; ilay <= ilayMax; ilay++) {
+                            int ilayEff = ilay;
+                            if (IBorOB == 1) ilayEff = ilay + 1;
+                            else if (IBorOB == 2 && ilay >= 3) ilayEff = ilay + 1;
+                            string objname = "ThrNoiseChipAverageIB";
+                            cout << "\nAll data in " << taskname[ilayEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+                            Download(choice, ccdb, ccdbApi, taskname[ilayEff], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay, runlistfromfile);
+                        }
+                 }//end loop on lists
+            }//end if layernum==-1
+            break;
+        }// end of case 2
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
