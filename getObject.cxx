@@ -631,14 +631,14 @@ bool RunExpert(CcdbDatabase *ccdb, int opt, std::string syncasync){
 
     case 2: { //thr scan
       // path name to be changed
-      taskname[0] = qcpathstart+"ITS/MO/ITSTHRTask0";
-      taskname[1] = qcpathstart+"ITS/MO/ITSTHRTask1";
-      taskname[2] = qcpathstart+"ITS/MO/ITSTHRTask2T";
-      taskname[3] = qcpathstart+"ITS/MO/ITSTHRTask2B";
-      taskname[4] = qcpathstart+"ITS/MO/ITSTHRTask0";
-      taskname[5] = qcpathstart+"ITS/MO/ITSTHRTask1";
-      taskname[6] = qcpathstart+"ITS/MO/ITSTHRTask2T";
-      taskname[7] = qcpathstart+"ITS/MO/ITSTHRTask2B";
+      taskname[0] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[1] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[2] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[3] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[4] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[5] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[6] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[7] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
 
       break;
     }
