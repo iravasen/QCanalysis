@@ -991,44 +991,43 @@ bool RunExpert(CcdbDatabase *ccdb, int opt, std::string syncasync){
     }// end of case 2
           */
         case 2: {// thresholds
-            vector<string> goodrunlist = GetGoodRunList(ccdbApi, run1, run2, "Thr", qcpathstart); //good run list
-            if (layernum >= 0) {
-                for (int il = 0; il < nListElements; il++) {//loop on lists
+            //vector<string> goodrunlist = GetGoodRunList(ccdbApi, run1, run2, "Thr", qcpathstart); //good run list
+            string tskn = "qc/ITS/MO/ITSThresholdCalibrationTask";
+
                         string objname = "ThrNoiseChipAverageIB";
-                        cout << "\nAll data in " << taskname[layernumEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
-                        Download(choice, ccdb, ccdbApi, taskname[layernumEff], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
+                        cout << "\nAll data in " << tskn + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+                        Download(choice, ccdb, ccdbApi, tskn, objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
                       
                         objname = "ThrNoiseChipAverageML";
-                        cout << "\nAll data in " << taskname[layernumEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
-                        Download(choice, ccdb, ccdbApi, taskname[layernumEff], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
+                        cout << "\nAll data in " << tskn + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+                        Download(choice, ccdb, ccdbApi, tskn, objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
                         
                         objname = "ThrNoiseChipAverageOL";
-                        cout << "\nAll data in " << taskname[layernumEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
-                        Download(choice, ccdb, ccdbApi, taskname[layernumEff], objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
-                }//end loop on lists
-            }//end if layernum>=0
+                        cout << "\nAll data in " << tskn + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+                        Download(choice, ccdb, ccdbApi, tskn, objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
 
-            else if (layernum == -1) {
-                for (int il = 0; il < nListElements; il++) {//loop on lists
-                        //for(int ilay=0; ilay<=2; ilay++){
-                        for (int ilay = ilayMin; ilay <= ilayMax; ilay++) {
-                            int ilayEff = ilay;
-                            if (IBorOB == 1) ilayEff = ilay + 1;
-                            else if (IBorOB == 2 && ilay >= 3) ilayEff = ilay + 1;
-                            string objname = "ThrNoiseChipAverageIB";
-                            cout << "\nAll data in " << taskname[ilayEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
-                            Download(choice, ccdb, ccdbApi, taskname[ilayEff], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay, runlistfromfile);
+            
 
-                            objname = "ThrNoiseChipAverageML";
-                            cout << "\nAll data in " << taskname[ilayEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
-                            Download(choice, ccdb, ccdbApi, taskname[ilayEff], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay, runlistfromfile);
+           
+            //            //for(int ilay=0; ilay<=2; ilay++){
+            //            for (int ilay = ilayMin; ilay <= ilayMax; ilay++) {
+            //                int ilayEff = ilay;
+            //                if (IBorOB == 1) ilayEff = ilay + 1;
+            //                else if (IBorOB == 2 && ilay >= 3) ilayEff = ilay + 1;
+            //                string objname = "ThrNoiseChipAverageIB";
+            //                cout << "\nAll data in " << taskname[ilayEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+            //                Download(choice, ccdb, ccdbApi, taskname[ilayEff], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay, runlistfromfile);
 
-                            objname = "ThrNoiseChipAverageOL";
-                            cout << "\nAll data in " << taskname[ilayEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
-                            Download(choice, ccdb, ccdbApi, taskname[ilayEff], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay, runlistfromfile);
-                        }
-                 }//end loop on lists
-            }//end if layernum==-1
+            //                objname = "ThrNoiseChipAverageML";
+            //                cout << "\nAll data in " << taskname[ilayEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+            //                Download(choice, ccdb, ccdbApi, taskname[ilayEff], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay, runlistfromfile);
+
+            //                objname = "ThrNoiseChipAverageOL";
+            //                cout << "\nAll data in " << taskname[ilayEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+            //                Download(choice, ccdb, ccdbApi, taskname[ilayEff], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay, runlistfromfile);
+            //            }
+            //     }//end loop on lists
+            //}//end if layernum==-1
             break;
         }// end of case 2
 
@@ -1590,7 +1589,7 @@ if(objname.find("LaneStatus") != string::npos){
       else if(objname.find("Trigger")!=string::npos)
         histname = Form("h2_trg%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
       else
-        histname = Form("h2_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+          histname = Form("h2%s%s_%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", objname.substr(objname.size() - 2, 2), timestamps[i]);
 
       h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
       if(/*objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos
