@@ -1589,7 +1589,7 @@ if(objname.find("LaneStatus") != string::npos){
       else if(objname.find("Trigger")!=string::npos)
         histname = Form("h2_trg%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
       else
-          histname = Form("h2%s%s_%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", objname.substr(objname.size() - 2, 2), timestamps[i]);
+          histname = Form("h2%s%s_%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", objname.substr(objname.size() - 2, 2).c_str(), timestamps[i]);
 
       h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
       if(/*objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos
