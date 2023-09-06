@@ -989,7 +989,10 @@ case 4: { //FEE
       Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/ITSFEE","LaneStatus/laneStatusFlagCumulativeFAULT", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
       Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/ITSFEE","LaneStatus/laneStatusFlagCumulativeWARNING", run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
       string objname = "TriggerVsFeeid";
-      cout<<"\nAll data in "<<qcpathstart<< "ITS/MO/ITSFEE/"<<objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;
+      cout<<"\nAll data in "<<qcpathstart<< "ITS/MO/ITSFEE/"<<objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;  
+      Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/ITSFEE", objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
+      objname = "RDHSummaryCumulative";
+      cout<<"\nAll data in "<<qcpathstart<< "ITS/MO/ITSFEE/"<<objname<<" between run"<<run1<<" and run"<<run2<<" are going to be downloaded."<<endl;  
       Download(choice, ccdb, ccdbApi, qcpathstart+"ITS/MO/ITSFEE", objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, 0, runlistfromfile);
       break;
     }//end of case 4
@@ -1518,6 +1521,8 @@ if(objname.find("LaneStatus") != string::npos){
         histname = Form("h2_err%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
       else if(objname.find("Trigger")!=string::npos)
         histname = Form("h2_trg%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+      else if(objname.find("RDHSummaryCumulative")!=string::npos)
+	histname = Form("h2_RDH%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
       else
         histname = Form("h2_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
 
