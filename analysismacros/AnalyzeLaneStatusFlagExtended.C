@@ -385,6 +385,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
     }
 
     for (int iFid = 0; iFid < 432; iFid++) {
+
+      int laneinfeeid = iFid < 145 ? 3 : iFid < 252 ? 8 : 14;
       
       hbfNOK = 0;
       
@@ -392,12 +394,11 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
 	hbfNOK += herrcumulative[iRev]->GetBinContent(iFid + 1, iLane + 1) + hfaultcumulative[iRev]->GetBinContent(iFid + 1, iLane + 1);
       }
       if (UseRecoveryFlag && hRDH.size()>0 ){
-	hbfNOK += 0.5*hRDH[iRev]->GetBinContent(iFid+1, 6); // RDH is read twice per orbit
+	hbfNOK += laneinfeeid*0.5*hRDH[iRev]->GetBinContent(iFid+1, 6); // 0.5 because RDH is read twice per orbit
       }
       
       double Norbit = htrg[iRev]->GetBinContent(iFid + 1, 1); // Number of ORBIT triggers seen by this FEEID
 
-      int laneinfeeid = iFid < 145 ? 3 : iFid < 252 ? 8 : 14;
       if (Norbit > 0)
         hbfNOK /= (Norbit * laneinfeeid);
       else
