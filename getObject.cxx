@@ -195,7 +195,7 @@ array<string,2> GetRunWithTS24hAgo(o2::ccdb::CcdbApi ccdbApi, string taskname, s
 }
 
 //
-// Expert mode
+// Shift mode
 //
 bool RunShifter(CcdbDatabase *ccdb, int opt, std::string syncasync){
 
@@ -231,10 +231,10 @@ bool RunShifter(CcdbDatabase *ccdb, int opt, std::string syncasync){
     }
 
     case 2: { //thr scan
-      taskname[0] = qcpathstart+"ITS/MO/ITSTHRTask0";
-      taskname[1] = qcpathstart+"ITS/MO/ITSTHRTask1";
-      taskname[2] = qcpathstart+"ITS/MO/ITSTHRTask2T";
-      taskname[3] = qcpathstart+"ITS/MO/ITSTHRTask2B";
+      taskname[0] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[1] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[2] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[3] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
       break;
     }
 
@@ -384,7 +384,7 @@ bool RunShifter(CcdbDatabase *ccdb, int opt, std::string syncasync){
       }//end if layernum==-1
       break;
     }//end case 1
-
+    /*
     case 2: {//thresholds
       //run interval definition
       cout<<"Finding runs in: "<<taskname[0]<<"/Threshold/Layer0/Threshold_Vs_Chip_and_Stave"<<endl;
@@ -479,7 +479,36 @@ bool RunShifter(CcdbDatabase *ccdb, int opt, std::string syncasync){
       }//end if layernum==-1
       break;
     }// end of case 2
+          */
+    case 2: {//thresholds
+        //run interval definition
+        cout << "Finding runs in: " << taskname[0] << "ThrNoiseChipAverageIB" << endl;
+        runts2 = GetLastRunWithTS(ccdbApi, taskname[0], "ThrNoiseChipAverageIB"); //take a random object name since run-list is the same.
+        runts1 = GetRunWithTS24hAgo(ccdbApi, taskname[0], "ThrNoiseChipAverageIB", runts2[0]);
+        vector<string> goodrunlist = GetGoodRunList(ccdbApi, runts1[1], runts2[1], "Thr", qcpathstart);
+        cout << "Run interval selected:       " << runts1[1] << "-" << runts2[1] << endl;
+        cout << "Timestamp interval selected: " << runts1[0] << "-" << runts2[0] << endl;
 
+        outputfile = new TFile(Form("Data/Output%s_%s_from_%s%s_to_%s%s%s.root", layername.c_str(), optname.c_str(), suffix.c_str(), runts1[1].c_str(), suffix.c_str(), runts2[1].c_str(), adderrordata ? "_w_error_and_trig_data" : ""), "RECREATE");
+        outputfile->cd();
+
+        if (layernum >= 0) {
+                    string objname = "ThrNoiseChipAverageIB";
+                    cout << "\nAll data in " << taskname[layernum] + "/" + objname << " between run" << runts1[1] << " and run" << runts2[1] << " are going to be downloaded." << endl;
+                    Download(1, ccdb, ccdbApi, taskname[layernum], objname, runts1[1], runts2[1], vector<string>(), stol(runts1[0]), stol(runts2[0]), layernum, vector<string>());
+         
+        }//end if layernum>=0
+
+        else if (layernum == -1) {
+                    for (int ilay = 0; ilay <= 2; ilay++) {
+                        string objname = "ThrNoiseChipAverageIB";
+                        cout << "\nAll data in " << taskname[ilay] + "/" + objname << " between run" << runts1[1] << " and run" << runts2[1] << " are going to be downloaded." << endl;
+                        Download(1, ccdb, ccdbApi, taskname[ilay], objname, runts1[1], runts2[1], goodrunlist, stol(runts1[0]), stol(runts2[0]), ilay, vector<string>());
+                    }
+              
+        }//end if layernum==-1
+        break;
+    }// end of case 2
   }//end switch
 
   outputfile->Close();
@@ -602,14 +631,14 @@ bool RunExpert(CcdbDatabase *ccdb, int opt, std::string syncasync){
 
     case 2: { //thr scan
       // path name to be changed
-      taskname[0] = qcpathstart+"ITS/MO/ITSTHRTask0";
-      taskname[1] = qcpathstart+"ITS/MO/ITSTHRTask1";
-      taskname[2] = qcpathstart+"ITS/MO/ITSTHRTask2T";
-      taskname[3] = qcpathstart+"ITS/MO/ITSTHRTask2B";
-      taskname[4] = qcpathstart+"ITS/MO/ITSTHRTask0";
-      taskname[5] = qcpathstart+"ITS/MO/ITSTHRTask1";
-      taskname[6] = qcpathstart+"ITS/MO/ITSTHRTask2T";
-      taskname[7] = qcpathstart+"ITS/MO/ITSTHRTask2B";
+      taskname[0] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[1] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[2] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[3] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[4] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[5] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[6] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
+      taskname[7] = qcpathstart+"ITS/MO/ITSThresholdCalibrationTask";
 
       break;
     }
@@ -862,7 +891,7 @@ bool RunExpert(CcdbDatabase *ccdb, int opt, std::string syncasync){
       }//end if layernum==-1
       break;
     }//end case 1
-
+          /*
     case 2: {// thresholds
       vector<string> goodrunlist = GetGoodRunList(ccdbApi, run1, run2, "Thr", qcpathstart); //good run list
       if(layernum>=0){
@@ -960,6 +989,47 @@ bool RunExpert(CcdbDatabase *ccdb, int opt, std::string syncasync){
       }//end if layernum==-1
       break;
     }// end of case 2
+          */
+        case 2: {// thresholds
+            //vector<string> goodrunlist = GetGoodRunList(ccdbApi, run1, run2, "Thr", qcpathstart); //good run list
+            string tskn = "qc/ITS/MO/ITSThresholdCalibrationTask";
+
+                        string objname = "ThrNoiseChipAverageIB";
+                        cout << "\nAll data in " << tskn + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+                        Download(choice, ccdb, ccdbApi, tskn, objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
+                      
+                        objname = "ThrNoiseChipAverageML";
+                        cout << "\nAll data in " << tskn + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+                        Download(choice, ccdb, ccdbApi, tskn, objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
+                        
+                        objname = "ThrNoiseChipAverageOL";
+                        cout << "\nAll data in " << tskn + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+                        Download(choice, ccdb, ccdbApi, tskn, objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
+
+            
+
+           
+            //            //for(int ilay=0; ilay<=2; ilay++){
+            //            for (int ilay = ilayMin; ilay <= ilayMax; ilay++) {
+            //                int ilayEff = ilay;
+            //                if (IBorOB == 1) ilayEff = ilay + 1;
+            //                else if (IBorOB == 2 && ilay >= 3) ilayEff = ilay + 1;
+            //                string objname = "ThrNoiseChipAverageIB";
+            //                cout << "\nAll data in " << taskname[ilayEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+            //                Download(choice, ccdb, ccdbApi, taskname[ilayEff], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay, runlistfromfile);
+
+            //                objname = "ThrNoiseChipAverageML";
+            //                cout << "\nAll data in " << taskname[ilayEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+            //                Download(choice, ccdb, ccdbApi, taskname[ilayEff], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay, runlistfromfile);
+
+            //                objname = "ThrNoiseChipAverageOL";
+            //                cout << "\nAll data in " << taskname[ilayEff] + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+            //                Download(choice, ccdb, ccdbApi, taskname[ilayEff], objname, run1, run2, goodrunlist, (long)ts_start, (long)ts_end, ilay, runlistfromfile);
+            //            }
+            //     }//end loop on lists
+            //}//end if layernum==-1
+            break;
+        }// end of case 2
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1034,8 +1104,8 @@ case 4: { //FEE
 //
 vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run2, string runtype, string qcpathstart){//run type can be "Thr" or "Fhr"
 
-  string objnames[4] = {"Threshold/Layer0/Threshold_Vs_Chip_and_Stave", "Threshold/Layer1/Threshold_Vs_Chip_and_Stave", "Threshold/Layer2/Threshold_Vs_Chip_and_Stave", "Threshold/Layer2/Threshold_Vs_Chip_and_Stave"};
-  string tasknames[4] = {qcpathstart+"ITS/MO/ITSTHRTask0", qcpathstart+"ITS/MO/ITSTHRTask1", qcpathstart+"ITS/MO/ITSTHRTask2T", qcpathstart+"ITS/MO/ITSTHRTask2B"};
+  string objnames[4] = {"ThrNoiseChipAverageIB", "ThrNoiseChipAverageIB", "ThrNoiseChipAverageIB", "ThrNoiseChipAverageIB"};
+  string tasknames[4] = {qcpathstart+"ITS/MO/ITSThresholdCalibrationTask", qcpathstart+"ITS/MO/ITSThresholdCalibrationTask", qcpathstart+"ITS/MO/ITSThresholdCalibrationTask", qcpathstart+"ITS/MO/ITSTHRTask2B"};
 
   //in case of FHR
   if(runtype=="Fhr"){
@@ -1319,7 +1389,7 @@ bool GetListOfHisto(CcdbDatabase* ccdb, string taskname, string objname, vector<
       //if(strstr(c,"TH2")!=nullptr){
       if(c.find("TH2")!=string::npos){
         string histname = "";
-        histname = Form("h2_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers2[i]) : "", timestamps2[i]);
+        histname = Form("h2%s%s_%s_%ld", isperstave ? Form("_Stv%s", stvnum.c_str()) : "", isrunknown ? Form("_run%d", runnumbers[i]) : "", objname.substr(objname.size() - 2, 2).c_str(), timestamps[i])
 
         h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
         outputfile->cd();
@@ -1519,7 +1589,7 @@ if(objname.find("LaneStatus") != string::npos){
       else if(objname.find("Trigger")!=string::npos)
         histname = Form("h2_trg%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
       else
-        histname = Form("h2_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+          histname = Form("h2%s%s_%s_%ld", isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", objname.substr(objname.size() - 2, 2).c_str(), timestamps[i]);
 
       h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
       if(/*objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos
