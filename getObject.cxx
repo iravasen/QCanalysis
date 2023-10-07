@@ -1389,7 +1389,7 @@ bool GetListOfHisto(CcdbDatabase* ccdb, string taskname, string objname, vector<
       //if(strstr(c,"TH2")!=nullptr){
       if(c.find("TH2")!=string::npos){
         string histname = "";
-        histname = Form("h2_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers2[i]) : "", timestamps2[i]);
+        histname = Form("h2%s%s_%s_%ld", isperstave ? Form("_Stv%s", stvnum.c_str()) : "", isrunknown ? Form("_run%d", runnumbers[i]) : "", objname.substr(objname.size() - 2, 2).c_str(), timestamps[i])
 
         h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
         outputfile->cd();
