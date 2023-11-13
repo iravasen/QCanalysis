@@ -21,7 +21,7 @@ void MakeNoisyPixFraction(string filename, string runnum){
   string hs;
   int layer, stave, mod, chipinmod, row, col;
   std::map<std::string, int> totalnoisypix; // stave id --> noisy pix
-  TH1D *hhits = new TH1D("hhits",Form("Percentage of noisy pixels per stave in ITS2 - Cosmic run %s - ITS2 framing rate 202 kHz - Recorded readout frames (ROF): 27.5 #times 10^{6} - Stave average thresholds: 100 #it{e}^{-};Stave ID;Noisy pixels (%%)",runnum.c_str()), nstavestot,0,(double)nstavestot);
+  TH1D *hhits = new TH1D("hhits",Form("Percentage of noisy pixels per stave in ITS2 - Cosmic run %s - ITS2 framing 67 kHz - Recorded readout frames (ROF): 27.5 #times 10^{6} - Stave average thresholds: 100 #it{e}^{-};Stave ID;Noisy pixels (%%)",runnum.c_str()), nstavestot,0,(double)nstavestot);
   string intro;
   TLine *lineIBOB = new TLine(48,3e-4,48, 4e-2);
   lineIBOB->SetLineStyle(2);
@@ -103,5 +103,5 @@ void MakeNoisyPixFraction(string filename, string runnum){
   b3->Draw("same");
   lat->DrawLatex(10,0.009,"50 pixels/chip");
 
-  c->SaveAs(Form("../Plots/noisypix_fraction_%s.eps",runnum.c_str()));
+  c->SaveAs(Form("../Plots/noisypix_fraction_%s.pdf",runnum.c_str()));
 }
