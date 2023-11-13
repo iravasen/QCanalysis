@@ -19,15 +19,15 @@ using namespace o2::quality_control::core;
 
 //functions to download data
 string GetCorrectTS(string selrun, vector<string> runs, vector<string> timestamps);
-array<string,2> GetLastRunWithTS(o2::ccdb::CcdbApi ccdbApi, string taskname, string objname);
-array<string,2> GetRunWithTS24hAgo(o2::ccdb::CcdbApi ccdbApi, string taskname, string objname, string timestamp);
-vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run2, string runtype, string qcpathstart);
+array<string,2> GetLastRunWithTS(o2::ccdb::CcdbApi &ccdbApi, string taskname, string objname);
+array<string,2> GetRunWithTS24hAgo(o2::ccdb::CcdbApi &ccdbApi, string taskname, string objname, string timestamp);
+vector<string> GetGoodRunList(o2::ccdb::CcdbApi &ccdbApi, string run1, string run2, string runtype, string qcpathstart);
 bool RunShifter(CcdbDatabase *ccdb, int opt, string syncasync);
 bool RunExpert(CcdbDatabase *ccdb, int opt, string syncasync);
-void DownloadTimestamps(CcdbDatabase *ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname, string objname, long int ts_start, long int ts_end, int lnum);
-void DownloadRuns(CcdbDatabase *ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, int lnum, vector<string> runlistfromfile);
+void DownloadTimestamps(CcdbDatabase *ccdb, o2::ccdb::CcdbApi &ccdbApi, string taskname, string objname, long int ts_start, long int ts_end, int lnum);
+void DownloadRuns(CcdbDatabase *ccdb, o2::ccdb::CcdbApi &ccdbApi, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, int lnum, vector<string> runlistfromfile);
 bool GetListOfHisto(CcdbDatabase* ccdb, string taskname, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers, vector<int>runnumbers2);
-bool Download(int choice, CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, long int ts_start, long int ts_end, int lnum, vector<string> runlistfromfile);
+bool Download(int choice, CcdbDatabase* ccdb, o2::ccdb::CcdbApi &ccdbApi, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, long int ts_start, long int ts_end, int lnum, vector<string> runlistfromfile);
 string GetOptName(int opt);
 string GetListName(int opt, int ilist);
 
@@ -138,7 +138,7 @@ void getObject(string expOrShift, int whatToDownload)
 //
 //Get Last (most recent) Run
 //
-array<string,2> GetLastRunWithTS(o2::ccdb::CcdbApi ccdbApi, string taskname, string objname){
+array<string,2> GetLastRunWithTS(o2::ccdb::CcdbApi &ccdbApi, string taskname, string objname){
 
   string objectlist = ccdbApi.list(taskname + "/" + objname,false,"text/plain");
   stringstream ss(objectlist);
@@ -164,7 +164,7 @@ array<string,2> GetLastRunWithTS(o2::ccdb::CcdbApi ccdbApi, string taskname, str
 //
 // Get Run 24h depending on the actual time stamp
 //
-array<string,2> GetRunWithTS24hAgo(o2::ccdb::CcdbApi ccdbApi, string taskname, string objname, string timestamp){
+array<string,2> GetRunWithTS24hAgo(o2::ccdb::CcdbApi &ccdbApi, string taskname, string objname, string timestamp){
 
   string objectlist = ccdbApi.list(taskname + "/" + objname,false,"text/plain");
   stringstream ss(objectlist);
@@ -1035,7 +1035,7 @@ case 4: { //FEE
 //
 // Return run list of GOOD runs = runs in all CCDB paths for TH2
 //
-vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run2, string runtype, string qcpathstart){//run type can be "Thr" or "Fhr"
+vector<string> GetGoodRunList(o2::ccdb::CcdbApi &ccdbApi, string run1, string run2, string runtype, string qcpathstart){//run type can be "Thr" or "Fhr"
 
   string objnames[4] = {"Threshold/Layer0/Threshold_Vs_Chip_and_Stave", "Threshold/Layer1/Threshold_Vs_Chip_and_Stave", "Threshold/Layer2/Threshold_Vs_Chip_and_Stave", "Threshold/Layer2/Threshold_Vs_Chip_and_Stave"};
   string tasknames[4] = {qcpathstart+"ITS/MO/ITSTHRTask0", qcpathstart+"ITS/MO/ITSTHRTask1", qcpathstart+"ITS/MO/ITSTHRTask2T", qcpathstart+"ITS/MO/ITSTHRTask2B"};
@@ -1105,7 +1105,7 @@ vector<string> GetGoodRunList(o2::ccdb::CcdbApi ccdbApi, string run1, string run
 //
 // Download data based on timestamps
 //
-void DownloadTimestamps(CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname, string objname, long int ts_start, long int ts_end, int lnum){
+void DownloadTimestamps(CcdbDatabase* ccdb, o2::ccdb::CcdbApi &ccdbApi, string taskname, string objname, long int ts_start, long int ts_end, int lnum){
 
   //Extract all the time stamps of the object
   string objectlist = ccdbApi.list(taskname + "/" + objname,false,"text/plain");
@@ -1152,7 +1152,7 @@ void DownloadTimestamps(CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string ta
 //
 // Download data based on run numbers - available in metadata from 03/07/2019 21.49 (run 582 --> fake hit scan)
 //
-void DownloadRuns(CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, int lnum, vector<string> runlistfromfile){
+void DownloadRuns(CcdbDatabase* ccdb, o2::ccdb::CcdbApi &ccdbApi, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, int lnum, vector<string> runlistfromfile){
   
   bool isQCAsync = taskname.find("qc_async")!=string::npos;
   
@@ -1566,7 +1566,7 @@ if(objname.find("LaneStatus") != string::npos){
 //
 // Download depending on the choice
 //
-bool Download(int choice, CcdbDatabase* ccdb, o2::ccdb::CcdbApi ccdbApi, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, long int ts_start, long int ts_end, int lnum, vector<string> runlistfromfile){
+bool Download(int choice, CcdbDatabase* ccdb, o2::ccdb::CcdbApi &ccdbApi, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, long int ts_start, long int ts_end, int lnum, vector<string> runlistfromfile){
 
   switch(choice){
     case 1: {
