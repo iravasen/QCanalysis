@@ -8,6 +8,10 @@
 #include "QualityControl/QcInfoLogger.h"
 #include "QualityControl/CcdbDatabase.h"
 #include "inc/ccdb.h"
+#include "TGraph.h"
+#include "TCanvas.h"
+#include "TLegend.h"
+
 
 using namespace o2::quality_control::repository;
 using namespace o2::quality_control::core;
