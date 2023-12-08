@@ -26,7 +26,7 @@ bool RunShifter(CcdbDatabase *ccdb, int opt, string syncasync);
 bool RunExpert(CcdbDatabase *ccdb, int opt, string syncasync);
 void DownloadTimestamps(CcdbDatabase *ccdb, o2::ccdb::CcdbApi &ccdbApi, string taskname, string objname, long int ts_start, long int ts_end, int lnum);
 void DownloadRuns(CcdbDatabase *ccdb, o2::ccdb::CcdbApi &ccdbApi, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, int lnum, vector<string> runlistfromfile);
-bool GetListOfHisto(CcdbDatabase* ccdb, string taskname, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers, vector<int>runnumbers2);
+bool GetListOfHisto(o2::ccdb::CcdbApi &ccdbApi, string taskname, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers, vector<int>runnumbers2);
 bool Download(int choice, CcdbDatabase* ccdb, o2::ccdb::CcdbApi &ccdbApi, string taskname, string objname, string run1, string run2, vector<string> goodrunlist, long int ts_start, long int ts_end, int lnum, vector<string> runlistfromfile);
 string GetOptName(int opt);
 string GetListName(int opt, int ilist);
@@ -1143,7 +1143,7 @@ void DownloadTimestamps(CcdbDatabase* ccdb, o2::ccdb::CcdbApi &ccdbApi, string t
 
   bool isperstave = 0;
   if(objname.find("HITMAP")!=string::npos) isperstave = 1;
-  GetListOfHisto(ccdb, taskname, objname, timestamps_selperiod, vector<long int>(), lnum, 0, isperstave, vector<int>(), vector<int>());
+  GetListOfHisto(ccdbApi, taskname, objname, timestamps_selperiod, vector<long int>(), lnum, 0, isperstave, vector<int>(), vector<int>());
 
   timestamps_selperiod.clear();
 }
@@ -1253,7 +1253,7 @@ void DownloadRuns(CcdbDatabase* ccdb, o2::ccdb::CcdbApi &ccdbApi, string tasknam
 
   bool isperstave = 0;
   if(objname.find("HITMAP")!=string::npos) isperstave = 1;
-  GetListOfHisto(ccdb, taskname, objname, timestamps_selperiod, vector<long int>(), lnum, 1, isperstave, runs_selperiod, vector<int>());
+  GetListOfHisto(ccdbApi, taskname, objname, timestamps_selperiod, vector<long int>(), lnum, 1, isperstave, runs_selperiod, vector<int>());
 
   timestamps_selperiod.clear();
   runs_selperiod.clear();
@@ -1279,7 +1279,7 @@ string GetCorrectTS(string selrun, vector<string> runs, vector<string> timestamp
 //
 //Get list of histogram inside an object
 //
-bool GetListOfHisto(CcdbDatabase* ccdb, string taskname, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers, vector<int>runnumbers2){
+bool GetListOfHisto(o2::ccdb::CcdbApi &ccdbApi, string taskname, string objname, vector<long int> timestamps, vector<long int> timestamps2, int lnum, bool isrunknown, bool isperstave, vector<int>runnumbers, vector<int>runnumbers2){
 
   string qcpathstart;
   if(taskname.find("qc_async")!=string::npos) {
@@ -1297,66 +1297,18 @@ bool GetListOfHisto(CcdbDatabase* ccdb, string taskname, string objname, vector<
       stvnum = objname.substr(objname.find("Stave")+5,1);
   }
 
- // cout<<"timestamps  size: "<<timestamps.size()<<endl;
- // cout<<"timestamps2 size: "<<timestamps2.size()<<endl;
-
-  //in case L2T is missing (excluded)
-  if((int)timestamps.size()==0 && (objname.find("Layer2/Threshold_Vs_Chip_and_Stave")!=string::npos || objname.find("Layer2/DeadPixel_Vs_Chip_and_Stave")!=string::npos)){
-    for(int i=0; i<(int)timestamps2.size();i++){
-
-      //MonitorObject *monitor = ccdb->retrieve(taskname, objname, timestamps[i]);
-
-      auto monitor = ccdb->retrieveMO(Form("ITS/MO/ITS%sTask2B",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw"), objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i], { 0, 0, "", "", qcpathstart });
-
-      if (monitor == nullptr) {
-        cerr << "Failed to get MonitorObject for timestamp: " << timestamps[i]<< endl;
-        return 0;
-      }
-
-      TObject *obj = nullptr;
-      obj = monitor->getObject();
-      monitor->setIsOwner(false);
-      string c = obj->ClassName();
-      TH2 *h2s = 0x0;
-
-      //if(strstr(c,"TH2")!=nullptr){
-      if(c.find("TH2")!=string::npos){
-        string histname = "";
-        histname = Form("h2_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers2[i]) : "", timestamps2[i]);
-
-        h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
-        outputfile->cd();
-        h2s->Write();
-      }
-    }
-  }
-
   //General case
-  for(int i=0; i<(int)timestamps.size();i++){
-
-    //MonitorObject *monitor = ccdb->retrieve(taskname, objname, timestamps[i]);
-
-    auto monitor = ccdb->retrieveMO(qcpathstart=="qc_async" ? taskname.substr(9) : taskname.substr(3), objname, timestamps[i], { 0, 0, "", "", qcpathstart });
-
-    if (monitor == nullptr) {
-      cerr << "Failed to get MonitorObject for timestamp: " << timestamps[i]<< endl;
+  for(int i=0; i<(int)timestamps.size();i++){	  
+    std::map<std::string, std::string> metadata;
+    metadata["RunNumber"] = std::to_string(runnumbers[i]);
+    auto *obj = ccdbApi.retrieveFromTFileAny<TObject>(taskname+"/"+objname, metadata, timestamps[i]);
+    if (obj == nullptr) {
+      cerr << "Failed to get TObject for timestamp: " << timestamps[i]<< endl;
       return 0;
     }
 
-    TObject *obj = nullptr;
-    obj = monitor->getObject();
-    monitor->setIsOwner(false);
-    //for L2B only
-    TObject *obj2 = nullptr;
-    if(/*objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos
-       || */objname.find("Layer2/Threshold_Vs_Chip_and_Stave")!=string::npos || objname.find("Layer2/DeadPixel_Vs_Chip_and_Stave")!=string::npos){
-      auto monitor2 = ccdb->retrieveMO(Form("ITS/MO/ITS%sTask2B",objname.find("Chip_and_Stave")!=string::npos ? "THR":"Raw"), objname, timestamps2.size()>0 ? timestamps2[i]:timestamps[i], { 0, 0, "", "", qcpathstart });
-      obj2 = monitor2->getObject();
-      monitor2->setIsOwner(false);
-    }
     string c = obj->ClassName();
-    TH2 *h2s = 0x0;
-    TH2 *h2sbis = 0x0; //for L2B only
+    TH2 *h2s = 0x0; 
     TH1 *h1s = 0x0;
     THnSparse *hSp = 0x0;
     TTree *tree;
@@ -1525,13 +1477,7 @@ if(objname.find("LaneStatus") != string::npos){
 	histname = Form("h2_RDH%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
       else
         histname = Form("h2_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
-
-      h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str()));
-      if(/*objname.find("Layer2ChipStave")!=string::npos || objname.find("ErrorFile")!=string::npos || objname.find("TriggerFile")!=string::npos
-        || */objname.find("Layer2/Threshold_Vs_Chip_and_Stave")!=string::npos || objname.find("Layer2/DeadPixel_Vs_Chip_and_Stave")!=string::npos){
-        h2sbis = dynamic_cast<TH2*>(obj2->Clone(Form("%s_L2B",histname.c_str())));
-        h2s->Add(h2sbis);
-      }
+      h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str())); 
       outputfile->cd();
       h2s->Write();
     }
