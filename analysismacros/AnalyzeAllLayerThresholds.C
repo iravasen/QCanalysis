@@ -25,15 +25,40 @@
 
 
 
+struct LayerParameters
+{
+	string name;
+	int nFirstStave;
+	int nLastStave;
+	int nChipsPerStave;
+	int nStavesForLayer;
+};
 
-Double_t GetAvgThresholdsForStave(TH2F* h, Int_t stvNum, Int_t numChip) {
+//struct LayerParameters l0 = { "IB", 1, 12, 9, 1 };
+//struct LayerParameters l1 = { "IB", 13, 28, 9, 13 };
+//struct LayerParameters l2 = { "IB", 29, 48, 9, 29 };
+//struct LayerParameters l3Top = { "ML", 1, 12, 112, 1 };
+//struct LayerParameters l3Bottom = { "ML", 13, 24, 112, 1 };
+//struct LayerParameters l4Top = { "ML", 25, 39, 112, 25 };
+//struct LayerParameters l4Bottom = { "ML", 40, 54, 112, 25 };
+//struct LayerParameters l5Top = { "OL", 1, 21, 196, 1 };
+//struct LayerParameters l5Bottom = { "OL", 22, 42, 196, 1 };
+//struct LayerParameters l6Top = { "OL", 43, 66, 196, 43 };
+//struct LayerParameters l6Bottom = { "OL", 67, 90, 196, 43 };
+
+
+
+std::pair <Double_t, Double_t> GetAvgThresholdsForStaveAndNumberOfFailedNChip(TH2F* h, Int_t stvNum, Int_t numChip) {
+	std::pair <Double_t, Double_t> avgFailed; 
 	TH1D* hproj = h->ProjectionX("proj", stvNum, stvNum);
 	Double_t sum = 0;
 	Int_t cNumChip = numChip;
+	Int_t failedNumChip = 0;
 	for (int i = 1; i <= numChip; i++) {
 		Double_t forChip = hproj->GetBinContent(i);
 		if (forChip == 0) {
 			cNumChip--;
+			failedNumChip++;
 		}
 		sum += forChip;
 	}
@@ -41,19 +66,21 @@ Double_t GetAvgThresholdsForStave(TH2F* h, Int_t stvNum, Int_t numChip) {
 	if (cNumChip > 0) {
 		avg = sum / cNumChip;
 	}
-	return avg;
+	avgFailed.first = avg;
+	avgFailed.second = failedNumChip;
+	return avgFailed;
 }
 
-Double_t GetNumberOfDisabledNChip(TH2F* h, Int_t stvNum, Int_t numChip) {
-	TH1D* hproj = h->ProjectionX("proj", stvNum, stvNum);
-	Int_t disabledNumChip = 0;
-	for (int i = 1; i <= numChip; i++) {
-		if (hproj->GetBinContent(i) == 0) {
-			disabledNumChip++;
-		}
-	}
-	return disabledNumChip;
-}
+//Double_t GetNumberOfFailedNChip(TH2F* h, Int_t stvNum, Int_t numChip) {
+//	TH1D* hproj = h->ProjectionX("proj", stvNum, stvNum);
+//	Int_t failedNumChip = 0;
+//	for (int i = 1; i <= numChip; i++) {
+//		if (hproj->GetBinContent(i) == 0) {
+//			failedNumChip++;
+//		}
+//	}
+//	return failedNumChip;
+//}
 
 
 set <string> RemoveEmptyRuns(set <string> allRunNumbers, set <string> toDelete) {
@@ -64,8 +91,8 @@ set <string> RemoveEmptyRuns(set <string> allRunNumbers, set <string> toDelete) 
 }
 
 
-TGraph* AddPointAndStyle(TGraph* result, Double_t x, Double_t y, Int_t color, Int_t style){
-	result->AddPoint(x, y);
+
+TGraph* AddStyle(TGraph* result, Int_t color, Int_t style) {
 	result->SetMarkerColor(color);
 	result->SetMarkerStyle(style);
 	result->SetMarkerSize(1.5);
@@ -107,17 +134,35 @@ void PrintGraphToPDF(int numLayer, TCanvas* canvas, TMultiGraph* graph, TLegend*
 	graph->Draw("AP");
 	legend->Draw();
 	canvas->Print(Form("%s.pdf", nameFile.c_str()));
-	canvas->Print(Form("/mnt/c/Users/User/source/repos/QCanalysis/analysismacros/plot/%s_Layer%i.png", nameFile.c_str(), numLayer));
+	canvas->Print(Form("./analysismacros/plot/%s_Layer%i.png", nameFile.c_str(), numLayer));
 	if (numLayer == 10) {
 		canvas->Print(Form("%s.pdf]", nameFile.c_str()));
 	}
 }
 
+vector <LayerParameters> init() {
+	LayerParameters l0 = { "IB", 1, 12, 9, 1 };
+	LayerParameters l1 = { "IB", 13, 28, 9, 13 };
+	LayerParameters l2 = { "IB", 29, 48, 9, 29 };
+	LayerParameters l3Top = { "ML", 1, 12, 112, 1 };
+	LayerParameters l3Bottom = { "ML", 13, 24, 112, 1 };
+	LayerParameters l4Top = { "ML", 25, 39, 112, 25 };
+	LayerParameters l4Bottom = { "ML", 40, 54, 112, 25 };
+	LayerParameters l5Top = { "OL", 1, 21, 196, 1 };
+	LayerParameters l5Bottom = { "OL", 22, 42, 196, 1 };
+	LayerParameters l6Top = { "OL", 43, 66, 196, 43 };
+	LayerParameters l6Bottom = { "OL", 67, 90, 196, 43 };
+
+	vector <LayerParameters> config = { l0, l1, l2, l3Top, l3Bottom, l4Top, l4Bottom, l5Top, l5Bottom, l6Top, l6Bottom };
+
+	return config;
+}
 
 
-void AnalyzeAllLayerThresholds()
-{
-	vector <string> l0 = { "IB", "1", "12", "9", "1" };
+
+void AnalyzeAllLayerThresholds() {
+	
+	/*vector <string> l0 = { "IB", "1", "12", "9", "1" };
 	vector <string> l1 = { "IB", "13", "28", "9", "13" };
 	vector <string> l2 = { "IB", "29", "48", "9", "29" };
 	vector <string> l3Top = { "ML", "1", "12", "112", "1" };
@@ -127,45 +172,54 @@ void AnalyzeAllLayerThresholds()
 	vector <string> l5Top = { "OL", "1", "21", "196", "1" };
 	vector <string> l5Bottom = { "OL", "22", "42", "196", "1" };
 	vector <string> l6Top = { "OL", "43", "66", "196", "43" };
-	vector <string> l6Bottom = { "OL", "67", "90", "196", "43" };
-	vector <vector<string>> config = { l0, l1, l2, l3Top, l3Bottom, l4Top, l4Bottom, l5Top, l5Bottom, l6Top, l6Bottom };
+	vector <string> l6Bottom = { "OL", "67", "90", "196", "43" };*/
+	vector <LayerParameters> config = init();
+
 	vector <Int_t> colorConfig = { kRed, kGreen, kBlue, kMagenta, kOrange };
 	vector <Int_t> styleConfig = { 24,25,26,30,28,32 };
-	TFile* analyzefile = new TFile("/mnt/c/Users/User/source/repos/QCanalysis/Data/Output_all-layers_THRMAPS_DEADPIXMAPS_from_run543470_to_run545333.root");
+	string filepath;
+	cout << endl << "Please enter the full path to the file to analyze" << endl;
+	gSystem->Exec("ls ../Data/*all-layers* -Art | tail -n 500");
+	cin >> filepath;
+	//"/mnt/c/Users/User/source/repos/QCanalysis/Data/Output_all-layers_THRMAPS_DEADPIXMAPS_from_run543470_to_run545333.root"
+	TFile* analyzefile = new TFile(filepath.c_str());
 	set <string> allRunNumbers = GetRunNumbers(analyzefile);
 	for (int numLayer = 0; numLayer <= 10; numLayer++) {
-		vector<string> configToUse = config[numLayer];
+		LayerParameters configToUse = config[numLayer];
 		TMultiGraph* avgLayerThreshold = new TMultiGraph();
-		TMultiGraph* disabledChipsForLayer = new TMultiGraph();
+		TMultiGraph* failedChipsForLayer = new TMultiGraph();
 		TLegend* legend = new TLegend(1, 0.19, 0.9, 0.925);
 		TLegend* legendForChips = new TLegend(1, 0.19, 0.9, 0.925);
 		int colorPointer = 0;
 		int stylePointer = 0;
 		set <string> emptyRunNumbers = {};
-		for (int currentStv = stoi(configToUse[1]); currentStv <= stoi(configToUse[2]); currentStv++) {
+		for (int currentStv = configToUse.nFirstStave; currentStv <= configToUse.nLastStave; currentStv++) {
 			TGraph* stvGraph = new TGraph();
-			TGraph* disabledChips = new TGraph();
+			TGraph* failedChips = new TGraph();
 			Double_t runSequenceNumber = 1;
 			for (auto runNumber : allRunNumbers) {
 				TList* listKeys = analyzefile->GetListOfKeys();
 				for (TObject* key : *listKeys) {
 					string fileName = key->GetName();
-					if (fileName.find(configToUse[0]) != string::npos && fileName.find(runNumber) != string::npos) {
+					if (fileName.find(configToUse.name) != string::npos && fileName.find(runNumber) != string::npos) {
 						TH2F* h = (TH2F*)analyzefile->Get(key->GetName());
 						if (h->Integral() == 0) {
 							emptyRunNumbers.insert(runNumber);
 							continue;
 						}
-						Double_t avgThrForStv = GetAvgThresholdsForStave(h, currentStv, stoi(configToUse[3]));
-						Int_t disabledNumChip = GetNumberOfDisabledNChip(h, currentStv, stoi(configToUse[3]));
+						std::pair <Double_t, Double_t> avgFailed = GetAvgThresholdsForStaveAndNumberOfFailedNChip(h, currentStv, configToUse.nChipsPerStave);
+						Double_t avgThrForStv = avgFailed.first;
+						Int_t failedNumChip = avgFailed.second;
 						if (avgThrForStv != 0) {
-							stvGraph = AddPointAndStyle(stvGraph, runSequenceNumber, avgThrForStv, colorConfig[colorPointer], styleConfig[stylePointer]);
+							stvGraph->AddPoint(runSequenceNumber, avgThrForStv);
 						}
-						disabledChips = AddPointAndStyle(disabledChips, runSequenceNumber, disabledNumChip, colorConfig[colorPointer], styleConfig[stylePointer]);
+						failedChips->AddPoint(runSequenceNumber, failedNumChip); 
 						runSequenceNumber++;
 					}
 				}
 			}
+			stvGraph = AddStyle(stvGraph, colorConfig[colorPointer], styleConfig[stylePointer]);
+			failedChips = AddStyle(failedChips, colorConfig[colorPointer], styleConfig[stylePointer]);
 			if (colorPointer == colorConfig.size() - 1) {
 				colorPointer = 0;
 				stylePointer = stylePointer + 1;
@@ -173,18 +227,18 @@ void AnalyzeAllLayerThresholds()
 			else {
 				colorPointer = colorPointer + 1;
 			}
-			legend->AddEntry(stvGraph, Form("Stv%d", currentStv - stoi(configToUse[4])), "p");
+			legend->AddEntry(stvGraph, Form("Stv%d", currentStv - configToUse.nStavesForLayer), "p");
 			avgLayerThreshold->Add(stvGraph);
-			legendForChips->AddEntry(disabledChips, Form("Stv%d", currentStv - stoi(configToUse[4])), "p");
-			disabledChipsForLayer->Add(disabledChips);
+			legendForChips->AddEntry(failedChips, Form("Stv%d", currentStv - configToUse.nStavesForLayer), "p");
+			failedChipsForLayer->Add(failedChips);
 		}
 		string layerName = (numLayer < 3) ? to_string(numLayer) : to_string((numLayer + 1) / 2 + 1) + ((numLayer % 2 == 0) ? "Bottom" : "Top");
 
 		avgLayerThreshold->SetTitle(Form("Average thresholds for stave at layer-%s", layerName.c_str()));
 		TAxis* X = avgLayerThreshold->GetXaxis();
 
-		disabledChipsForLayer->SetTitle(Form("Failed chips for stave at layer-%s", layerName.c_str()));
-		TAxis* XChips = disabledChipsForLayer->GetXaxis();
+		failedChipsForLayer->SetTitle(Form("Failed chips for stave at layer-%s", layerName.c_str()));
+		TAxis* XChips = failedChipsForLayer->GetXaxis();
 		set <string> notEmptyRuns = RemoveEmptyRuns(allRunNumbers, emptyRunNumbers);
 		XChips->SetNdivisions((notEmptyRuns.size() * 2));
 		X->SetNdivisions((notEmptyRuns.size() * 2));
@@ -199,16 +253,16 @@ void AnalyzeAllLayerThresholds()
 			runSequenceNumber++;
 		}
 		avgLayerThreshold->GetYaxis()->SetTitle("Average thresholds for stave");
-		disabledChipsForLayer->GetYaxis()->SetTitle("Failed chips for stave");
+		failedChipsForLayer->GetYaxis()->SetTitle("Failed chips for stave");
 		string nameFileAvg = "avgThreshold";
 		string nameFileChips = "Failed_chips";
 		TCanvas* canvas = new TCanvas(Form("c_L%s", layerName.c_str()), Form("c_L%s", layerName.c_str()), 0, 0, 640, 480);
 		PrintGraphToPDF(numLayer, canvas, avgLayerThreshold, legend, nameFileAvg);
 		canvas->Close();
 		TCanvas* canvasForChips = new TCanvas(Form("c2_L%s", layerName.c_str()), Form("c2_L%s", layerName.c_str()), 0, 0, 640, 480);
-		TGraph* line = AddLine(numLayer, -1.0, notEmptyRuns.size() * 2, stoi(configToUse[3]) / 4.0, stoi(configToUse[3]) / 4.0);
-		disabledChipsForLayer->Add(line, "L");
-		PrintGraphToPDF(numLayer, canvasForChips, disabledChipsForLayer, legendForChips, nameFileChips);
+		TGraph* line = AddLine(numLayer, -1.0, notEmptyRuns.size() * 2, configToUse.nChipsPerStave / 4.0, configToUse.nChipsPerStave / 4.0);
+		failedChipsForLayer->Add(line, "L");
+		PrintGraphToPDF(numLayer, canvasForChips, failedChipsForLayer, legendForChips, nameFileChips);
 		canvasForChips->Close();
 	}
 }

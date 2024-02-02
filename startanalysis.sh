@@ -25,7 +25,7 @@ todo(){
        root -l -b -q AnalyzeErrorsFHR.C++
        remove ;;
     6) echo -e "\n\e[32m=> Starting threshold analysis run by run\e[39m"
-       root -l -b -q AnalyzeLayerThresholds.C++
+       root -l -b -q AnalyzeAllLayerThresholds.C
        remove ;;
     7) echo -e "\n\e[32m=> Starting dead pixel analysis run by run\e[39m"
        root -l -b -q AnalyzeLayerDeadPixels.C++
@@ -335,7 +335,7 @@ todooption(){
                  echo -e "\n"
                  analysismenu ;;
               2) echo -e "\n\e[32m=> Downloading data for thresholds to analyse\e[39m"
-                 root -l -b -q "getObject.cxx++(\"expert\",2)"
+                 root -l -b -q "getObject.cxx(\"expert\",2)"
                  rm *.d *.so *.pcm
                  echo -e "\n"
                  analysismenu ;;
