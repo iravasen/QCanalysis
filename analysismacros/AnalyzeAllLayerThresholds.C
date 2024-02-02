@@ -34,17 +34,6 @@ struct LayerParameters
 	int nStavesForLayer;
 };
 
-//struct LayerParameters l0 = { "IB", 1, 12, 9, 1 };
-//struct LayerParameters l1 = { "IB", 13, 28, 9, 13 };
-//struct LayerParameters l2 = { "IB", 29, 48, 9, 29 };
-//struct LayerParameters l3Top = { "ML", 1, 12, 112, 1 };
-//struct LayerParameters l3Bottom = { "ML", 13, 24, 112, 1 };
-//struct LayerParameters l4Top = { "ML", 25, 39, 112, 25 };
-//struct LayerParameters l4Bottom = { "ML", 40, 54, 112, 25 };
-//struct LayerParameters l5Top = { "OL", 1, 21, 196, 1 };
-//struct LayerParameters l5Bottom = { "OL", 22, 42, 196, 1 };
-//struct LayerParameters l6Top = { "OL", 43, 66, 196, 43 };
-//struct LayerParameters l6Bottom = { "OL", 67, 90, 196, 43 };
 
 
 
@@ -71,16 +60,6 @@ std::pair <Double_t, Double_t> GetAvgThresholdsForStaveAndNumberOfFailedNChip(TH
 	return avgFailed;
 }
 
-//Double_t GetNumberOfFailedNChip(TH2F* h, Int_t stvNum, Int_t numChip) {
-//	TH1D* hproj = h->ProjectionX("proj", stvNum, stvNum);
-//	Int_t failedNumChip = 0;
-//	for (int i = 1; i <= numChip; i++) {
-//		if (hproj->GetBinContent(i) == 0) {
-//			failedNumChip++;
-//		}
-//	}
-//	return failedNumChip;
-//}
 
 
 set <string> RemoveEmptyRuns(set <string> allRunNumbers, set <string> toDelete) {
@@ -162,17 +141,6 @@ vector <LayerParameters> init() {
 
 void AnalyzeAllLayerThresholds() {
 	
-	/*vector <string> l0 = { "IB", "1", "12", "9", "1" };
-	vector <string> l1 = { "IB", "13", "28", "9", "13" };
-	vector <string> l2 = { "IB", "29", "48", "9", "29" };
-	vector <string> l3Top = { "ML", "1", "12", "112", "1" };
-	vector <string> l3Bottom = { "ML", "13", "24", "112", "1" };
-	vector <string> l4Top = { "ML", "25", "39", "112", "25" };
-	vector <string> l4Bottom = { "ML", "40", "54", "112", "25" };
-	vector <string> l5Top = { "OL", "1", "21", "196", "1" };
-	vector <string> l5Bottom = { "OL", "22", "42", "196", "1" };
-	vector <string> l6Top = { "OL", "43", "66", "196", "43" };
-	vector <string> l6Bottom = { "OL", "67", "90", "196", "43" };*/
 	vector <LayerParameters> config = init();
 
 	vector <Int_t> colorConfig = { kRed, kGreen, kBlue, kMagenta, kOrange };
@@ -181,7 +149,7 @@ void AnalyzeAllLayerThresholds() {
 	cout << endl << "Please enter the full path to the file to analyze" << endl;
 	gSystem->Exec("ls ../Data/*all-layers* -Art | tail -n 500");
 	cin >> filepath;
-	//"/mnt/c/Users/User/source/repos/QCanalysis/Data/Output_all-layers_THRMAPS_DEADPIXMAPS_from_run543470_to_run545333.root"
+
 	TFile* analyzefile = new TFile(filepath.c_str());
 	set <string> allRunNumbers = GetRunNumbers(analyzefile);
 	for (int numLayer = 0; numLayer <= 10; numLayer++) {
