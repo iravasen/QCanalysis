@@ -33,6 +33,9 @@ TString SIBorOB[2] = {"IB", "OB"};
 
 int ns[] = {12, 16, 20, 24, 30, 42, 48}; // n staves for each layer
 
+bool UseRecoveryFlag = true;
+int DoNotUseRecoveryFlagBeforeRun = 541972; // First run of 27 Aug 2023
+
 //
 // MAIN
 //
@@ -113,8 +116,9 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
   std::vector<TH2 *> hok;
   std::vector<TH2 *> hwarning;
   std::vector<TH2 *> htrg;
-  std::vector<string> runnumbersErr, runnumbersFaul, runnumbersWarn, runnumbersCumul, runnumbersTrg; // only runnumbersErr is used later in the macro. TODO: protect in case some of the plots are missing?
-  std::vector<string> timestamps1, timestamps2, timestamps3, timestamps4; // not in use
+  std::vector<TH2 *> hRDH;
+  std::vector<string> runnumbersErr, runnumbersFaul, runnumbersWarn, runnumbersCumul, runnumbersTrg, runnumbersRDH; // only runnumbersErr is used later in the macro. TODO: protect in case some of the plots are missing?
+  std::vector<string> timestamps1, timestamps2, timestamps3, timestamps4, timestamps5; // not in use
   int col[] = {810, 807, 797, 827, 417, 841, 868, 867, 860, 602};
   //	Int_t col[] = {TColor::GetColor("#ff3300"), TColor::GetColor("#ec6e0a"),
   //TColor::GetColor("#daaa14"), TColor::GetColor("#c7e51e"),
@@ -140,6 +144,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
   TH2 *h2faultcumulative;
   TH2 *h2warning;
   TH2 *h2trg;
+  TH2 *h2RDH;
   while ((key = ((TKey *)next()))) {
     obj = key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(), "TProfile") != 0) &&
@@ -162,6 +167,8 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
 
     if (skipruns.find(runnum) != string::npos)
       continue; // eventually skip runs specified by the user
+
+
     if (objname.find("LSerror") != string::npos) {
       h2err = (TH2 *)obj;
       cout << "... Reading " << obj->GetName() << endl;
@@ -193,6 +200,15 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
       htrg.push_back(h2trg);
       timestamps3.push_back(timestamp);
       runnumbersTrg.push_back(runnum);
+    }
+    if (objname.find("RDH") != string::npos) {
+      h2RDH = (TH2 *)obj;
+      cout << "... Reading " << obj->GetName() << endl;
+      h2RDH->ClearUnderflowAndOverflow();
+      hRDH.push_back(h2RDH);
+      timestamps5.push_back(timestamp);
+      runnumbersRDH.push_back(runnum);
+      if (runnum != "norun") if (std::stoi(runnum) < DoNotUseRecoveryFlagBeforeRun) UseRecoveryFlag = false;
     }
     if (objname.find("LCSerror") != string::npos) {
       h2errcumulative = (TH2 *)obj;
@@ -369,16 +385,20 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
     }
 
     for (int iFid = 0; iFid < 432; iFid++) {
-      
-      hbfNOK = 0;
-
-      for (int iLane = 0; iLane < 28; iLane++) {
-        hbfNOK += herrcumulative[iRev]->GetBinContent(iFid + 1, iLane + 1) + hfaultcumulative[iRev]->GetBinContent(iFid + 1, iLane + 1);
-      }
-
-      double Norbit = htrg[iRev]->GetBinContent(iFid + 1, 1); // Number of ORBIT triggers seen by this FEEID
 
       int laneinfeeid = iFid < 145 ? 3 : iFid < 252 ? 8 : 14;
+      
+      hbfNOK = 0;
+      
+      for (int iLane = 0; iLane < 28; iLane++) {
+	hbfNOK += herrcumulative[iRev]->GetBinContent(iFid + 1, iLane + 1) + hfaultcumulative[iRev]->GetBinContent(iFid + 1, iLane + 1);
+      }
+      if (UseRecoveryFlag && hRDH.size()>0 ){
+	hbfNOK += laneinfeeid*0.5*hRDH[iRev]->GetBinContent(iFid+1, 6); // 0.5 because RDH is read twice per orbit
+      }
+      
+      double Norbit = htrg[iRev]->GetBinContent(iFid + 1, 1); // Number of ORBIT triggers seen by this FEEID
+
       if (Norbit > 0)
         hbfNOK /= (Norbit * laneinfeeid);
       else
@@ -757,10 +777,9 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
   latex2.SetTextSize(0.021);
   TLine *Avg[NLayer][(int)runnumbersErr.size()];
   for (int iLayer = 0; iLayer < NLayer; iLayer++) {
+    TString CanvasTitle = UseRecoveryFlag ? "Percentage of orbits in NOK or RECOVERY" : "Percentage of orbits in NOK";
     hblank2[iLayer] = new TH1F(Form("hblank2_%d", iLayer),
-                               Form("Layer %d - Percentage of orbits into "
-                                    "ERROR or FAULT; Run; Time ratio",
-                                    iLayer),
+                               Form("Layer %d - %s; Run; Time ratio", iLayer, CanvasTitle.Data()),
                                NRun, -0.5, (double)NRun - 0.5);
     for (int ir = 0; ir < (int)runnumbersErr.size(); ir++)
       hblank2[iLayer]->GetXaxis()->SetBinLabel(ir + 1,Form("%06d", stoi(runnumbersErr[runnumbersErr.size() - 1 - ir]))); // runnumbersErr is a descending order
@@ -778,7 +797,7 @@ void DoAnalysis(string filepath, const int nChips, string skipruns,
     latex2.DrawLatex(-0.4,6.5,"Normalization uncertainty (%):");
     int yoffset=0;
     for (int ir = 0; ir < (int)runnumbersErr.size(); ir++){
-      latex.DrawLatex(ir-0.95, 2.5-yoffset, Form("%4.0f",100.*nOrbitDispersion[ir][iLayer]));
+      latex.DrawLatex(ir-0.5, 2.5-yoffset, Form("%4.0f",100.*nOrbitDispersion[ir][iLayer]));
       yoffset = 1 - yoffset;
     }
     gPad->SetLogy(); // for total number of errors
