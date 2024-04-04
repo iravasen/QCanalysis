@@ -15,13 +15,19 @@
 #include "vector"
 #include "string"
 #include "set"
+#include "TH1.h"
+#include "TH2.h"
+#include "TAxis.h"
+#include "TMultiGraph.h"
+#include <TSystem.h>
+#include <iostream>
 //include "stdio.h"
 
 
 
 //using namespace o2::quality_control::repository;
 //using namespace o2::quality_control::core;
-//using namespace std;
+using namespace std;
 
 
 
@@ -113,7 +119,7 @@ void PrintGraphToPDF(int numLayer, TCanvas* canvas, TMultiGraph* graph, TLegend*
 	graph->Draw("AP");
 	legend->Draw();
 	canvas->Print(Form("%s.pdf", nameFile.c_str()));
-	canvas->Print(Form("./analysismacros/plot/%s_Layer%i.png", nameFile.c_str(), numLayer));
+	//canvas->Print(Form("./analysismacros/plot/%s_Layer%i.png", nameFile.c_str(), numLayer));
 	if (numLayer == 10) {
 		canvas->Print(Form("%s.pdf]", nameFile.c_str()));
 	}
