@@ -120,7 +120,7 @@ void DoAnalysis(string sFile_Path, string output_file_name){
            string stavestring = Form("L%s_%02d",vLayerNumber[ihist].c_str(),istave-1);
            string hsstring;
            if(std::stoi(vLayerNumber[ihist])<5) {
-             if(ilane-1 <= 8) hsstring = "L";
+             if(ilane-1 < 8) hsstring = "L";
              else hsstring = "U";
            } else {
              if(ilane-1 < 14) hsstring = "L";
