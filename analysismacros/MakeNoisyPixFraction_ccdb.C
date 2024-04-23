@@ -97,10 +97,10 @@ void MakeNoisyPixFraction(string filename, string runnum){
   lineIBOB->Draw();
   ar50pix->Draw();
   lat->SetTextSize(0.05);
-  lat->DrawLatex(159,0.0146,"#bf{ALICE Performance}");
+  //lat->DrawLatex(159,0.0146,"#bf{ALICE Performance}");
   lat->SetTextSize(0.035);
   lat->SetTextColor(kRed);
-  b3->Draw("same");
+
   lat->DrawLatex(10,0.009,"50 pixels/chip");
 
   c->SaveAs(Form("../Plots/noisypix_fraction_%s.pdf",runnum.c_str()));
