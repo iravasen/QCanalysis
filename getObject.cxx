@@ -1322,8 +1322,12 @@ if(objname.find("LaneStatus") != string::npos){
         histname = Form("h2_trg%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
       else if(objname.find("RDHSummaryCumulative")!=string::npos)
 	histname = Form("h2_RDH%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
-      else
+      else if(objname.find("Thr")!=string::npos){
           histname = Form("h2%s%s_%s_%ld", isperstave ? Form("_Stv%s", stvnum.c_str()) : "", isrunknown ? Form("_run%d", runnumbers[i]) : "", objname.substr(objname.size() - 2, 2).c_str(), timestamps[i]);
+      }
+      else {
+	  histname = Form("h2_L%d%s%s_%ld", lnum, isperstave ? Form("_Stv%s",stvnum.c_str()) : "", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
+      }
       h2s = dynamic_cast<TH2*>(obj->Clone(histname.c_str())); 
       outputfile->cd();
       h2s->Write();
