@@ -794,6 +794,18 @@ bool RunExpert(CcdbDatabase *ccdb, int opt, std::string syncasync){
     case 2: {// thresholds
         string tskn = "qc/ITS/MO/ITSThresholdCalibrationTask";
 
+                    string objname = "THRChipAverageIB";
+                    cout << "\nAll data in " << tskn + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+                    Download(choice, ccdb, ccdbApi, tskn, objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
+
+                    objname = "THRChipAverageML";
+                    cout << "\nAll data in " << tskn + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+                    Download(choice, ccdb, ccdbApi, tskn, objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
+
+                    objname = "THRChipAverageOL";
+                    cout << "\nAll data in " << tskn + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
+                    Download(choice, ccdb, ccdbApi, tskn, objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
+
                     string objname = "ThrNoiseChipAverageIB";
                     cout << "\nAll data in " << tskn + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
                     Download(choice, ccdb, ccdbApi, tskn, objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
@@ -1322,7 +1334,7 @@ if(objname.find("LaneStatus") != string::npos){
         histname = Form("h2_trg%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
       else if(objname.find("RDHSummaryCumulative")!=string::npos)
 	histname = Form("h2_RDH%s_%ld", isrunknown ? Form("_run%d",runnumbers[i]) : "", timestamps[i]);
-      else if(objname.find("Thr")!=string::npos){
+      else if((objname.find("Thr") != string::npos) || (objname.find("THR") != string::npos)) {
           histname = Form("h2%s%s_%s_%ld", isperstave ? Form("_Stv%s", stvnum.c_str()) : "", isrunknown ? Form("_run%d", runnumbers[i]) : "", objname.substr(objname.size() - 2, 2).c_str(), timestamps[i]);
       }
       else {
