@@ -806,7 +806,7 @@ bool RunExpert(CcdbDatabase *ccdb, int opt, std::string syncasync){
                     cout << "\nAll data in " << tskn + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
                     Download(choice, ccdb, ccdbApi, tskn, objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
 
-                    string objname = "ThrNoiseChipAverageIB";
+                    objname = "ThrNoiseChipAverageIB";
                     cout << "\nAll data in " << tskn + "/" + objname << " between run" << run1 << " and run" << run2 << " are going to be downloaded." << endl;
                     Download(choice, ccdb, ccdbApi, tskn, objname, run1, run2, vector<string>(), (long)ts_start, (long)ts_end, layernum, runlistfromfile);
                       
