@@ -24,6 +24,7 @@
 #include <iostream>
 #include <filesystem>
 #include <list>
+#include "TKey.h"
 //include "stdio.h"
 
 
@@ -171,6 +172,8 @@ void AnalyzeAllLayerThresholds() {
 
 	TFile* analyzefile = new TFile(filepath.c_str());
 	set <string> allRunNumbers = GetRunNumbers(analyzefile);
+	//set <string> processedRuns = {};
+	string procH;
 	for (int numLayer = 0; numLayer <= 10; numLayer++) {
 		LayerParameters configToUse = config[numLayer];
 		TMultiGraph* avgLayerThreshold = new TMultiGraph();
@@ -190,8 +193,8 @@ void AnalyzeAllLayerThresholds() {
 				TList* listKeys = analyzefile->GetListOfKeys();
 				for (TObject* key : *listKeys) {
 					string fileName = key->GetName();
-					if (fileName.find(configToUse.name) != string::npos && fileName.find(runNumber) != string::npos) {
-						TH2F* h = (TH2F*)analyzefile->Get(key->GetName());
+					if (fileName.find(configToUse.name) != string::npos && fileName.find(runNumber) != string::npos && procH != fileName) {
+						TH2F* h = (TH2F*)analyzefile->Get(Form("%s;1", key->GetName()));
 						if (h->Integral() == 0) {
 							emptyRunNumbers.insert(runNumber);
 							continue;
@@ -204,6 +207,8 @@ void AnalyzeAllLayerThresholds() {
 						}
 						failedChips->AddPoint(runSequenceNumber, failedNumChip);
 						runSequenceNumber++;
+						procH = fileName;
+						//processedRuns.insert(fileName);
 					}
 				}
 			}
@@ -246,10 +251,10 @@ void AnalyzeAllLayerThresholds() {
 			X->SetNdivisions(notEmptyRunSize, 2 + axisRegisterCoef, 0, true);
 			Double_t runSequenceNumber = 2;
 			X->ChangeLabel(-1, 315, 0, 10, -1, -1, "");
-			X->ChangeLabel(1, 315, 0, 10, -1, -1, "");
+			X->ChangeLabel(0, 315, 0, 10, -1, -1, "");
 			//X->ChangeLabel(2, 315, 0, 10, -1, -1, "");
 			XChips->ChangeLabel(-1, 315, 0, 10, -1, -1, "");
-			XChips->ChangeLabel(1, 315, 0, 10, -1, -1, "");
+			XChips->ChangeLabel(0, 315, 0, 10, -1, -1, "");
 			//XChips->ChangeLabel(2, 315, 0, 10, -1, -1, "");
 			for (auto runNum : forBigData) {
 				int runNumber = stoi(runNum);
@@ -259,12 +264,12 @@ void AnalyzeAllLayerThresholds() {
 			}
 		}
 		else {
-			XChips->SetNdivisions((notEmptyRunSize * 2));
-			X->SetNdivisions((notEmptyRunSize * 2));
-			Double_t runSequenceNumber = 2;
-			X->ChangeLabel(1, 315, 0, 10, -1, -1, "");
+			XChips->SetNdivisions((notEmptyRunSize*2));
+			X->SetNdivisions((notEmptyRunSize*2));
+			Double_t runSequenceNumber = 1;
+			X->ChangeLabel(0, 315, 0, 10, -1, -1, "");
 			X->ChangeLabel(notEmptyRunSize + 2, 315, 0, 10, -1, -1, "");
-			XChips->ChangeLabel(1, 315, 0, 10, -1, -1, "");
+			XChips->ChangeLabel(0, 315, 0, 10, -1, -1, "");
 			XChips->ChangeLabel(notEmptyRunSize + 2, 315, 0, 10, -1, -1, "");
 			for (auto runNum : notEmptyRuns) {
 				int runNumber = stoi(runNum);
