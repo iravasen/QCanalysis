@@ -161,6 +161,7 @@ void AnalyzeAllLayerNoiseThresholds() {
 	
 	TFile* analyzefile = new TFile(filepath.c_str());
 	set <string> allRunNumbers = GetRunNumbers(analyzefile);
+	string procH;
 	for (int numLayer = 0; numLayer <= 10; numLayer++) {
 		LayerParameters configToUse = config[numLayer];
 		TMultiGraph* avgLayerThreshold = new TMultiGraph();
@@ -180,8 +181,8 @@ void AnalyzeAllLayerNoiseThresholds() {
 					TList* listKeys = analyzefile->GetListOfKeys();
 					for (TObject* key : *listKeys) {
 						string fileName = key->GetName();
-						if (fileName.find(configToUse.name) != string::npos && fileName.find(runNumber) != string::npos) {
-							TH2F* h = (TH2F*)analyzefile->Get(key->GetName());
+						if (fileName.find(configToUse.name) != string::npos && fileName.find(runNumber) != string::npos && procH != fileName) {
+							TH2F* h = (TH2F*)analyzefile->Get(Form("%s;2", key->GetName()));
 							if (h->Integral() == 0) {
 								emptyRunNumbers.insert(runNumber);
 								continue;
@@ -192,6 +193,7 @@ void AnalyzeAllLayerNoiseThresholds() {
 								stvGraph->AddPoint(runSequenceNumber, avgThrForStv);
 							}
 							runSequenceNumber++;
+							procH = fileName;
 						}
 					}
 				}
