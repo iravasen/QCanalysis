@@ -22,6 +22,9 @@
 #include "QualityControl/QcInfoLogger.h"
 #include "QualityControl/CcdbDatabase.h"
 #include "inc/ccdb.h"
+#include <list>
+#include <tuple>
+#include <cmath>
 
 //using namespace o2::framework;
 using namespace o2::quality_control::repository;
@@ -206,6 +209,8 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
    int ChipMax {1};
    int nStaveParts {0};
 
+   std::list <tuple <int, double, double>> listMinMaxPerLayer;
+
    for(int ihist = (int) vInput_Histo.size() - 1; ihist >= 0; ihist--){ //start from the last in order to have the runs from the oldest to the newest
 
       //@ can be discarded since the same code is written at line 247
@@ -227,6 +232,9 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
       } else {
          nStaveParts = 0;
       }
+
+      tuple <int, double, double> minMaxPerLayer;
+      minMaxPerLayer = make_tuple(ilayer, 1e+2, 1e-5);
 
       for(int ibiny = 1; ibiny <= vInput_Histo[ihist]->GetNbinsY(); ibiny++){ //loop on y bins (stave)s
          //cout << "\n stave number: " << ibiny-1 << endl;
@@ -263,7 +271,24 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
                for(int ibinx = ChipMin; ibinx <= ChipMax; ibinx++){
                   StaveOccupancy += vInput_Histo[ihist]->GetBinContent(ibinx, ibiny);
                }
-               gClusterOccupation[ilayer][ibiny-1][StavePart]->SetPoint(irun, irun, StaveOccupancy/(nChips-nDeadchips)); // @ final output
+
+               double value = StaveOccupancy / (nChips - nDeadchips);
+
+               gClusterOccupation[ilayer][ibiny-1][StavePart]->SetPoint(irun, irun, value); // @ final output
+
+               double min = get<1>(minMaxPerLayer);
+               double max = get<2>(minMaxPerLayer);
+
+               if (min > value) {
+                   get<1>(minMaxPerLayer) = value;
+               }
+
+               if (max < value) {
+                   get<2>(minMaxPerLayer) = value;
+               }
+
+               listMinMaxPerLayer.push_back(minMaxPerLayer);
+
                // cout << "Stave " << ibiny - 1 << " average cluster occupation " << StaveOccupancy/(nChips-nDeadchips) << endl;
             } else {
                gClusterOccupation[ilayer][ibiny-1][StavePart]->SetPoint(irun, irun, 0.0);
@@ -382,6 +407,14 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
       //@@ Stop here
       for(int istave = 0; istave < vInput_Histo[nRunsTot]->GetNbinsY(); istave++){
          leg->AddEntry(gClusterOccupation[ilay][istave][0], Form("Stv%d",istave), "p");
+      }
+
+      for (auto t : listMinMaxPerLayer) {
+          if (get<0>(t) == ilay) {
+              double powerOfMinValue = floor(log10(get<1>(t)));
+              double powerOfMaxValue = ceil(log10(get<2>(t)));
+              hDummy[ilay]->GetYaxis()->SetRangeUser(pow(10, powerOfMinValue), pow(10, powerOfMaxValue));
+          }
       }
 
       hDummy[ilay]->GetYaxis()->SetRangeUser(1e-5, 1e+2);
