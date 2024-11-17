@@ -24,6 +24,7 @@
 #include "inc/ccdb.h"
 #include <list>
 #include <tuple>
+#include <set>
 #include <cmath>
 
 //using namespace o2::framework;
@@ -32,7 +33,7 @@ using namespace o2::quality_control::core;
 using namespace std;
 
 void SetStyle(TGraph *gObject, int color, Style_t marker);
-void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_upload);
+void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_upload, string isLogAxis);
 
 //___________________________________________________
 // MAIN
@@ -60,7 +61,7 @@ void AnalyzeLayerClusterOccupancy(){
       IBorOB = 2;
    }
 
-   string sSkip_Answer, sSkip_Runs, CCDB_up;
+   string sSkip_Answer, sSkip_Runs, CCDB_up, isLogAxis;
    cout << endl;
    cout << "Would you like to skip some run(s)? [y/n]";
    cin  >> sSkip_Answer;
@@ -83,8 +84,12 @@ void AnalyzeLayerClusterOccupancy(){
 
    if(ccdb_upload) SetTaskName(__func__);
 
+   cout << "Would you prefer to use a logarithmic scale for the graphs? [y/n]";
+   cin >> isLogAxis;
+   cout << endl;
+
    //Call
-   DoAnalysis(sFile_Path, sSkip_Runs, IBorOB, ccdb_upload);
+   DoAnalysis(sFile_Path, sSkip_Runs, IBorOB, ccdb_upload, isLogAxis);
 }
 
 //___________________________________________________
@@ -98,7 +103,7 @@ void SetStyle(TGraph *gObject, int color, Style_t marker){
 
 //___________________________________________________
 // Analyse data
-void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_upload){
+void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_upload, string isLogAxis){
 
    //___________________________________________________
    //Auxiliary variables
@@ -209,7 +214,7 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
    int ChipMax {1};
    int nStaveParts {0};
 
-   std::list <tuple <int, double, double>> listMinMaxPerLayer;
+   std::list <tuple <int, int, double, double>> listMinMaxPerLayerPerRun;
 
    for(int ihist = (int) vInput_Histo.size() - 1; ihist >= 0; ihist--){ //start from the last in order to have the runs from the oldest to the newest
 
@@ -233,8 +238,8 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
          nStaveParts = 0;
       }
 
-      tuple <int, double, double> minMaxPerLayer;
-      minMaxPerLayer = make_tuple(ilayer, 1e+2, 1e-5);
+      tuple <int, int, double, double> minMaxPerLayer;
+      minMaxPerLayer = make_tuple(ilayer, irun, 1e+2, 1e-5);
 
       for(int ibiny = 1; ibiny <= vInput_Histo[ihist]->GetNbinsY(); ibiny++){ //loop on y bins (stave)s
          //cout << "\n stave number: " << ibiny-1 << endl;
@@ -276,18 +281,16 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
 
                gClusterOccupation[ilayer][ibiny-1][StavePart]->SetPoint(irun, irun, value); // @ final output
 
-               double min = get<1>(minMaxPerLayer);
-               double max = get<2>(minMaxPerLayer);
+               double min = get<2>(minMaxPerLayer);
+               double max = get<3>(minMaxPerLayer);
 
                if (min > value) {
-                   get<1>(minMaxPerLayer) = value;
-               }
-
-               if (max < value) {
                    get<2>(minMaxPerLayer) = value;
                }
 
-               listMinMaxPerLayer.push_back(minMaxPerLayer);
+               if (max < value) {
+                   get<3>(minMaxPerLayer) = value;
+               }
 
                // cout << "Stave " << ibiny - 1 << " average cluster occupation " << StaveOccupancy/(nChips-nDeadchips) << endl;
             } else {
@@ -330,6 +333,9 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
             // cout << "gClusterOccupation values for run "<< irun<< " "  << gClusterOccupation[ilayer][ibiny-1][StavePart]->GetPointY(irun) << endl;
          } //Stavepart end
       } // biny part end
+
+      listMinMaxPerLayerPerRun.push_back(minMaxPerLayer);
+
       irun++;
       if(ihist > 0 && vLayerNumber[ihist - 1] != vLayerNumber[ihist]) irun = 0;
    } // end of loop over histograms
@@ -366,6 +372,28 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
    TString sPathOut = Form("../Plots/ClusterOccupation_%s.root", sFile_Path.substr(sFile_Path.find("from"), sFile_Path.find(".root")-sFile_Path.find("from")).c_str());
    TFile *Output_File = new TFile(sPathOut, "RECREATE");
 
+
+   //__________________________________________________
+   std::set <tuple <int, double, double>> setMinMaxPerLayer;
+
+   for (auto tup1 : listMinMaxPerLayerPerRun) {
+       tuple <int, double, double> minMaxPerLayer;
+       minMaxPerLayer = make_tuple(get<0>(tup1), 1e+2, 1e-5);
+       for (auto tup2 : listMinMaxPerLayerPerRun) {
+           if (get<0>(tup1) == get<0>(tup2)) {
+               if (get<1>(minMaxPerLayer) > get<2>(tup2)) {
+                   get<1>(minMaxPerLayer) = get<2>(tup2);
+               }
+
+               if (get<2>(minMaxPerLayer) < get<3>(tup2)) {
+                   get<2>(minMaxPerLayer) = get<3>(tup2);
+               }
+           }
+       }
+       setMinMaxPerLayer.insert(minMaxPerLayer);
+   }
+   //__________________________________________________
+
    //___________________________________________________
    //Draw
    nRunsTot = 0;
@@ -389,11 +417,15 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
          canvas->SetName("canvas_HSLower");
       }
 
-      canvas->SetLogy();
+      if (isLogAxis == "y") {
+          canvas->SetLogy();
+          Secondcanvas->SetLogy();
+      }
+      
       canvas->SetTickx();
       canvas->SetTicky();
       canvas->SetMargin(0.0988,0.15,0.194,0.0993);
-      Secondcanvas->SetLogy();
+      
       Secondcanvas->SetTickx();
       Secondcanvas->SetTicky();
       Secondcanvas->SetMargin(0.0988,0.15,0.194,0.0993);
@@ -409,15 +441,25 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
          leg->AddEntry(gClusterOccupation[ilay][istave][0], Form("Stv%d",istave), "p");
       }
 
-      for (auto t : listMinMaxPerLayer) {
-          if (get<0>(t) == ilay) {
-              double powerOfMinValue = floor(log10(get<1>(t)));
-              double powerOfMaxValue = ceil(log10(get<2>(t)));
-              hDummy[ilay]->GetYaxis()->SetRangeUser(pow(10, powerOfMinValue), pow(10, powerOfMaxValue));
+      if (isLogAxis == "y") {
+          for (auto t : setMinMaxPerLayer) {
+              if (get<0>(t) == ilay) {
+                   double powerOfMinValue = floor(log10(get<1>(t)));
+                   double powerOfMaxValue = ceil(log10(get<2>(t)));
+                   hDummy[ilay]->GetYaxis()->SetRangeUser(pow(10, powerOfMinValue), pow(10, powerOfMaxValue));
+              }
+          }
+      }
+      else {
+          for (auto t : setMinMaxPerLayer) {
+              if (get<0>(t) == ilay) {
+                  double minValue = get<1>(t);
+                  double maxValue = get<2>(t);
+                  hDummy[ilay]->GetYaxis()->SetRangeUser(minValue - 0.5 * minValue, maxValue + 0.1 * maxValue);
+              }
           }
       }
 
-      hDummy[ilay]->GetYaxis()->SetRangeUser(1e-5, 1e+2);
       hDummy[ilay]->GetXaxis()->SetTitleOffset(2);
       hDummy[ilay]->SetTitle(Form("Layer-%s, %s", vLayerNumber[nRunsTot].c_str(), sFile_Path.substr(sFile_Path.find("from"), sFile_Path.find(".root")-sFile_Path.find("from")).c_str()));
       canvas->cd();
