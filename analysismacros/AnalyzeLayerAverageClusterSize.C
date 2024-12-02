@@ -22,6 +22,9 @@
 #include "QualityControl/QcInfoLogger.h"
 #include "QualityControl/CcdbDatabase.h"
 #include "inc/ccdb.h"
+#include <list>
+#include <tuple>
+#include <set>
 
 //using namespace o2::framework;
 using namespace o2::quality_control::repository;
@@ -206,6 +209,8 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
    int ChipMax {1};
    int nStaveParts {0};
 
+   std::list <tuple <int, int, double, double>> listMinMaxPerLayerPerRun;
+
    for(int ihist = (int) vInput_Histo.size() - 1; ihist >= 0; ihist--){ //start from the last in order to have the runs from the oldest to the newest
 
       //@ can be discarded since the same code is written at line 247
@@ -227,6 +232,9 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
       } else {
          nStaveParts = 0;
       }
+
+      tuple <int, int, double, double> minMaxPerLayer;
+      minMaxPerLayer = make_tuple(ilayer, irun, 1e+2, 1e-5);
 
       for(int ibiny = 1; ibiny <= vInput_Histo[ihist]->GetNbinsY(); ibiny++){ //loop on y bins (stave)s
          //cout << "\n stave number: " << ibiny-1 << endl;
@@ -263,7 +271,22 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
                for(int ibinx = ChipMin; ibinx <= ChipMax; ibinx++){
                   StaveOccupancy += vInput_Histo[ihist]->GetBinContent(ibinx, ibiny);
                }
-               gAverageClusterSize[ilayer][ibiny-1][StavePart]->SetPoint(irun, irun, StaveOccupancy/(nChips-nDeadchips)); // @ final output
+
+               double value = StaveOccupancy / (nChips - nDeadchips);
+
+               gAverageClusterSize[ilayer][ibiny-1][StavePart]->SetPoint(irun, irun, value); // @ final output
+
+               double min = get<2>(minMaxPerLayer);
+               double max = get<3>(minMaxPerLayer);
+
+               if (min > value) {
+                   get<2>(minMaxPerLayer) = value;
+               }
+
+               if (max < value) {
+                   get<3>(minMaxPerLayer) = value;
+               }
+
                // cout << "Stave " << ibiny - 1 << " average cluster occupation " << StaveOccupancy/(nChips-nDeadchips) << endl;
             } else {
                gAverageClusterSize[ilayer][ibiny-1][StavePart]->SetPoint(irun, irun, 0.0);
@@ -305,6 +328,9 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
             // cout << "gAverageClusterSize values for run "<< irun<< " "  << gAverageClusterSize[ilayer][ibiny-1][StavePart]->GetPointY(irun) << endl;
          } //Stavepart end
       } // biny part end
+
+      listMinMaxPerLayerPerRun.push_back(minMaxPerLayer);
+      
       irun++;
       if(ihist > 0 && vLayerNumber[ihist - 1] != vLayerNumber[ihist]) irun = 0;
    } // end of loop over histograms
@@ -313,6 +339,27 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
    int ilayEff = 0;
    TH1F *hDummy[7];
    nRunsTot = 0;
+    
+   //__________________________________________________
+   std::set <tuple <int, double, double>> setMinMaxPerLayer;
+
+   for (auto tup1 : listMinMaxPerLayerPerRun) {
+       tuple <int, double, double> minMaxPerLayer;
+       minMaxPerLayer = make_tuple(get<0>(tup1), 1e+2, 1e-5);
+       for (auto tup2 : listMinMaxPerLayerPerRun) {
+           if (get<0>(tup1) == get<0>(tup2)) {
+               if (get<1>(minMaxPerLayer) > get<2>(tup2)) {
+                   get<1>(minMaxPerLayer) = get<2>(tup2);
+               }
+
+               if (get<2>(minMaxPerLayer) < get<3>(tup2)) {
+                   get<2>(minMaxPerLayer) = get<3>(tup2);
+               }
+           }
+       }
+       setMinMaxPerLayer.insert(minMaxPerLayer);
+   }
+   //__________________________________________________
 
    for(int ilay = 0; ilay < nLayers; ilay++){
       if(nLayers == 1){ // @ # of input layers
@@ -384,7 +431,15 @@ void DoAnalysis(string sFile_Path, string sSkip_Runs, int IBorOB, bool ccdb_uplo
          leg->AddEntry(gAverageClusterSize[ilay][istave][0], Form("Stv%d",istave), "p");
       }
 
-      hDummy[ilay]->GetYaxis()->SetRangeUser(1, 13);
+      for (auto t : setMinMaxPerLayer) {
+          if (get<0>(t) == ilay) {
+              double minValue = get<1>(t);
+              double maxValue = get<2>(t);
+              hDummy[ilay]->GetYaxis()->SetRangeUser(minValue - 0.1 * minValue, maxValue + 0.1 * maxValue);
+          }
+      }
+
+      //hDummy[ilay]->GetYaxis()->SetRangeUser(1, 13);
       hDummy[ilay]->GetXaxis()->SetTitleOffset(2);
       hDummy[ilay]->SetTitle(Form("Layer-%s, %s", vLayerNumber[nRunsTot].c_str(), sFile_Path.substr(sFile_Path.find("from"), sFile_Path.find(".root")-sFile_Path.find("from")).c_str()));
       canvas->cd();

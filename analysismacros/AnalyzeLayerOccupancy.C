@@ -22,6 +22,10 @@
 #include "QualityControl/QcInfoLogger.h"
 #include "QualityControl/CcdbDatabase.h"
 #include "inc/ccdb.h"
+#include <list>
+#include <tuple>
+#include <set>
+
 
 //using namespace o2::framework;
 using namespace o2::quality_control::repository;
@@ -218,11 +222,17 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   int ChipMax =1;
   int numStavePart =0;
 
+  std::list <tuple <int, int, double, double>> listMinMaxPerLayerPerRun;
+
   for(int ihist=(int)hmaps.size()-1; ihist>=0; ihist--){// start from the last in order to have the runs from the oldest to the newest
     if (IBorOB==1)  ilayer = stoi(laynums[ihist])-3;
     else ilayer = stoi(laynums[ihist]);
     if (nLayersInput==1) ilayer = 0;
-
+    
+    tuple <int, int, double, double> minMaxPerLayer;
+    minMaxPerLayer = make_tuple(ilayer, irun, 1e+2, 1e-5);
+    
+ 
     /*
     if (stoi(laynums[ihist]) < 3)   nChips=9; //IB layers
     else if (stoi(laynums[ihist]) ==3 || stoi(laynums[ihist]) ==4)    nChips=16./2;  //L3 and L4, Half stave
@@ -271,7 +281,20 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
 	    StaveOccupancy+= hproj->GetBinContent(b);
 	  }
 	  //	  cout << "full int " <<hproj->Integral() << " StaveOccupancy " << StaveOccupancy<<  " average stave occupancy per chip " <<  StaveOccupancy/(nChips-deadchips) << endl;
-	  trend[ilayer][ibiny-1][StavePart]->SetPoint(irun, irun, StaveOccupancy/(nChips-deadchips));
+      double value = StaveOccupancy / (nChips - deadchips);
+
+          trend[ilayer][ibiny-1][StavePart]->SetPoint(irun, irun, value);
+
+          double min = get<2>(minMaxPerLayer);
+          double max = get<3>(minMaxPerLayer);
+
+          if (min > value) {
+              get<2>(minMaxPerLayer) = value;
+          }
+
+          if (max < value) {
+              get<3>(minMaxPerLayer) = value;
+          }
 	  //	  cout << "layer " << laynums[ihist] << " run " <<runnumbers[ihist] << " stave " << ibiny-1 << " " <<  StaveOccupancy/(nChips-deadchips)<< endl;
 	}
 	else
@@ -311,6 +334,9 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
 
       }//Stavepart end
     }
+
+    listMinMaxPerLayerPerRun.push_back(minMaxPerLayer);
+
     irun++;
     if(ihist>0)
       if(laynums[ihist-1]!=laynums[ihist]){
@@ -342,6 +368,27 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
   TString PathOut = Form("../Plots/FHR_%s.root",filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str());
   TFile * fileout = new TFile(PathOut, "RECREATE");
 
+  //__________________________________________________
+  std::set <tuple <int, double, double>> setMinMaxPerLayer;
+
+  for (auto tup1 : listMinMaxPerLayerPerRun) {
+      tuple <int, double, double> minMaxPerLayer;
+      minMaxPerLayer = make_tuple(get<0>(tup1), 1e+2, 1e-5);
+      for (auto tup2 : listMinMaxPerLayerPerRun) {
+          if (get<0>(tup1) == get<0>(tup2)) {
+              if (get<1>(minMaxPerLayer) > get<2>(tup2)) {
+                  get<1>(minMaxPerLayer) = get<2>(tup2);
+              }
+
+              if (get<2>(minMaxPerLayer) < get<3>(tup2)) {
+                  get<2>(minMaxPerLayer) = get<3>(tup2);
+              }
+          }
+      }
+      setMinMaxPerLayer.insert(minMaxPerLayer);
+  }
+  //__________________________________________________
+
   //Draw
   nRunsTot =0;
   for(int ilay=0; ilay<nLayers; ilay++){
@@ -357,11 +404,11 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
       Secondcanvas->SetName("canvas_HSUpper");
       canvas->SetName("canvas_HSLower");
     }
-    canvas->SetLogy();
+    //canvas->SetLogy();
     canvas->SetTickx();
     canvas->SetTicky();
     canvas->SetMargin(0.0988,0.15,0.194,0.0993);
-    Secondcanvas->SetLogy();
+    //Secondcanvas->SetLogy();
     Secondcanvas->SetTickx();
     Secondcanvas->SetTicky();
     Secondcanvas->SetMargin(0.0988,0.15,0.194,0.0993);
@@ -372,9 +419,19 @@ auto ccdb = dynamic_cast<CcdbDatabase*>(mydb.get());
     TLegend *leg = new TLegend(0.857, 0.197,0.997,0.898);
     if (ilayEff>=3) leg->SetNColumns(2);
 
-    for(int istave=0; istave<hmaps[nRunsTot]->GetNbinsY(); istave++)
-      leg->AddEntry(trend[ilay][istave][0], Form("Stv%d",istave), "p");
-    hfake[ilay]->GetYaxis()->SetRangeUser(1e-12, 1e-2);
+    for (int istave = 0; istave < hmaps[nRunsTot]->GetNbinsY(); istave++) {
+        leg->AddEntry(trend[ilay][istave][0], Form("Stv%d", istave), "p");
+    }
+
+    for (auto t : setMinMaxPerLayer) {
+        if (get<0>(t) == ilay) {
+            double minValue = get<1>(t);
+            double maxValue = get<2>(t);
+            hfake[ilay]->GetYaxis()->SetRangeUser(minValue - 0.1 * minValue, maxValue + 0.1 * maxValue);
+        }
+    }
+
+    
     hfake[ilay]->GetXaxis()->SetTitleOffset(2);
     hfake[ilay]->SetTitle(Form("Layer-%s, %s",laynums[nRunsTot].c_str(), filepath.substr(filepath.find("from"), filepath.find(".root")-filepath.find("from")).c_str()));
     canvas->cd();
